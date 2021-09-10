@@ -10,11 +10,16 @@ import os
 import pathos.multiprocessing as mp
 import copy
 import gzip
-
+from rdkit import Chem
+from rdkit.Geometry import Point3D
+from rdkit.Chem import AllChem
 try:
     from openbabel.openbabel import OBConversion, OBMol, OBAtomAtomIter, OBMolAtomIter
 except ImportError:
     from openbabel import *
+
+import pandas as pd
+import CNN_model
 
 
 c_distance = 4.532297920317418
@@ -25,121 +30,44 @@ class DP5data:
 
         self.Atom_number = Atoms
 
-        self.Cshifts = []  # Carbon shifts used in DP4 calculation
+        self.Cshifts = []  # Carbon shifts used in DP5 calculation
+        self.Cscaled = []  # Scaled Carbon shifts used in DP5 calculation
         self.Cexp = []  # Carbon experimental shifts used in DP4 calculation
         self.Clabels = []  # Carbon atom labels
-        self.Hshifts = []  # Proton shifts used in DP4 calculation
-        self.Hexp = []  # Proton experimental shifts used in DP4 calculation
+        self.Cinds = [] # Carbon atom indcies
+        self.Hshifts = []  # Proton shifts used in DP5 calculation
+        self.Hscaled = []  # Scaled Proton shifts used in DP5 calculation
+        self.Hexp = []  # Proton experimental shifts used in DP5 calculation
         self.Hlabels = []  # Proton atom labels
-        self.Cscaled = []  # Internally scaled carbon shifts
-        self.Hscaled = []  # Internally scaled proton shifts
 
         self.ConfCshifts = []
 
-        self.Compounds = [] #qml compound objects for each isomer
-        self.AtomReps = [] # FCHL representations ordered by Clabels
+        self.Mols = [] #qml compound objects for each isomer
 
-        self.ScaledAtomProbs = [] #per atom dp5 scaled probabilities for all conformers
+        self.ErrorAtomReps = [] # FCHL representations ordered by Clabels
 
-        self.CScaledprobs = []  # DP5 for isomers based on Carbon data
+        self.ErrorAtomProbs = [] #per atom dp5 scaled probabilities for all conformers
 
-        self.BScaledAtomProbs = [] #per atom dp5 scaled probabilities boltzmann weighted
+        self.B_ErrorAtomProbs = [] #per atom dp5 Exp probabilities boltzmann weighted
 
-        self.DP5scaledprobs = []  # Final DP5S
+        self.Mol_Error_probs = []  # DP5 for isomers based on Carbon data
 
-        self.output = str()  # final DP4 output
+        self.DP5_Error_probs = []  # Final DP5S
 
-        self.folded_scaled_errors = pickle.load(open(ScriptPath / "folded_scaled_errors.p", "rb"))
+        self.ExpAtomReps = [] # FCHL representations ordered by Clabels
 
-        #self.folded_unscaled_errors = pickle.load(open(ScriptPath / "folded_unscaled_errors.p", "rb"))
+        self.ExpAtomProbs = [] #per atom dp5 scaled probabilities for all conformers
 
-        if self.Atom_number < 86:
+        self.B_ExpAtomProbs = [] #per atom dp5 Exp probabilities boltzmann weighted
 
-            with gzip.open(ScriptPath / "atomic_reps.gz", "rb") as f:
+        self.Mol_Exp_probs = []  # DP5 for isomers based on Carbon data
 
-                self.atomic_reps = pickle.load(f)
-
-        else:
-
-            with gzip.open(ScriptPath / "frag_reps.gz", "rb") as f:
-
-                self.atomic_reps = pickle.load(f)
-
-        self.mean_abs_error = np.mean(abs(self.folded_scaled_errors))
+        self.DP5_Exp_probs = []  # Final DP5S
 
         self.output = ""
 
-def kde_probs(Isomers,dp5Data,sigma):
 
-    def kde_probfunction(conf_shifts, conf_reps):
-
-        scaled_probs = []
-
-        errors = [abs(shift - exp) for shift, exp in zip(conf_shifts, dp5Data.Cexp[iso])]
-
-        scaled_shifts = ScaleNMR(conf_shifts, dp5Data.Cexp[iso])
-
-        scaled_errors = [abs(shift - exp) for shift, exp in zip(scaled_shifts, dp5Data.Cexp[iso])]
-
-        for e, s_e, r in zip(errors, scaled_errors, conf_reps):
-
-            # calculate similarites between this atom and those in the atomic representation test set
-
-            K_sim = get_atomic_kernels(np.array([r]), dp5Data.atomic_reps, [sigma],
-                                       cut_distance=c_distance)[0][0]
-
-            K_sim = np.hstack((K_sim, K_sim))
-
-            # calculate kde using K_sim as the weighting function
-
-            if np.sum(K_sim) == 0:
-
-                scaled_kde_estimator = kde(dp5Data.folded_scaled_errors)
-
-            else:
-
-                scaled_kde_estimator = kde(dp5Data.folded_scaled_errors, weights=K_sim)
-
-            s_e_diff = abs(s_e - dp5Data.mean_abs_error)
-
-            s_p = scaled_kde_estimator.integrate_box_1d(dp5Data.mean_abs_error - s_e_diff, dp5Data.mean_abs_error + s_e_diff)
-
-            scaled_probs.append(s_p)
-
-        return  scaled_probs
-
-    #for each atom in the molecule calculate the atomic worry factor
-
-    dp5Data.ScaledAtomProbs = [[] for i in range(len(Isomers))]
-
-    for iso in range(len(Isomers)):
-
-        res = [[] for i in dp5Data.AtomReps[iso]]
-
-        dp5Data.ScaledAtomProbs[iso] = [[] for i in dp5Data.AtomReps[iso]]
-
-        maxproc = 4
-
-        pool = mp.Pool(maxproc)
-
-        ind1 = 0
-
-        for conf_shifts , conf_reps in zip(dp5Data.ConfCshifts[iso],dp5Data.AtomReps[iso] ) :
-            res[ind1] = pool.apply_async(kde_probfunction,
-                                         [conf_shifts,conf_reps])
-
-            ind1 += 1
-
-        for ind1 in range(len(res)):
-
-            dp5Data.ScaledAtomProbs[iso][ind1] = res[ind1].get()
-
-    return dp5Data
-
-
-def ProcessIsomers(dp5Data, Isomers,Settings):
-
-
+def ProcessIsomers(dp5Data, Isomers, Settings):
     OutputFolder = Path(Settings.OutputFolder)
 
     # extract calculated and experimental shifts and add to dp5Data instance
@@ -155,6 +83,7 @@ def ProcessIsomers(dp5Data, Isomers,Settings):
         dp5Data.Cexp.append([])
         dp5Data.Cshifts.append([])
         dp5Data.Clabels.append([])
+        dp5Data.Cinds.append([])
 
         dp5Data.ConfCshifts.append([[] for i in range(len(iso.DFTConformers))])
 
@@ -167,18 +96,18 @@ def ProcessIsomers(dp5Data, Isomers,Settings):
                 dp5Data.Cshifts[-1].append(shift)
                 dp5Data.Cexp[-1].append(exp)
                 dp5Data.Clabels[-1].append(label)
+                dp5Data.Cinds[-1].append(int(label[1:]) - 1)
 
-                for i in range( len(dp5Data.ConfCshifts[-1])):
-
+                for i in range(len(dp5Data.ConfCshifts[-1])):
                     dp5Data.ConfCshifts[-1][i].append(iso.ConformerCShifts[i][j])
 
-                    i+=1
+                    i += 1
 
             elif label not in removedC:
 
                 removedC.append(label)
 
-            j+=1
+            j += 1
 
     for l in removedC:
 
@@ -193,130 +122,198 @@ def ProcessIsomers(dp5Data, Isomers,Settings):
 
                 dp5Data.Clabels[j].pop(i)
 
+    # if the is nmr data append scaled shifts
 
-    #write qml compound objects and atomic representations
+    if "n" in Settings.Workflow:
 
-    #check the number of atoms in the structures
+        for iso in range(0, len(Isomers)):
 
-    #if there are less than 86 (max number of atoms in a molecule in the training set) atoms
+            if len(dp5Data.Cshifts[iso]) > 3:
 
-    if dp5Data.Atom_number < 86:
+                dp5Data.Cscaled.append(ScaleNMR(dp5Data.Cshifts[iso], dp5Data.Cexp[iso]))
 
-        for iso in Isomers:
+            else:
 
-            #open new xyz file
+                dp5Data.Cscaled.append(dp5Data.Cshifts[iso])
 
-            InputFile = Path(iso.InputFile)
+    for iso in Isomers:
 
-            #find conformer with the lowest energy
+        InputFile = Path(iso.InputFile)
 
-            dp5Data.AtomReps.append([])
+        # make rdkit mol for each conformer
 
-            for i,geom in enumerate(iso.DFTConformers):
+        dp5Data.Mols.append([])
 
-                xyz_file = open(str(OutputFolder / "dp5" /InputFile.stem) + "_" +str(i).zfill(3) + ".xyz", "w")
+        for i, geom in enumerate(iso.DFTConformers):
 
-                xyz_file.write(str(len(iso.Atoms)) + "\n" + "\n")
+            m = Chem.MolFromMolFile(str(InputFile) + ".sdf", removeHs=False)
 
-                for atom, coords in zip(iso.Atoms, geom):
+            conf = m.GetConformer(0)
 
-                    xyz_file.write(atom + " " + str(coords[0]) + " " + str(coords[1]) + " " + str(coords[2]) + "\n")
+            for j, atom_coords in enumerate(geom):
+                conf.SetAtomPosition(j, Point3D(float(atom_coords[0]), float(atom_coords[1]), float(atom_coords[2])))
 
-                xyz_file.close()
+            dp5Data.Mols[-1].append(m)
 
-                dp5Data.Compounds.append(qml.Compound(xyz = str(Settings.OutputFolder/"dp5"/ InputFile.stem) +"_"+ str(i).zfill(3) + ".xyz"))
+    # make pandas df to go into CNN predicting model
 
-                dp5Data.Compounds[-1].generate_fchl_representation(max_size=86, cut_distance=c_distance)
+    Error_model = CNN_model.build_model(Settings, "Error")
 
-                dp5Data.AtomReps[-1].append([])
+    Exp_model = CNN_model.build_model(Settings, "Error")
 
-                for C_l in iso.Clabels:
+    for iso in range(len(Isomers)):
 
-                    ind = int(C_l.split("C")[1])
+        iso_df = []
 
-                    dp5Data.AtomReps[-1][-1].append(dp5Data.Compounds[-1].representation[ind])
+        i = 0
+        for conf in dp5Data.Mols[iso]:
+            iso_df += [(i, conf, np.array(dp5Data.Cinds[iso]))]
 
-    #otherwise we need to fragment the molecule to radius of 3
+            i += 1
 
-    else:
+        iso_df = pd.DataFrame(iso_df, columns=['conf_id', 'Mol', 'atom_index'])
 
-        for iso in Isomers:
+        # use CNN to get reps for each conformer
 
-            #open new xyz file
+        dp5Data.ErrorAtomReps.append(CNN_model.extract_Error_reps(Error_model, iso_df, Settings))
 
-            InputFile = Path(iso.InputFile)
-
-            #find conformer with the lowest energy
-
-            dp5Data.AtomReps.append([])
-
-            for i,geom in enumerate(iso.DFTConformers):
-
-                xyz_file = open(str(OutputFolder / "dp5" /InputFile.stem) + "_" +str(i).zfill(3) + ".xyz", "w")
-
-                xyz_file.write(str(len(iso.Atoms)) + "\n" + "\n")
-
-                for atom, coords in zip(iso.Atoms, geom):
-
-                    xyz_file.write(atom + " " + str(coords[0]) + " " + str(coords[1]) + " " + str(coords[2]) + "\n")
-
-                xyz_file.close()
-
-                #now need to fragment the molecule and generate these representations
-
-                #build ob mol
-
-                obconversion = OBConversion()
-                obconversion.SetInFormat("sdf")
-                m = OBMol()
-                obconversion.ReadFile(m, iso.InputFile)
-
-                os.mkdir(str(OutputFolder / "dp5" /InputFile.stem) + "_" +str(i).zfill(3) + "_fragments")
-
-                mol_fragments(m,str(OutputFolder / "dp5" /InputFile.stem) + "_" +str(i).zfill(3) + "_fragments")
-
-                conf_rep = []
-
-                for xyz_frag in sorted(os.listdir(  str(OutputFolder / "dp5" /InputFile.stem) + "_" +str(i).zfill(3) + "_fragments")):
-
-                    c = qml.Compound(xyz=str(OutputFolder / "dp5" /InputFile.stem) + "_" +str(i).zfill(3) + "_fragments/" + xyz_frag)
-
-                    c.generate_fchl_representation(max_size=54, cut_distance=c_distance)
-
-                    conf_rep.append(c.representation[0])
-
-                dp5Data.AtomReps[-1].append([])
-
-                for C_l in iso.Clabels:
-
-                    ind = int(C_l.split("C")[1])
-
-                    dp5Data.AtomReps[-1][-1].append(conf_rep[ind])
+        dp5Data.ExpAtomReps.append(CNN_model.extract_Exp_reps(Exp_model, iso_df, Settings))
 
     return dp5Data
 
 
-def InternalScaling(dp5Data):
-    # perform internal scaling process
+def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
 
-    # calculate prediction errors
+    if DP5type == "Error":
 
-    if len(dp5Data.Cexp[0]) > 0:
+        Error_kernel = pickle.load(open(Path(Settings.ScriptDir) / "pca_10_kde_ERRORrep_Error_kernel.p", "rb"))
 
-        for Cshifts, Cexp in zip(dp5Data.Cshifts, dp5Data.Cexp):
-            dp5Data.Cscaled.append(ScaleNMR(Cshifts, Cexp))
+        def kde_probfunction(conf_shifts, conf_reps, exp_data):
 
-    '''
+            # loop through atoms in the test molecule - generate kde for all of them.
 
-    if len(dp5Data.Hexp[0]) > 0:
+            # check if this has been calculated
 
-        for Hshifts, Hexp in zip(dp5Data.Hshifts, dp5Data.Hexp):
-            dp5Data.Hscaled.append(ScaleNMR(Hshifts, Hexp))
+            n_points = 250
 
-        for Hscaled, Hexp in zip(dp5Data.Hscaled, dp5Data.Hexp):
-            dp5Data.Hscalederrors.append([Hscaled[i] - Hexp[i] for i in range(0, len(Hscaled))])
-    '''
-    return dp5Data
+            x = np.linspace(-20, 20, n_points)
+
+            ones_ = np.ones(n_points)
+
+            n_comp = 10
+
+            p_s = []
+
+            scaled_shifts = ScaleNMR(conf_shifts, exp_data)
+
+            scaled_errors = [shift - exp for shift, exp in zip(scaled_shifts, exp_data)]
+
+            for rep, value in zip(conf_reps, scaled_errors):
+
+                # do kde hybrid part here to yield the atomic probability p
+
+                point = np.vstack((rep.reshape(n_comp, 1) * ones_, x))
+
+                pdf = Error_kernel.pdf(point)
+
+                integral_ = np.sum(pdf)
+
+                if integral_ != 0:
+                    max_x = x[np.argmax(pdf)]
+
+                    low_point = max(-20, max_x - abs(max_x - value))
+
+                    high_point = min(20, max_x + abs(max_x - value))
+
+                    low_bound = np.argmin(np.abs(x - low_point))
+
+                    high_bound = np.argmin(np.abs(x - high_point))
+
+                    bound_integral = np.sum(pdf[min(low_bound, high_bound): max(low_bound, high_bound)])
+
+                    p_s.append(bound_integral / integral_)
+
+            return p_s
+
+    if DP5type == "Exp":
+
+        Exp_kernel = pickle.load( open(Path(Settings.ScriptDir) / "pca_10_kde_EXP_kernel.p", "rb"))
+
+        def kde_probfunction(_, conf_reps, exp_data):
+
+            # loop through atoms in the test molecule - generate kde for all of them.
+
+            # check if this has been calculated
+
+            n_points = 250
+
+            x = np.linspace(0, 250, n_points)
+
+            ones_ = np.ones(n_points)
+
+            n_comp = 10
+
+            p_s = []
+
+            for rep, value in zip(conf_reps ,exp_data):
+
+                # do kde hybrid part here to yield the atomic probability p
+
+                point = np.vstack((rep.reshape(n_comp, 1) * ones_, x))
+
+                pdf = Exp_kernel.pdf(point)
+
+                integral_ = np.sum(pdf)
+
+                if integral_ != 0:
+
+                    max_x = x[np.argmax(pdf)]
+
+                    low_point = max(0, max_x - abs(max_x - value))
+
+                    high_point = min(250, max_x + abs(max_x - value))
+
+                    low_bound = np.argmin(np.abs(x - low_point))
+
+                    high_bound = np.argmin(np.abs(x - high_point))
+
+                    bound_integral = np.sum(pdf[min(low_bound, high_bound): max(low_bound, high_bound)])
+
+                    p_s.append(bound_integral / integral_)
+
+            return p_s
+
+    #for each atom in the molecule calculate the atomic worry factor
+
+    AtomProbs = [[] for i in range(len(Isomers))]
+
+    for iso in range(len(Isomers)):
+
+        res = [[] for i in AtomReps[iso]]
+
+        AtomProbs[iso] = [[] for i in AtomReps[iso]]
+
+        maxproc = 4
+
+        pool = mp.Pool(maxproc)
+
+        ind1 = 0
+
+        for conf_shifts , conf_reps in zip(ConfCshifts[iso],AtomReps[iso] ) :
+
+            res[ind1] = pool.apply_async(kde_probfunction,
+                                         [conf_shifts,conf_reps,Cexp[iso]])
+
+            ind1 += 1
+
+        for ind1 in range(len(res)):
+
+            AtomProbs[iso][ind1] = res[ind1].get()
+
+    return AtomProbs
+
+
+
 
 
 def ScaleNMR(calcShifts, expShifts):
@@ -328,9 +325,13 @@ def ScaleNMR(calcShifts, expShifts):
     return scaled
 
 
-def BoltzmannWeight_DP5(Isomers,dp5Data):
+def BoltzmannWeight_DP5(Isomers,AtomProbs):
 
-    for iso,scaled_probs in zip( Isomers, dp5Data.ScaledAtomProbs):
+    BAtomProbs = []
+
+    print("Atom probs" , np.shape(AtomProbs))
+
+    for iso,scaled_probs in zip( Isomers, AtomProbs):
 
         B_scaled_probs = [0] * len(scaled_probs[0])
 
@@ -340,62 +341,98 @@ def BoltzmannWeight_DP5(Isomers,dp5Data):
 
                 B_scaled_probs[i] += conf_scaled_p[i] * population
 
-        dp5Data.BScaledAtomProbs.append(B_scaled_probs)
+        BAtomProbs.append(B_scaled_probs)
 
-    return dp5Data
+    print("B Atom probs" ,np.shape(BAtomProbs))
 
-
-def Calculate_DP5(dp5Data):
-
-    for scaled_probs in dp5Data.BScaledAtomProbs:
-
-        DP5scaled = 1 - gmean([1 - p_si for p_si in scaled_probs])
-
-        dp5Data.CScaledprobs.append(DP5scaled)
-
-    return dp5Data
+    return BAtomProbs
 
 
-def Rescale_DP5(dp5Data,Settings):
+def Calculate_DP5(BAtomProbs):
 
-    incorrect_kde = pickle.load(open(Path(Settings.ScriptDir) / "i_w_kde_mean_s_0.025.p" ,"rb"))
+    Molecular_probability = []
 
-    correct_kde = pickle.load(open(Path(Settings.ScriptDir) / "c_w_kde_mean_s_0.025.p" ,"rb"))
+    for scaled_probs in BAtomProbs:
+
+         Molecular_probability.append(gmean([1 - p_si for p_si in scaled_probs]))
+
+    return Molecular_probability
+
+
+def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type):
+
+    if DP5type == "Error":
+
+        incorrect_kde = pickle.load(open(Path(Settings.ScriptDir) / "Error_incorrect_kde.p" ,"rb"))
+
+        correct_kde = pickle.load(open(Path(Settings.ScriptDir) / "Error_correct_kde.p" ,"rb"))
+
+
+    elif DP5type == "Exp":
+
+        #incorrect_kde = pickle.load(open(Path(Settings.ScriptDir) / "Exp_incorrect_kde.p", "rb"))
+
+        #correct_kde = pickle.load(open(Path(Settings.ScriptDir) / "Exp_correct_kde.p", "rb"))
+
+        return Mol_probs, BAtomProbs
+
+    else:
+
+        print("DP5 type...")
 
     i = 0
 
-    for scaled in dp5Data.BScaledAtomProbs:
+    DP5AtomProbs = [ [] for i in range(0,len(BAtomProbs)) ]
 
-        dp5Data.BScaledAtomProbs[i] = [ 1 - float(incorrect_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in scaled  ]
+
+    print("Batom" , print(len(DP5AtomProbs)))
+
+    for scaled in BAtomProbs:
+
+        DP5AtomProbs[i] = [ float(correct_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in scaled  ]
 
         i += 1
 
-    dp5Data.DP5scaledprobs = [  1 - float(incorrect_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in dp5Data.CScaledprobs  ]   # Final DP5S
+    DP5probs = [  float(correct_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in Mol_probs  ]   # Final DP5S
 
-    return dp5Data
+    return DP5probs, DP5AtomProbs
 
 
 def Pickle_res(dp5Data,Settings):
 
     data_dic = {"Cshifts": dp5Data.Cshifts,
+                "Cscaled": dp5Data.Cscaled,
                 "Cexp": dp5Data.Cexp,
                 "Clabels": dp5Data.Clabels,
                 "Hshifts": dp5Data.Hshifts,
+                "Hscaled": dp5Data.Hscaled,
                 "Hexp": dp5Data.Hexp,
                 "Hlabels": dp5Data.Hlabels,
-                "Cscaled": dp5Data.Cscaled,
-                "Hscaled": dp5Data.Hscaled,
                 "ConfCshifts": dp5Data.ConfCshifts,
-                "Compounds": dp5Data.Compounds,
-                "AtomReps": dp5Data.AtomReps,
 
-                "ScaledAtomProbs": dp5Data.ScaledAtomProbs,
+                "Mols": dp5Data.Mols,
 
-                "BScaledAtomProbs": dp5Data.BScaledAtomProbs,
+                "ErrorAtomReps" : dp5Data.ErrorAtomReps,
 
-                "CScaledprobs": dp5Data.CScaledprobs,
+                "ErrorAtomProbs" : dp5Data.ErrorAtomProbs,
 
-                "DP5scaledprobs": dp5Data.DP5scaledprobs}
+                "B_ErrorAtomProbs" : dp5Data.B_ErrorAtomProbs ,
+
+                "Mol_Error_probs" : dp5Data.Mol_Error_probs ,
+
+                "DP5_Error_probs" : dp5Data.DP5_Error_probs ,
+
+                "ExpAtomReps" : dp5Data.ExpAtomReps ,
+
+                "ExpAtomProbs" : dp5Data.ExpAtomProbs ,
+
+                "B_ExpAtomProbs" : dp5Data.B_ExpAtomProbs ,
+
+                "Mol_Exp_probs" : dp5Data.Mol_Exp_probs ,
+
+                "DP5_Exp_probs" : dp5Data.DP5_Exp_probs
+
+                }
 
     pickle.dump(data_dic , open(Path(Settings.OutputFolder) / "dp5" / "data_dic.p","wb"))
 
@@ -407,36 +444,58 @@ def UnPickle_res(dp5Data,Settings):
     data_dic =  pickle.load(open(Path(Settings.OutputFolder) / "dp5" / "data_dic.p","rb"))
 
     dp5Data.Cshifts = data_dic["Cshifts"]
+    dp5Data.Cscaled = data_dic["Cscaled"]
     dp5Data.Cexp = data_dic["Cexp"]
     dp5Data.Clabels = data_dic["Clabels"]
     dp5Data.Hshifts = data_dic["Hshifts"]
+    dp5Data.Hscaled = data_dic["Hscaled"]
     dp5Data.Hexp = data_dic["Hexp"]
     dp5Data.Hlabels = data_dic["Hlabels"]
-    dp5Data.Cscaled = data_dic["Cscaled"]
-    dp5Data.Hscaled = data_dic["Hscaled"]
     dp5Data.ConfCshifts = data_dic["ConfCshifts"]
-    dp5Data.Compounds = data_dic["Compounds"]
-    dp5Data.AtomReps = data_dic["AtomReps"]
-    dp5Data.ScaledAtomProbs = data_dic["ScaledAtomProbs"]
-    dp5Data.BScaledAtomProbs = data_dic["BScaledAtomProbs"]
-    dp5Data.CScaledprobs = data_dic["CScaledprobs"]
-    dp5Data.DP5scaledprobs = data_dic["DP5scaledprobs"]
+
+    dp5Data.Mols = data_dic["Mols"]
+    dp5Data.ErrorAtomReps= data_dic["ErrorAtomReps"]
+    dp5Data.ErrorAtomProbs= data_dic["ErrorAtomProbs"]
+    dp5Data.B_ErrorAtomProbs= data_dic["B_ErrorAtomProbs"]
+    dp5Data.Mol_Error_probs= data_dic["Mol_Error_probs"]
+    dp5Data.DP5_Error_probs= data_dic["DP5_Error_probs"]
+    dp5Data.ExpAtomReps= data_dic["ExpAtomReps"]
+    dp5Data.ExpAtomProbs= data_dic["ExpAtomProbs"]
+    dp5Data.B_ExpAtomProbs= data_dic["B_ExpAtomProbs"]
+    dp5Data.Mol_Exp_probs= data_dic["Mol_Exp_probs"]
+    dp5Data.DP5_Exp_probs = data_dic["DP5_Exp_probs"]
 
     return dp5Data
 
 
-def PrintAssignment(dp5Data):
+def PrintAssignment(dp5Data,DP5AtomProbs,output,Settings):
+
     isomer = 0
 
-    for Clabels, Cshifts, Cexp, Cscaled, atom_p in zip(dp5Data.Clabels, dp5Data.Cshifts, dp5Data.Cexp, dp5Data.Cscaled,dp5Data.BScaledAtomProbs):
-        dp5Data.output += ("\n\nAssigned C shifts for isomer " + str(isomer + 1) + ": ")
+    if "n" in Settings.Workflow:
 
-        PrintNMR(Clabels, Cshifts, Cscaled, Cexp,atom_p, dp5Data)
+        for Clabels, Cshifts, Cexp, Cscaled, atom_p in zip(dp5Data.Clabels, dp5Data.Cshifts, dp5Data.Cexp, dp5Data.Cscaled,DP5AtomProbs):
 
-        isomer += 1
+            dp5Data.output += ("\n\nAssigned C shifts for isomer " + str(isomer + 1) + ": ")
+
+            output = PrintNMR(Clabels, Cshifts, Cscaled, Cexp,atom_p, output)
+
+            isomer += 1
+
+    else:
+
+        for Clabels, Cexp,  atom_p in zip(dp5Data.Clabels, dp5Data.Cexp, DP5AtomProbs):
+
+            dp5Data.output += ("\n\nAssigned C shifts for isomer " + str(isomer + 1) + ": ")
+
+            output = PrintNMR_EXP(Clabels, Cexp, atom_p, output)
+
+            isomer += 1
+
+    return output
 
 
-def PrintNMR(labels, values, scaled, exp,atom_p, dp5Data):
+def PrintNMR(labels, values, scaled, exp,atom_p,output):
 
     s = np.argsort(values)
 
@@ -450,148 +509,95 @@ def PrintNMR(labels, values, scaled, exp,atom_p, dp5Data):
 
     atom_p = np.array(atom_p)[s]
 
-    dp5Data.output += ("\nlabel, calc, corrected, exp, error,prob")
+    output += ("\nlabel, calc, corrected, exp, error,prob")
 
     for i in range(len(labels)):
 
-        dp5Data.output += ("\n" + format(slabels[i], "6s") + ' ' + format(svalues[i], "6.2f") + ' '
+        output += ("\n" + format(slabels[i], "6s") + ' ' + format(svalues[i], "6.2f") + ' '
                            + format(sscaled[i], "6.2f") + ' ' + format(sexp[i], "6.2f") + ' ' +
                            format(sexp[i] - sscaled[i], "6.2f")+ ' ' +
                            format(atom_p[i] , "6.2f"))
 
+    return output
 
-def MakeOutput(dp5Data, Isomers, Settings):
+
+def PrintNMR_EXP(labels, values, atom_p,output):
+
+    s = np.argsort(values)
+
+    svalues = np.array(values)[s]
+
+    slabels = np.array(labels)[s]
+
+    atom_p = np.array(atom_p)[s]
+
+    output += ("\nlabel, exp, error,prob")
+
+    for i in range(len(labels)):
+
+        output += ("\n" + format(slabels[i], "6s") + ' ' + format(svalues[i], "6.2f") + ' '
+
+                            + format(atom_p[i] , "6.2f"))
+
+    return output
+
+
+def MakeOutput( Isomers, Settings,DP5data,DP5Probs,DP5AtomProbs):
+
     # add some info about the calculation
 
-    dp5Data.output += Settings.InputFiles[0] + "\n"
+    output = ""
 
-    dp5Data.output += "\n" + "Solvent = " + Settings.Solvent
+    output += Settings.InputFiles[0] + "\n"
 
-    dp5Data.output += "\n" + "Force Field = " + Settings.ForceField + "\n"
+    output += "\n" + "Solvent = " + Settings.Solvent
+
+    output += "\n" + "Force Field = " + Settings.ForceField + "\n"
 
     if 'o' in Settings.Workflow:
-        dp5Data.output += "\n" + "DFT optimisation Functional = " + Settings.oFunctional
-        dp5Data.output += "\n" + "DFT optimisation Basis = " + Settings.oBasisSet
+        output += "\n" + "DFT optimisation Functional = " + Settings.oFunctional
+        output += "\n" + "DFT optimisation Basis = " + Settings.oBasisSet
 
     if 'e' in Settings.Workflow:
-        dp5Data.output += "\n" + "DFT energy Functional = " + Settings.eFunctional
-        dp5Data.output += "\n" + "DFT energy Basis = " + Settings.eBasisSet
+        output += "\n" + "DFT energy Functional = " + Settings.eFunctional
+        output += "\n" + "DFT energy Basis = " + Settings.eBasisSet
 
     if 'n' in Settings.Workflow:
-        dp5Data.output += "\n" + "DFT NMR Functional = " + Settings.nFunctional
-        dp5Data.output += "\n" + "DFT NMR Basis = " + Settings.nBasisSet
+        output += "\n" + "DFT NMR Functional = " + Settings.nFunctional
+        output += "\n" + "DFT NMR Basis = " + Settings.nBasisSet
 
     if Settings.StatsParamFile != "none":
-        dp5Data.output += "\n\nStats model = " + Settings.StatsParamFile
+        output += "\n\nStats model = " + Settings.StatsParamFile
 
-    dp5Data.output += "\n\nNumber of isomers = " + str(len(Isomers))
+    output += "\n\nNumber of isomers = " + str(len(Isomers))
 
     c = 1
 
     for i in Isomers:
-        dp5Data.output += "\nNumber of conformers for isomer " + str(c) + " = " + str(len(i.Conformers))
+        output += "\nNumber of conformers for isomer " + str(c) + " = " + str(len(i.Conformers))
 
         c += 1
 
-    PrintAssignment(dp5Data)
+    output = PrintAssignment(DP5data,DP5AtomProbs,output,Settings)
 
-    dp5Data.output += ("\n\nResults of DP5 using Carbon: ")
+    output += ("\n\nResults of DP5 using Error: ")
 
-    for i, p in enumerate(dp5Data.DP5scaledprobs):
+    for i, p in enumerate(DP5Probs):
 
-        dp5Data.output += ("\nIsomer " + str(i + 1) + ": " + format(p * 100, "4.1f") + "%")
+        output += ("\nIsomer " + str(i + 1) + ": " + format(p * 100, "4.1f") + "%")
 
-    print(dp5Data.output)
+    print(output)
 
     if Settings.OutputFolder == '':
 
-        out = open(str(os.getcwd()) + "/" + str(Settings.InputFiles[0] + "NMR.dp5"), "w+")
+        out = open(str(os.getcwd()) + "/" + str("Output.dp5"), "w+")
 
     else:
 
-        out = open(os.path.join(Settings.OutputFolder, str(Settings.InputFiles[0] + "NMR.dp5")), "w+")
+        out = open(os.path.join(Settings.OutputFolder, str("Output.dp5")), "w+")
 
-    out.write(dp5Data.output)
+    out.write(output)
 
     out.close()
 
-    return dp5Data
-
-
-def mol_fragments(mole,outfile):
-
-    obconv = OBConversion()
-
-    obconv.SetOutFormat("xyz")
-
-    c = 1
-
-    for atom, exp,dft,diff in zip(OBMolAtomIter(mole)):
-
-        # if this is a carbon atom start a breadth first search for other carbon atoms with depth specified
-
-        # create a new mol instance
-
-        new_mol = OBMol()
-
-        # add this atom
-
-        # new_mol.AddAtom(atom)
-
-        fragment_ind = []
-
-        l = atom.GetIndex()
-
-        fragment_ind.append(l)
-
-        # for iteration depth radius
-
-        old_queue = [atom]
-
-        for iteration in range(0, 3):
-
-            new_queue = []
-
-            for a in old_queue:
-
-                for atom2 in OBAtomAtomIter(a):
-
-                    i = atom2.GetIndex()
-
-                    # if the atom has not been seen before add it to the fragment ind list and to the new molecule
-
-                    if i not in fragment_ind:
-                        new_queue.append(atom2)
-
-                        fragment_ind.append(i)
-
-                        # new_mol.AddAtom(atom2)
-
-            old_queue = copy.copy(new_queue)
-
-        fragment_ind = [fragment_ind[0]] + sorted(fragment_ind[1:])
-
-        for i in fragment_ind:
-
-            for a in OBMolAtomIter(mole):
-
-                if a.GetIndex() == i:
-                    new_mol.AddAtom(a)
-
-        f = open(outfile + "frag" + str(l).zfill(3) + ".xyz", "w+")
-
-        f.write(str(new_mol.NumAtoms()) + "\n\n")
-
-        i = 0
-
-        for atom in OBMolAtomIter(new_mol):
-
-            f.write(atom.GetType()[0] + " " + str(atom.GetX()) + " " + str(atom.GetY()) + " " + str(
-                atom.GetZ()) + "\n")
-
-
-            i+=1
-
-        f.close()
-
-        c += 1
+    return output

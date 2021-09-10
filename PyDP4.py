@@ -484,23 +484,59 @@ def main(settings):
 
         DP5data = DP5.DP5data(Path(settings.ScriptDir), len(Isomers[0].Atoms))
 
-        if not os.path.exists('dp5'):
+
+        if not os.path.exists(Path(settings.OutputFolder)):
+            os.mkdir(Path(settings.OutputFolder))
+
+
+        if not os.path.exists(Path(settings.OutputFolder) / 'dp5'):
 
             os.mkdir(Path(settings.OutputFolder) / 'dp5')
 
             DP5data = DP5.ProcessIsomers(DP5data, Isomers, settings)
-            DP5data = DP5.InternalScaling(DP5data)
-            DP5data = DP5.kde_probs(Isomers, DP5data, 0.025)
-            DP5data = DP5.BoltzmannWeight_DP5(Isomers, DP5data)
-            DP5data = DP5.Calculate_DP5(DP5data)
-            DP5data = DP5.Rescale_DP5(DP5data, settings)
+
+            if "n" in Settings.Workflow:
+                # Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp
+
+                DP5data.ErrorAtomProbs = DP5.kde_probs(Isomers, settings, "Error", DP5data.ErrorAtomReps,DP5data.ConfCshifts, DP5data.Cexp )
+
+                DP5data.B_ErrorAtomProbs = DP5.BoltzmannWeight_DP5(Isomers, DP5data.ErrorAtomProbs)
+                DP5data.Mol_Error_probs = DP5.Calculate_DP5(DP5data.B_ErrorAtomProbs)
+                DP5data.DP5_Error_probs, DP5data.B_ErrorAtomProbs = DP5.Rescale_DP5(DP5data.Mol_Error_probs,
+                                                                                     DP5data.B_ErrorAtomProbs, settings,
+                                                                                     "Error")
+
+            else:
+
+                DP5data.ExpAtomProbs = DP5.kde_probs(Isomers, settings, "Exp", DP5data.ExpAtomReps,DP5data.ConfCshifts, DP5data.Cexp )
+                DP5data.B_ExpAtomProbs = DP5.BoltzmannWeight_DP5(Isomers, DP5data.ExpAtomProbs)
+                DP5data.Mol_Exp_probs = DP5.Calculate_DP5(DP5data.B_ExpAtomProbs)
+                DP5data.DP5_Exp_probs, DP5data.DP5ExpAtomProbs = DP5.Rescale_DP5(DP5data.Mol_Exp_probs,
+                                                                                 DP5data.B_ExpAtomProbs, settings,
+                                                                                 "Exp")
+
             DP5data = DP5.Pickle_res(DP5data, settings)
 
         else:
 
             DP5data = DP5.UnPickle_res(DP5data, settings)
 
-        DP5data = DP5.MakeOutput(DP5data, Isomers, settings)
+        if "n" in Settings.Workflow:
+
+            DP5data.Output = DP5.MakeOutput( Isomers, settings,DP5data,DP5data.DP5_Error_probs,DP5data.B_ErrorAtomProbs)
+
+        else:
+
+            DP5data.Output = DP5.MakeOutput( Isomers, settings,DP5data,DP5data.DP5_Exp_probs,DP5data.B_ExpAtomProbs)
+
+        import pickle
+
+        res_dict = pickle.load( open("/home/ah809/output_Exp/dp5_run.p", "rb+"))
+
+        res_dict[str(settings.InputFiles[0])] = DP5data.DP5scaledprobs
+
+        pickle.dump(res_dict, open("/home/ah809/output_Exp/dp5_run.p", "wb+"))
+
 
     else:
 
@@ -523,6 +559,12 @@ def main(settings):
             DP4data = DP4.CalcDP4(DP4data)
 
             DP4data = DP4.MakeOutput(DP4data, Isomers, settings)
+
+            res_dict = pickle.load(open("/home/ah809/output_Exp/dp4_run.p", "rb+"))
+
+            res_dict[str(settings.InputFiles[0])] = DP4data.CDP4probs
+
+            pickle.dump(res_dict, open("/home/ah809/output_Exp/dp4_run.p", "wb+"))
 
     else:
         print('\nNo DP4 analysis requested.')
