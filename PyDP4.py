@@ -531,11 +531,11 @@ def main(settings):
 
         import pickle
 
-        res_dict = pickle.load( open("/home/ah809/output_Exp/dp5_run.p", "rb+"))
+        res_dict = pickle.load( open( Path(settings.OutputFolder) /  "dp5_run.p", "rb+"))
 
         res_dict[str(settings.InputFiles[0])] = DP5data.DP5scaledprobs
 
-        pickle.dump(res_dict, open("/home/ah809/output_Exp/dp5_run.p", "wb+"))
+        pickle.dump(res_dict, open(  Path(settings.OutputFolder)  / "dp5_run.p", "wb+"))
 
 
     else:
@@ -560,11 +560,11 @@ def main(settings):
 
             DP4data = DP4.MakeOutput(DP4data, Isomers, settings)
 
-            res_dict = pickle.load(open("/home/ah809/output_Exp/dp4_run.p", "rb+"))
+            res_dict = pickle.load(open( Path(settings.OutputFolder) / "dp4_run.p", "rb+"))
 
             res_dict[str(settings.InputFiles[0])] = DP4data.CDP4probs
 
-            pickle.dump(res_dict, open("/home/ah809/output_Exp/dp4_run.p", "wb+"))
+            pickle.dump(res_dict, open(Path(settings.OutputFolder) / "dp4_run.p", "wb+"))
 
     else:
         print('\nNo DP4 analysis requested.')
