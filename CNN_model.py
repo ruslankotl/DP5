@@ -41,7 +41,7 @@ def atomic_number_tokenizer(atom):
 def _compute_stacked_offsets(sizes, repeats):
     return np.repeat(np.cumsum(np.hstack([0, sizes[:-1]])), repeats)
 
-'''
+
 class RBFSequence(GraphSequence):
     def process_data(self, batch_data):
         batch_data['distance_rbf'] = rbf_expansion(batch_data['distance'])
@@ -57,7 +57,7 @@ class RBFSequence(GraphSequence):
         del batch_data['distance']
 
         return batch_data
-'''
+
 
 def Mol_iter(dfr):
 
