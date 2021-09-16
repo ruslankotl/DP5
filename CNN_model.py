@@ -1,19 +1,14 @@
-import sys
-import gzip
 import numpy as np
 from numpy.random import seed
 
 seed(1)
 
-from tensorflow.random import set_seed
+#from tensorflow.random import set_seed
 
-set_seed(2)
+#set_seed(2)
 
 from nfp.preprocessing import MolPreprocessor, GraphSequence
-
-import gzip
 import pickle
-import pandas as pd
 
 # Define Keras model
 
@@ -26,9 +21,8 @@ from nfp.layers import (MessageLayer, GRUStep, Squeeze, EdgeNetwork,
                                ReduceAtomToMol, ReduceBondToAtom,
                                GatherAtomToBond, ReduceAtomToPro)
 from nfp.models import GraphModel
-import argparse
 from pathlib import Path
-import datetime
+
 
 def rbf_expansion(distances, mu=0, delta=0.1, kmax=256):
     k = np.arange(0, kmax)
