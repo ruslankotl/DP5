@@ -136,7 +136,7 @@ def build_model(Settings,model_type):
 
     trans_model_name = "NMRdb-CASCADEset_"+ model_type +"_mean_model_atom_features256.hdf5"
 
-    trans_model = load_model( Path(Settings.ScriptDir) /  trans_model_name, custom_objects={'GraphModel': GraphModel,
+    trans_model = load_model( str(Path(Settings.ScriptDir) /  trans_model_name), custom_objects={'GraphModel': GraphModel,
                                                  'Squeeze': Squeeze,
                                                  'GatherAtomToBond': GatherAtomToBond,
                                                  'ReduceBondToAtom': ReduceBondToAtom,
@@ -227,7 +227,7 @@ def build_Exp_predicting_model(Settings):
 
     filepath = "NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5"
 
-    model = load_model( Path(Settings.ScriptDir) / filepath , custom_objects={'GraphModel': GraphModel,
+    model = load_model( str(Path(Settings.ScriptDir) / filepath) , custom_objects={'GraphModel': GraphModel,
                                                  'Squeeze': Squeeze,
                                                  'GatherAtomToBond': GatherAtomToBond,
                                                  'ReduceBondToAtom': ReduceBondToAtom,
