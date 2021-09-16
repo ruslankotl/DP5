@@ -1,4 +1,4 @@
-import numpy as np
+'''import numpy as np
 from numpy.random import seed
 
 seed(1)
@@ -22,7 +22,7 @@ from nfp.layers import (MessageLayer, GRUStep, Squeeze, EdgeNetwork,
                                GatherAtomToBond, ReduceAtomToPro)
 from nfp.models import GraphModel
 from pathlib import Path
-
+'''
 
 def rbf_expansion(distances, mu=0, delta=0.1, kmax=256):
     k = np.arange(0, kmax)

@@ -15,7 +15,6 @@ except ImportError:
 
 import pandas as pd
 import CNN_model
-from matplotlib import pyplot as plt
 
 c_distance = 4.532297920317418
 
