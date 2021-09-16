@@ -519,6 +519,9 @@ def main(settings):
                                                                                      DP5data.B_ErrorAtomProbs, settings,
                                                                                      "Error")
 
+
+                final_ps = DP5data.DP5_Error_probs
+
             else:
 
                 DP5data.ExpAtomProbs = DP5.kde_probs(Isomers, settings, "Exp", DP5data.ExpAtomReps, [], DP5data.Cexp )
@@ -530,19 +533,13 @@ def main(settings):
                                                                                  DP5data.B_ExpAtomProbs, settings,
                                                                                  "Exp")
 
+                final_ps = DP5data.DP5_Exp_probs
+
             DP5data = DP5.Pickle_res(DP5data, settings)
 
         else:
 
             DP5data = DP5.UnPickle_res(DP5data, settings)
-
-            import numpy as np
-
-            print(np.shape(DP5data.ExpAtomReps[0]))
-            print(DP5data.ExpAtomReps[0][0])
-            print(DP5data.ExpAtomReps[1][0])
-
-            quit()
 
         if "n" in settings.Workflow:
 
@@ -556,7 +553,7 @@ def main(settings):
 
         res_dict = pickle.load( open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "rb+"))
 
-        res_dict[str(settings.InputFiles[0])] = DP5data.DP5scaledprobs
+        res_dict[str(settings.InputFiles[0])] = final_ps
 
         pickle.dump(res_dict, open(  "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "wb+"))
 
@@ -565,7 +562,7 @@ def main(settings):
 
         DP5data = []
 
-    if 's' in settings.Workflow:
+    if ('s' in settings.Workflow) and ('n' in settings.Workflow):
 
         if len(Isomers) < 2:
 
