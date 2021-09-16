@@ -165,14 +165,6 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
                 dp5Data.Mols[-1].append(m)
 
-                f = Chem.MolToMolBlock(m)
-
-                f_ = open("/Users/Maidenhair/Desktop/t","w")
-
-                f_.write(f)
-
-                f_.close()
-
     # make pandas df to go into CNN predicting model
 
     for iso in range(len(Isomers)):
