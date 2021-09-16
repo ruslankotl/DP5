@@ -17,11 +17,11 @@ from tensorflow.keras.layers import (Input, Embedding, Dense, BatchNormalization
 from tensorflow.keras.models import Model, load_model
 
 
-#from nfp.preprocessing import MolPreprocessor, GraphSequence
-#from nfp.layers import (MessageLayer, GRUStep, Squeeze, EdgeNetwork,
- #                              ReduceAtomToMol, ReduceBondToAtom,
-  #                             GatherAtomToBond, ReduceAtomToPro)
-#from nfp.models import GraphModel
+from nfp.preprocessing import MolPreprocessor, GraphSequence
+from nfp.layers import (MessageLayer, GRUStep, Squeeze, EdgeNetwork,
+                               ReduceAtomToMol, ReduceBondToAtom,
+                               GatherAtomToBond, ReduceAtomToPro)
+from nfp.models import GraphModel
 
 from pathlib import Path
 
