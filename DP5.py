@@ -167,6 +167,16 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
     # make pandas df to go into CNN predicting model
 
+    if "n" in Settings.Workflow:
+
+        model = CNN_model.build_model(Settings, "Error")
+
+
+    else:
+
+        model = CNN_model.build_model(Settings, "Exp")
+
+
     for iso in range(len(Isomers)):
 
         iso_df = []
@@ -183,17 +193,11 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
         if "n" in Settings.Workflow:
 
-            Error_model = CNN_model.build_model(Settings, "Error")
-
-            dp5Data.ErrorAtomReps.append(CNN_model.extract_Error_reps(Error_model, iso_df, Settings))
+            dp5Data.ErrorAtomReps.append(CNN_model.extract_Error_reps(model, iso_df, Settings))
 
         else:
 
-            Exp_model = CNN_model.build_model(Settings, "Exp")
-
-            reps = CNN_model.extract_Exp_reps(Exp_model, iso_df, Settings)
-
-            dp5Data.ExpAtomReps.append(reps)
+            dp5Data.ExpAtomReps.append(CNN_model.extract_Exp_reps(model, iso_df, Settings))
 
     return dp5Data
 

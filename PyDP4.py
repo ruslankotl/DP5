@@ -536,6 +536,14 @@ def main(settings):
 
             DP5data = DP5.UnPickle_res(DP5data, settings)
 
+            import numpy as np
+
+            print(np.shape(DP5data.ExpAtomReps[0]))
+            print(DP5data.ExpAtomReps[0][0])
+            print(DP5data.ExpAtomReps[1][0])
+
+            quit()
+
         if "n" in settings.Workflow:
 
             DP5data.Output = DP5.MakeOutput( Isomers, settings,DP5data,DP5data.DP5_Error_probs,DP5data.B_ErrorAtomProbs)
