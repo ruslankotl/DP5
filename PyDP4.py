@@ -38,7 +38,7 @@ Interprets the arguments and takes care of the general workflow logic.
 import NMR
 import Tinker
 import MacroModel
-import DP5 as DP5
+#import DP5 as DP5
 import DP4 as DP4
 import sys
 import os
