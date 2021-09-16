@@ -20,7 +20,7 @@ except ImportError:
 
 import pandas as pd
 import CNN_model
-
+from matplotlib import pyplot as plt
 
 c_distance = 4.532297920317418
 
@@ -68,6 +68,7 @@ class DP5data:
 
 
 def ProcessIsomers(dp5Data, Isomers, Settings):
+
     OutputFolder = Path(Settings.OutputFolder)
 
     # extract calculated and experimental shifts and add to dp5Data instance
@@ -98,10 +99,11 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
                 dp5Data.Clabels[-1].append(label)
                 dp5Data.Cinds[-1].append(int(label[1:]) - 1)
 
-                for i in range(len(dp5Data.ConfCshifts[-1])):
-                    dp5Data.ConfCshifts[-1][i].append(iso.ConformerCShifts[i][j])
 
-                    i += 1
+                if len(iso.ConformerCShifts) > 1:
+
+                    for i in range(len(dp5Data.ConfCshifts[-1])):
+                        dp5Data.ConfCshifts[-1][i].append(iso.ConformerCShifts[i][j])
 
             elif label not in removedC:
 
@@ -144,22 +146,40 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
         dp5Data.Mols.append([])
 
-        for i, geom in enumerate(iso.DFTConformers):
+        if ("m" not in Settings.Workflow) & ("o" not in Settings.Workflow):
 
-            m = Chem.MolFromMolFile(str(InputFile) + ".sdf", removeHs=False)
+            dp5Data.Mols[-1].append(iso.Mols[0])
 
-            conf = m.GetConformer(0)
+        else:
 
-            for j, atom_coords in enumerate(geom):
-                conf.SetAtomPosition(j, Point3D(float(atom_coords[0]), float(atom_coords[1]), float(atom_coords[2])))
+            if "o" in Settings.Workflow:
 
-            dp5Data.Mols[-1].append(m)
+                conf_data = iso.DFTConformers
+
+            else:
+
+                conf_data = iso.Conformers
+
+            for i, geom in enumerate(conf_data):
+
+                m = Chem.MolFromMolFile(str(InputFile) + ".sdf", removeHs=False)
+
+                conf = m.GetConformer(0)
+
+                for j, atom_coords in enumerate(geom):
+                    conf.SetAtomPosition(j, Point3D(float(atom_coords[0]), float(atom_coords[1]), float(atom_coords[2])))
+
+                dp5Data.Mols[-1].append(m)
+
+                f = Chem.MolToMolBlock(m)
+
+                f_ = open("/Users/Maidenhair/Desktop/t","w")
+
+                f_.write(f)
+
+                f_.close()
 
     # make pandas df to go into CNN predicting model
-
-    Error_model = CNN_model.build_model(Settings, "Error")
-
-    Exp_model = CNN_model.build_model(Settings, "Error")
 
     for iso in range(len(Isomers)):
 
@@ -175,9 +195,19 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
         # use CNN to get reps for each conformer
 
-        dp5Data.ErrorAtomReps.append(CNN_model.extract_Error_reps(Error_model, iso_df, Settings))
+        if "n" in Settings.Workflow:
 
-        dp5Data.ExpAtomReps.append(CNN_model.extract_Exp_reps(Exp_model, iso_df, Settings))
+            Error_model = CNN_model.build_model(Settings, "Error")
+
+            dp5Data.ErrorAtomReps.append(CNN_model.extract_Error_reps(Error_model, iso_df, Settings))
+
+        else:
+
+            Exp_model = CNN_model.build_model(Settings, "Exp")
+
+            reps = CNN_model.extract_Exp_reps(Exp_model, iso_df, Settings)
+
+            dp5Data.ExpAtomReps.append(reps)
 
     return dp5Data
 
@@ -281,6 +311,10 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
 
                     p_s.append(bound_integral / integral_)
 
+                else:
+
+                    p_s.append(1)
+
             return p_s
 
     #for each atom in the molecule calculate the atomic worry factor
@@ -299,10 +333,26 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
 
         ind1 = 0
 
-        for conf_shifts , conf_reps in zip(ConfCshifts[iso],AtomReps[iso] ) :
+        if len(ConfCshifts) > 0:
+
+            conf_shifts = ConfCshifts[iso]
+
+        else:
+
+            conf_shifts = [[] for i in AtomReps[iso] ]
+
+        for shifts , conf_reps in zip(conf_shifts , AtomReps[iso])  :
+
+            if not conf_shifts[ind1]:
+
+                shifts = []
+
+            else:
+
+                shifts = conf_shifts[ind1]
 
             res[ind1] = pool.apply_async(kde_probfunction,
-                                         [conf_shifts,conf_reps,Cexp[iso]])
+                                         [shifts,conf_reps,Cexp[iso]])
 
             ind1 += 1
 
@@ -311,9 +361,6 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
             AtomProbs[iso][ind1] = res[ind1].get()
 
     return AtomProbs
-
-
-
 
 
 def ScaleNMR(calcShifts, expShifts):
@@ -361,39 +408,45 @@ def Calculate_DP5(BAtomProbs):
 
 def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type):
 
-    if DP5type == "Error":
 
-        incorrect_kde = pickle.load(open(Path(Settings.ScriptDir) / "Error_incorrect_kde.p" ,"rb"))
-
-        correct_kde = pickle.load(open(Path(Settings.ScriptDir) / "Error_correct_kde.p" ,"rb"))
-
-
-    elif DP5type == "Exp":
+    if DP5type == "Exp":
 
         #incorrect_kde = pickle.load(open(Path(Settings.ScriptDir) / "Exp_incorrect_kde.p", "rb"))
 
         #correct_kde = pickle.load(open(Path(Settings.ScriptDir) / "Exp_correct_kde.p", "rb"))
 
-        return Mol_probs, BAtomProbs
+        DP5probs = Mol_probs
+
+        DP5AtomProbs = BAtomProbs
+
+    elif DP5type == "Error":
+
+        incorrect_kde = pickle.load(open(Path(Settings.ScriptDir) / "Error_incorrect_kde.p" ,"rb"))
+
+        correct_kde = pickle.load(open(Path(Settings.ScriptDir) / "Error_correct_kde.p" ,"rb"))
+
+        i = 0
+
+        DP5AtomProbs = [[] for i in range(0, len(BAtomProbs))]
+
+        print("Batom", print(len(DP5AtomProbs)))
+
+        for scaled in BAtomProbs:
+            DP5AtomProbs[i] = [float(correct_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in scaled]
+
+            i += 1
+
+        DP5probs = [float(correct_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in
+                    Mol_probs]  # Final DP5S
 
     else:
 
         print("DP5 type...")
+        DP5probs = []
 
-    i = 0
-
-    DP5AtomProbs = [ [] for i in range(0,len(BAtomProbs)) ]
+        DP5AtomProbs = []
 
 
-    print("Batom" , print(len(DP5AtomProbs)))
-
-    for scaled in BAtomProbs:
-
-        DP5AtomProbs[i] = [ float(correct_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in scaled  ]
-
-        i += 1
-
-    DP5probs = [  float(correct_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in Mol_probs  ]   # Final DP5S
 
     return DP5probs, DP5AtomProbs
 
@@ -537,7 +590,7 @@ def PrintNMR_EXP(labels, values, atom_p,output):
 
         output += ("\n" + format(slabels[i], "6s") + ' ' + format(svalues[i], "6.2f") + ' '
 
-                            + format(atom_p[i] , "6.2f"))
+                            + format(1 - atom_p[i] , "6.2f"))
 
     return output
 
@@ -580,7 +633,7 @@ def MakeOutput( Isomers, Settings,DP5data,DP5Probs,DP5AtomProbs):
 
     output = PrintAssignment(DP5data,DP5AtomProbs,output,Settings)
 
-    output += ("\n\nResults of DP5 using Error: ")
+    output += ("\n\nResults of DP5: ")
 
     for i, p in enumerate(DP5Probs):
 
@@ -601,3 +654,67 @@ def MakeOutput( Isomers, Settings,DP5data,DP5Probs,DP5AtomProbs):
     out.close()
 
     return output
+
+
+
+def predict_Exp_shifts(Settings, Isomers):
+
+    Exp_model = CNN_model.build_Exp_predicting_model(Settings)
+
+    iso_df = []
+
+    i =0
+
+    labels = []
+
+    for iso in Isomers:
+
+        labels.append([])
+
+        InputFile = Path(iso.InputFile)
+
+        # make rdkit mol for each conformer
+
+        geom = iso.Conformers[0]
+
+        m = Chem.MolFromMolFile(str(InputFile) + ".sdf", removeHs=False)
+
+        #if we've done MM her use this geom
+
+        if 'm' in Settings.Workflow:
+
+            conf = m.GetConformer(0)
+
+            for  j , atom_coords in enumerate(geom):
+
+                conf.SetAtomPosition(j, Point3D(float(atom_coords[0]), float(atom_coords[1]), float(atom_coords[2])))
+
+        #else use rdkit optimisation
+
+        else:
+
+            AllChem.EmbedMolecule(m, useRandomCoords=True)
+
+            AllChem.MMFFOptimizeMolecule(m)
+
+        inds = []
+
+        #else use starting point geom.
+
+        for  j , atom in enumerate(m.GetAtoms()):
+
+            if atom.GetAtomicNum() == 6:
+                inds.append(j)
+
+                labels[-1].append("C" + str(j + 1))
+
+        iso_df.append((i , m , np.array(inds) ))
+
+        i+=1
+
+
+    iso_df = pd.DataFrame( iso_df, columns=['conf_id', 'Mol', 'atom_index'])
+
+    shifts = CNN_model.predict_shifts(Exp_model, iso_df ,Settings)
+
+    return shifts,labels

@@ -1,5 +1,4 @@
 import sys
-sys.path.append('../..')
 import gzip
 import numpy as np
 from numpy.random import seed
@@ -221,6 +220,42 @@ def extract_Exp_reps(model,test,Settings):
     #do pca on the reps
 
     return reps
+
+def build_Exp_predicting_model(Settings):
+
+    filepath = "NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5"
+
+    model = load_model( Path(Settings.ScriptDir) / filepath , custom_objects={'GraphModel': GraphModel,
+                                                 'Squeeze': Squeeze,
+                                                 'GatherAtomToBond': GatherAtomToBond,
+                                                 'ReduceBondToAtom': ReduceBondToAtom,
+                                                 'ReduceAtomToPro': ReduceAtomToPro}, compile=False)
+
+    model.compile()
+
+    return model
+
+def predict_shifts(model,test,Settings):
+
+    batch_size = 1
+
+    preprocessor = pickle.load(open( Path(Settings.ScriptDir) /  "mean_model_preprocessor.p","rb"))
+
+    inputs_test = preprocessor.predict(Mol_iter2(test))
+
+    test_sequence = RBFSequence(inputs_test, test.atom_index, batch_size)
+
+    iso_shifts = []
+
+    for i in test_sequence:
+
+        yhat = model(i[0])
+
+        shifts = np.array([m[0] for m in yhat.numpy()])
+
+        iso_shifts.append(shifts)
+
+    return iso_shifts
 
 
 

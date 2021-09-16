@@ -16,6 +16,12 @@ import os
 import time
 import glob
 import shutil
+import math
+
+gasConstant = 8.3145
+temperature = 298.15
+hartreeEnergy = 2625.499629554010
+
 
 def SetupNMRCalcs(Isomers, settings):
 
@@ -464,6 +470,36 @@ def ReadEnergies(Isomers, settings):
             DFTEnergies.append(energy)
 
         Isomers[i].DFTEnergies = DFTEnergies
+
+        ####
+        # Calculate rel. energies in kJ/mol
+        minE = min(iso.DFTEnergies)
+
+        relEs = []
+
+        for e in iso.DFTEnergies:
+            relEs.append((e - minE) * hartreeEnergy)
+
+        Isomers[i].Energies = relEs
+
+        populations = []
+
+        # Calculate Boltzmann populations
+        for e in relEs:
+            populations.append(math.exp(-e * 1000 / (gasConstant * temperature)))
+
+        q = sum(populations)
+
+        for p in range(0, len(populations)):
+            populations[p] = populations[p] / q
+
+        Isomers[i].Populations = populations
+
+        ####
+
+
+
+
 
     os.chdir(jobdir)
     return Isomers

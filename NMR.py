@@ -272,30 +272,6 @@ def CalcBoltzmannWeightedShieldings(Isomers):
 
     for i, iso in enumerate(Isomers):
 
-
-        # Calculate rel. energies in kJ/mol
-        minE = min(iso.DFTEnergies)
-
-        relEs = []
-
-        for e in iso.DFTEnergies:
-            relEs.append((e - minE) * hartreeEnergy)
-
-        Isomers[i].Energies = relEs
-
-        populations = []
-
-        # Calculate Boltzmann populations
-        for e in relEs:
-            populations.append(math.exp(-e * 1000 / (gasConstant * temperature)))
-
-        q = sum(populations)
-
-        for p in range(0, len(populations)):
-            populations[p] = populations[p] / q
-
-        Isomers[i].Populations = populations
-
         # Calculate Boltzmann weighed shielding constants
         # by summing the shifts multiplied by the isomers population
         BoltzmannShieldings = []

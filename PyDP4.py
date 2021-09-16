@@ -184,6 +184,7 @@ class Isomer:
         self.Hshifts = []  # Calculated H NMR
         self.Clabels = []
         self.Hlabels = []
+        self.Mols = []
         self.Cexp = []  # Experimental C NMR shifts
         self.Hexp = []  # Experimental H NMR shifts
 
@@ -364,6 +365,8 @@ def main(settings):
             for iso in Isomers:
                 print(iso.InputFile + ": " + str(iso.DFTEnergies))
 
+
+
     else:
         # Read DFT optimized geometries, if requested
         if ('o' in settings.Workflow):
@@ -380,11 +383,7 @@ def main(settings):
             Isomers = DFT.ReadShieldings(Isomers)
             Isomers = DFT.ReadEnergies(Isomers, settings)
 
-    if not (NMR.NMRDataValid(Isomers)) or ('n' not in settings.Workflow):
-        print('\nNo NMR data calculated, quitting...')
-        quit()
-
-    if ('s' in settings.Workflow) or ('a' in settings.Workflow):
+    if ('n' in settings.Workflow):
 
         print('\nSetting TMS computational NMR shielding constant references')
         settings.TMS_SC_C13, settings.TMS_SC_H1 = NMR.GetTMSConstants(settings)
@@ -392,6 +391,23 @@ def main(settings):
         print('\nConverting DFT data to NMR shifts...')
         Isomers = NMR.CalcBoltzmannWeightedShieldings(Isomers)
         Isomers = NMR.CalcNMRShifts(Isomers, settings)
+
+
+    elif ('s' in settings.Workflow) or ('w' in settings.Workflow):
+
+        #predict NMR shifts with an ML model instead
+
+        Cshifts , Clabels =  DP5.predict_Exp_shifts(settings,Isomers)
+
+        for iso , cshifts,clabels in zip(Isomers,Cshifts,Clabels):
+
+            iso.Cshifts = cshifts
+            iso.Clabels = clabels
+
+
+
+    if ('s' in settings.Workflow) or ('w' in settings.Workflow) or ("a" in settings.Workflow):
+
 
         print('\nReading experimental NMR data...')
         NMRData = NMR.NMRData(settings)
@@ -472,9 +488,9 @@ def main(settings):
 
             print('Raw FID NMR datafound and read.')
 
-        # print('\nProcessing experimental NMR data...')
+    # print('\nProcessing experimental NMR data...')
 
-        # NMRdata = NMR.ProcessNMRData(Isomers, settings.NMRsource, settings)
+    # NMRdata = NMR.ProcessNMRData(Isomers, settings.NMRsource, settings)
 
     if 'w' in settings.Workflow:
 
@@ -484,10 +500,8 @@ def main(settings):
 
         DP5data = DP5.DP5data(Path(settings.ScriptDir), len(Isomers[0].Atoms))
 
-
         if not os.path.exists(Path(settings.OutputFolder)):
             os.mkdir(Path(settings.OutputFolder))
-
 
         if not os.path.exists(Path(settings.OutputFolder) / 'dp5'):
 
@@ -495,11 +509,10 @@ def main(settings):
 
             DP5data = DP5.ProcessIsomers(DP5data, Isomers, settings)
 
-            if "n" in Settings.Workflow:
+            if "n" in settings.Workflow:
                 # Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp
 
                 DP5data.ErrorAtomProbs = DP5.kde_probs(Isomers, settings, "Error", DP5data.ErrorAtomReps,DP5data.ConfCshifts, DP5data.Cexp )
-
                 DP5data.B_ErrorAtomProbs = DP5.BoltzmannWeight_DP5(Isomers, DP5data.ErrorAtomProbs)
                 DP5data.Mol_Error_probs = DP5.Calculate_DP5(DP5data.B_ErrorAtomProbs)
                 DP5data.DP5_Error_probs, DP5data.B_ErrorAtomProbs = DP5.Rescale_DP5(DP5data.Mol_Error_probs,
@@ -508,8 +521,10 @@ def main(settings):
 
             else:
 
-                DP5data.ExpAtomProbs = DP5.kde_probs(Isomers, settings, "Exp", DP5data.ExpAtomReps,DP5data.ConfCshifts, DP5data.Cexp )
+                DP5data.ExpAtomProbs = DP5.kde_probs(Isomers, settings, "Exp", DP5data.ExpAtomReps, [], DP5data.Cexp )
+
                 DP5data.B_ExpAtomProbs = DP5.BoltzmannWeight_DP5(Isomers, DP5data.ExpAtomProbs)
+
                 DP5data.Mol_Exp_probs = DP5.Calculate_DP5(DP5data.B_ExpAtomProbs)
                 DP5data.DP5_Exp_probs, DP5data.DP5ExpAtomProbs = DP5.Rescale_DP5(DP5data.Mol_Exp_probs,
                                                                                  DP5data.B_ExpAtomProbs, settings,
@@ -521,7 +536,7 @@ def main(settings):
 
             DP5data = DP5.UnPickle_res(DP5data, settings)
 
-        if "n" in Settings.Workflow:
+        if "n" in settings.Workflow:
 
             DP5data.Output = DP5.MakeOutput( Isomers, settings,DP5data,DP5data.DP5_Error_probs,DP5data.B_ErrorAtomProbs)
 
