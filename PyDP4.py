@@ -580,6 +580,8 @@ def main(settings):
 
             DP4data = DP4.MakeOutput(DP4data, Isomers, settings)
 
+            import pickle
+
             res_dict = pickle.load(open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) + "/dp4_run.p", "rb+"))
 
             res_dict[str(settings.InputFiles[0])] = DP4data.CDP4probs
