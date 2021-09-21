@@ -505,6 +505,10 @@ def main(settings):
 
         if not os.path.exists(Path(settings.OutputFolder) / 'dp5'):
 
+            print(settings.OutputFolder)
+
+            quit()
+
             os.mkdir(Path(settings.OutputFolder) / 'dp5')
 
             DP5data = DP5.ProcessIsomers(DP5data, Isomers, settings)
@@ -518,7 +522,6 @@ def main(settings):
                 DP5data.DP5_Error_probs, DP5data.B_ErrorAtomProbs = DP5.Rescale_DP5(DP5data.Mol_Error_probs,
                                                                                      DP5data.B_ErrorAtomProbs, settings,
                                                                                      "Error")
-
 
                 final_ps = DP5data.DP5_Error_probs
 
