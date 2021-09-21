@@ -497,6 +497,7 @@ def main(settings):
         print('\nCalculating DP5 probabilities...')
 
         # make folder for WF data to go into
+        print(settings.OutputFolder, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
         DP5data = DP5.DP5data(Path(settings.ScriptDir), len(Isomers[0].Atoms))
 
@@ -505,7 +506,7 @@ def main(settings):
 
         if not os.path.exists(Path(settings.OutputFolder) / 'dp5'):
 
-            print(settings.OutputFolder, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
 
             quit()
 
