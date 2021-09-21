@@ -505,7 +505,7 @@ def main(settings):
 
         if not os.path.exists(Path(settings.OutputFolder) / 'dp5'):
 
-            print(settings.OutputFolder)
+            print(settings.OutputFolder, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
             quit()
 
