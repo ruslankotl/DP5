@@ -108,11 +108,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
             a_ind += 1
 
         #print("exp ind" , exp_inds, len(exp_inds))
-
-        dp5Data.ConfCshifts.append([[] for i in range(len(iso.DFTConformers))])
-
         #print("dp5 conf s" , dp5Data.ConfCshifts[-1] , len(dp5Data.ConfCshifts[-1] ))
-
 
         if len(iso.ConformerCShifts) > 1:
 
