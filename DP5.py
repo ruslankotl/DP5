@@ -73,6 +73,8 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
     removedC = []
 
+    iso_ind = 0
+
     for iso in Isomers:
 
         dp5Data.Cexp.append([])
@@ -80,9 +82,9 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
         dp5Data.Clabels.append([])
         dp5Data.Cinds.append([])
 
-        dp5Data.ConfCshifts.append([[] for i in range(len(iso.DFTConformers))])
+        a_ind = 0
 
-        j = 0
+        exp_inds = []
 
         for shift, exp, label in zip(iso.Cshifts, iso.Cexp, iso.Clabels):
 
@@ -92,18 +94,21 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
                 dp5Data.Cexp[-1].append(exp)
                 dp5Data.Clabels[-1].append(label)
                 dp5Data.Cinds[-1].append(int(label[1:]) - 1)
-
-
-                if len(iso.ConformerCShifts) > 1:
-
-                    for i in range(len(dp5Data.ConfCshifts[-1])):
-                        dp5Data.ConfCshifts[-1][i].append(iso.ConformerCShifts[i][j])
+                exp_inds.append(a_ind)
 
             elif label not in removedC:
 
                 removedC.append(label)
 
-            j += 1
+            a_ind += 1
+
+        dp5Data.ConfCshifts.append([[] for i in range(len(iso.DFTConformers))])
+
+        if len(iso.ConformerCShifts) > 1:
+
+            for i in range(len(iso.ConformerCShifts)):
+
+                dp5Data.ConfCshifts[iso_ind][i].append(iso.ConformerCShifts[i][exp_inds])
 
     for l in removedC:
 
@@ -321,28 +326,20 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp,Cinds):
 
         pool = mp.Pool(maxproc)
 
-        ind1 = 0
-
         if len(ConfCshifts) > 0:
 
-            conf_shifts = ConfCshifts[iso][Cinds[iso]]
+            conf_shifts = ConfCshifts[iso]
 
         else:
 
             conf_shifts = [[] for i in AtomReps[iso] ]
 
+        ind1 = 0
+
         for shifts , conf_reps in zip(conf_shifts , AtomReps[iso])  :
 
-            if not conf_shifts[ind1]:
-
-                shifts = []
-
-            else:
-
-                shifts = conf_shifts[ind1]
-
             res[ind1] = pool.apply_async(kde_probfunction,
-                                         [shifts,conf_reps,Cexp[iso]])
+                                         [conf_shifts[ind1][Cinds[iso]],conf_reps,Cexp[iso]])
 
             ind1 += 1
 
