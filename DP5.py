@@ -86,11 +86,6 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
         exp_inds = []
 
-        #print("shifts" , iso.Cshifts, len(iso.Cshifts))
-        #print("Cexp" , iso.Cexp, len(iso.Cexp))
-
-        #print("labels" , iso.Clabels, len(iso.Clabels))
-
         for shift, exp, label in zip(iso.Cshifts, iso.Cexp, iso.Clabels):
 
             if exp != '':
@@ -106,9 +101,6 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
                 removedC.append(label)
 
             a_ind += 1
-
-        #print("exp ind" , exp_inds, len(exp_inds))
-        #print("dp5 conf s" , dp5Data.ConfCshifts[-1] , len(dp5Data.ConfCshifts[-1] ))
 
         if len(iso.ConformerCShifts) > 1:
 
@@ -342,24 +334,12 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
 
         ind1 = 0
 
-
-        print("conf_shifts",conf_shifts)
-
         for shifts , conf_reps in zip(conf_shifts , AtomReps[iso])  :
-
-
-            print( "shifts" , shifts)
-
-            print( "reps" , conf_reps)
-            print()
-
 
             res[ind1] = pool.apply_async(kde_probfunction,
                                          [conf_shifts[ind1],conf_reps,Cexp[iso]])
 
             ind1 += 1
-
-        print("res" , res)
 
         for ind1 in range(len(res)):
 
