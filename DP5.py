@@ -73,23 +73,23 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
     removedC = []
 
-    iso_ind = 0
-
     for iso in Isomers:
 
         dp5Data.Cexp.append([])
         dp5Data.Cshifts.append([])
         dp5Data.Clabels.append([])
         dp5Data.Cinds.append([])
+        dp5Data.ConfCshifts.append([])
+
 
         a_ind = 0
 
         exp_inds = []
 
-        print("shifts" , iso.Cshifts)
-        print("exp" , iso.Cexp)
+        print("shifts" , iso.Cshifts, len(iso.Cshifts))
+        print("Cexp" , iso.Cexp, len(iso.Cexp))
 
-        print("exp" , iso.Clabels)
+        print("labels" , iso.Clabels, len(iso.Clabels))
 
         for shift, exp, label in zip(iso.Cshifts, iso.Cexp, iso.Clabels):
 
@@ -107,17 +107,18 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
             a_ind += 1
 
-        print("exp ind" , exp_inds)
+        print("exp ind" , exp_inds, len(exp_inds))
 
         dp5Data.ConfCshifts.append([[] for i in range(len(iso.DFTConformers))])
+
+        print("dp5 conf s" , dp5Data.ConfCshifts[-1] , len(dp5Data.ConfCshifts[-1] ))
+
 
         if len(iso.ConformerCShifts) > 1:
 
             for i in range(len(iso.ConformerCShifts)):
 
-                dp5Data.ConfCshifts[iso_ind][i].append( [iso.ConformerCShifts[i][e] for e in exp_inds])
-
-        print()
+                dp5Data.ConfCshifts[-1][i].append( [iso.ConformerCShifts[i][e] for e in exp_inds])
 
     for l in removedC:
 
