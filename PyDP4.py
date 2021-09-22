@@ -512,12 +512,16 @@ def main(settings):
             if "n" in settings.Workflow:
                 # Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp
 
+                print("helllllllllooooooooo")
+
                 DP5data.ErrorAtomProbs = DP5.kde_probs(Isomers, settings, "Error", DP5data.ErrorAtomReps,DP5data.ConfCshifts, DP5data.Cexp)
                 DP5data.B_ErrorAtomProbs = DP5.BoltzmannWeight_DP5(Isomers, DP5data.ErrorAtomProbs)
                 DP5data.Mol_Error_probs = DP5.Calculate_DP5(DP5data.B_ErrorAtomProbs)
                 DP5data.DP5_Error_probs, DP5data.B_ErrorAtomProbs = DP5.Rescale_DP5(DP5data.Mol_Error_probs,
                                                                                      DP5data.B_ErrorAtomProbs, settings,
                                                                                      "Error")
+
+
 
                 final_ps = DP5data.DP5_Error_probs
 
