@@ -497,7 +497,7 @@ def main(settings):
         print('\nCalculating DP5 probabilities...')
 
         # make folder for WF data to go into
-        
+
         DP5data = DP5.DP5data(Path(settings.ScriptDir), len(Isomers[0].Atoms))
 
         if not os.path.exists(Path(settings.OutputFolder)):
@@ -523,7 +523,7 @@ def main(settings):
 
             else:
 
-                DP5data.ExpAtomProbs = DP5.kde_probs(Isomers, settings, "Exp", DP5data.ExpAtomReps, [], DP5data.Cexp )
+                DP5data.ExpAtomProbs = DP5.kde_probs(Isomers, settings, "Exp", DP5data.ExpAtomReps, [], DP5data.Cexp,DP5data.Cinds )
 
                 DP5data.B_ExpAtomProbs = DP5.BoltzmannWeight_DP5(Isomers, DP5data.ExpAtomProbs)
 

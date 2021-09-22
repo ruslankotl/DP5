@@ -202,7 +202,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
     return dp5Data
 
 
-def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
+def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp,Cinds):
 
     if DP5type == "Error":
 
@@ -325,7 +325,7 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
 
         if len(ConfCshifts) > 0:
 
-            conf_shifts = ConfCshifts[iso]
+            conf_shifts = ConfCshifts[iso][Cinds[iso]]
 
         else:
 
