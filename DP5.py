@@ -346,10 +346,14 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
 
         ind1 = 0
 
-        print( "conf shifts" , conf_shifts)
-        print( "Atom reps iso" , AtomReps[iso])
-
         for shifts , conf_reps in zip(conf_shifts , AtomReps[iso])  :
+
+
+            print( "shifts" , shifts)
+
+            print( "reps" , reps)
+            print()
+
 
             res[ind1] = pool.apply_async(kde_probfunction,
                                          [conf_shifts[ind1],conf_reps,Cexp[iso]])
