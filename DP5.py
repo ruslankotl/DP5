@@ -346,6 +346,9 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
 
         ind1 = 0
 
+
+        print("conf_shifts",conf_shifts)
+
         for shifts , conf_reps in zip(conf_shifts , AtomReps[iso])  :
 
 
