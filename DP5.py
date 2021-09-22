@@ -86,10 +86,10 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
         exp_inds = []
 
-        print("shifts" , iso.Cshifts, len(iso.Cshifts))
-        print("Cexp" , iso.Cexp, len(iso.Cexp))
+        #print("shifts" , iso.Cshifts, len(iso.Cshifts))
+        #print("Cexp" , iso.Cexp, len(iso.Cexp))
 
-        print("labels" , iso.Clabels, len(iso.Clabels))
+        #print("labels" , iso.Clabels, len(iso.Clabels))
 
         for shift, exp, label in zip(iso.Cshifts, iso.Cexp, iso.Clabels):
 
@@ -107,11 +107,11 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
             a_ind += 1
 
-        print("exp ind" , exp_inds, len(exp_inds))
+        #print("exp ind" , exp_inds, len(exp_inds))
 
         dp5Data.ConfCshifts.append([[] for i in range(len(iso.DFTConformers))])
 
-        print("dp5 conf s" , dp5Data.ConfCshifts[-1] , len(dp5Data.ConfCshifts[-1] ))
+        #print("dp5 conf s" , dp5Data.ConfCshifts[-1] , len(dp5Data.ConfCshifts[-1] ))
 
 
         if len(iso.ConformerCShifts) > 1:
@@ -217,7 +217,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
     return dp5Data
 
 
-def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp,Cinds):
+def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
 
     if DP5type == "Error":
 
@@ -349,7 +349,7 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp,Cinds):
         for shifts , conf_reps in zip(conf_shifts , AtomReps[iso])  :
 
             res[ind1] = pool.apply_async(kde_probfunction,
-                                         [conf_shifts[ind1][Cinds[iso]],conf_reps,Cexp[iso]])
+                                         [conf_shifts[ind1],conf_reps,Cexp[iso]])
 
             ind1 += 1
 
