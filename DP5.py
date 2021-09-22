@@ -118,7 +118,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
             for i in range(len(iso.ConformerCShifts)):
 
-                dp5Data.ConfCshifts[-1][i].append( [iso.ConformerCShifts[i][e] for e in exp_inds])
+                dp5Data.ConfCshifts[-1].append( [iso.ConformerCShifts[i][e] for e in exp_inds])
 
     for l in removedC:
 
