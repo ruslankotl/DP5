@@ -86,7 +86,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
         exp_inds = []
 
-        print("shifts" , iso.Cshift)
+        print("shifts" , iso.Cshifts)
         print("exp" , iso.Cexp)
 
         print("exp" , iso.Clabels)
