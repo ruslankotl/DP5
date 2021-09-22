@@ -523,7 +523,7 @@ def main(settings):
 
             else:
 
-                DP5data.ExpAtomProbs = DP5.kde_probs(Isomers, settings, "Exp", DP5data.ExpAtomReps, [  ], DP5data.Cexp,)
+                DP5data.ExpAtomProbs = DP5.kde_probs(Isomers, settings, "Exp", DP5data.ExpAtomReps, [], DP5data.Cexp)
 
                 DP5data.B_ExpAtomProbs = DP5.BoltzmannWeight_DP5(Isomers, DP5data.ExpAtomProbs)
 
