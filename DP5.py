@@ -353,6 +353,8 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
 
             ind1 += 1
 
+        print("res" , res)
+
         for ind1 in range(len(res)):
 
             AtomProbs[iso][ind1] = res[ind1].get()
