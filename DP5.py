@@ -351,7 +351,7 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
 
             print( "shifts" , shifts)
 
-            print( "reps" , reps)
+            print( "reps" , conf_reps)
             print()
 
 
