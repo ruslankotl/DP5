@@ -95,13 +95,15 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
                 dp5Data.Cinds[-1].append(int(label[1:]) - 1)
                 exp_inds.append(a_ind)
 
+            a_ind += 1
+
         #print("len conf", len(iso.ConformerCShifts))
 
         if len(iso.ConformerCShifts) > 1:
 
-            for i in range(len(iso.ConformerCShifts)):
+            for conf_shifts in iso.ConformerCShifts:
 
-                dp5Data.ConfCshifts[-1].append( [iso.ConformerCShifts[i][e] for e in exp_inds])
+                dp5Data.ConfCshifts[-1].append( [conf_shifts[e] for e in exp_inds])
 
         #print("dp5Data.Cexp",dp5Data.Cexp[-1] , len(dp5Data.Cexp[-1]))
         #print("dp5Data.Cshift",dp5Data.Cshifts[-1] , len(dp5Data.Cshifts[-1]))
@@ -186,6 +188,8 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
         if "n" in Settings.Workflow:
 
             dp5Data.ErrorAtomReps.append(CNN_model.extract_Error_reps(model, iso_df, Settings))
+
+
 
         else:
 
@@ -352,8 +356,6 @@ def BoltzmannWeight_DP5(Isomers,AtomProbs):
 
     BAtomProbs = []
 
-    print("Atom probs" , np.shape(AtomProbs))
-
     for iso,scaled_probs in zip( Isomers, AtomProbs):
 
         B_scaled_probs = [0] * len(scaled_probs[0])
@@ -365,8 +367,6 @@ def BoltzmannWeight_DP5(Isomers,AtomProbs):
                 B_scaled_probs[i] += conf_scaled_p[i] * population
 
         BAtomProbs.append(B_scaled_probs)
-
-    print("B Atom probs" ,np.shape(BAtomProbs))
 
     return BAtomProbs
 
@@ -405,8 +405,6 @@ def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type):
 
         DP5AtomProbs = [[] for i in range(0, len(BAtomProbs))]
 
-        print("Batom", print(len(DP5AtomProbs)))
-
         for scaled in BAtomProbs:
             DP5AtomProbs[i] = [float(correct_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in scaled]
 
@@ -417,7 +415,6 @@ def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type):
 
     else:
 
-        print("DP5 type...")
         DP5probs = []
 
         DP5AtomProbs = []

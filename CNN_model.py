@@ -25,11 +25,6 @@ from nfp.models import GraphModel
 
 from pathlib import Path
 
-
-print("imported")
-
-
-
 def rbf_expansion(distances, mu=0, delta=0.1, kmax=256):
     k = np.arange(0, kmax)
     logits = -(np.atleast_2d(distances).T - (-mu + delta * k)) ** 2 / delta
