@@ -106,6 +106,20 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
             a_ind += 1
 
+        for l in removedC:
+
+            for j, Clabel in enumerate(dp5Data.Clabels):
+
+                if l in Clabel:
+                    i = Clabel.index(l)
+
+                    dp5Data.Cshifts[j].pop(i)
+
+                    dp5Data.Cexp[j].pop(i)
+
+                    dp5Data.Clabels[j].pop(i)
+
+
         print("len conf", len(iso.ConformerCShifts))
 
         if len(iso.ConformerCShifts) > 1:
@@ -114,8 +128,6 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
                 dp5Data.ConfCshifts[-1].append( [iso.ConformerCShifts[i][e] for e in exp_inds])
 
-
-
         print("dp5Data.Cexp",dp5Data.Cexp[-1] , len(dp5Data.Cexp[-1]))
         print("dp5Data.Cshift",dp5Data.Cshifts[-1] , len(dp5Data.Cshifts[-1]))
         print("dp5Data.Clabels",dp5Data.Clabels[-1] , len(dp5Data.Clabels[-1]))
@@ -123,18 +135,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
         print("dp5Data.Confshift",dp5Data.ConfCshifts[-1] , len(dp5Data.ConfCshifts[-1]))
         print()
 
-    for l in removedC:
 
-        for j, Clabel in enumerate(dp5Data.Clabels):
-
-            if l in Clabel:
-                i = Clabel.index(l)
-
-                dp5Data.Cshifts[j].pop(i)
-
-                dp5Data.Cexp[j].pop(i)
-
-                dp5Data.Clabels[j].pop(i)
 
     # if the is nmr data append scaled shifts
 
