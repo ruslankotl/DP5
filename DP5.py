@@ -113,7 +113,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
         print("dp5Data.Cshift",dp5Data.Cshifts[-1] , len(dp5Data.Cshifts[-1]))
         print("dp5Data.Clabels",dp5Data.Clabels[-1] , len(dp5Data.Clabels[-1]))
         print("dp5Data.Cinds",dp5Data.Cinds[-1] , len(dp5Data.Cinds[-1]))
-        print("dp5Data.Confshift",dp5Data.ConfCshifts[-1][0] , len(dp5Data.ConfCshifts[-1][0]))
+        print("dp5Data.Confshift",dp5Data.ConfCshifts[-1] , len(dp5Data.ConfCshifts[-1]))
         print()
 
     for l in removedC:
