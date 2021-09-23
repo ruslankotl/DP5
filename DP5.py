@@ -87,7 +87,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
         print("iso Cshifts" , iso.Cshifts , len(iso.Cshifts ))
         print("iso Cexp", iso.Cexp, len(iso.Cexp))
-        print("iso Cexp", iso.Clabels, len(iso.Clabels))
+        print("iso Clabels", iso.Clabels, len(iso.Clabels))
 
 
         for shift, exp, label in zip(iso.Cshifts, iso.Cexp, iso.Clabels):
@@ -100,6 +100,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
                 dp5Data.Cinds[-1].append(int(label[1:]) - 1)
                 exp_inds.append(a_ind)
 
+            '''
             elif label not in removedC:
 
                 removedC.append(label)
@@ -119,7 +120,8 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
                     dp5Data.Clabels[j].pop(i)
 
-
+            '''
+            
         print("len conf", len(iso.ConformerCShifts))
 
         if len(iso.ConformerCShifts) > 1:
