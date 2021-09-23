@@ -48,10 +48,6 @@ def ProcessIsomers(DP4data, Isomers):
 
     # make sure any shifts with missing peaks are removed from all isomers
 
-    removedC = []
-
-    removedH = []
-
     for iso in Isomers:
 
         DP4data.Cshifts.append([])
@@ -64,23 +60,6 @@ def ProcessIsomers(DP4data, Isomers):
                 DP4data.Cshifts[-1].append(shift)
                 DP4data.Cexp[-1].append(exp)
                 DP4data.Clabels[-1].append(label)
-
-            elif label not in removedC:
-
-                removedC.append(label)
-
-    for l in removedC:
-
-        for j, Clabel in enumerate(DP4data.Clabels):
-
-            if l in Clabel:
-                i = Clabel.index(l)
-
-                DP4data.Cshifts[j].pop(i)
-
-                DP4data.Cexp[j].pop(i)
-
-                DP4data.Clabels[j].pop(i)
 
     # proton
     for iso in Isomers:
@@ -95,23 +74,6 @@ def ProcessIsomers(DP4data, Isomers):
                 DP4data.Hshifts[-1].append(shift)
                 DP4data.Hexp[-1].append(exp)
                 DP4data.Hlabels[-1].append(label)
-
-            elif label not in removedH:
-
-                removedH.append(label)
-
-    for l in removedH:
-
-        for j, Hlabel in enumerate(DP4data.Hlabels):
-
-            if l in Hlabel:
-                i = Hlabel.index(l)
-
-                DP4data.Hshifts[j].pop(i)
-
-                DP4data.Hexp[j].pop(i)
-
-                DP4data.Hlabels[j].pop(i)
 
     return DP4data
 

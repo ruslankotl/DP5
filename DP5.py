@@ -63,15 +63,11 @@ class DP5data:
 
 def ProcessIsomers(dp5Data, Isomers, Settings):
 
-    OutputFolder = Path(Settings.OutputFolder)
-
     # extract calculated and experimental shifts and add to dp5Data instance
 
     # Carbon
 
     # make sure any shifts with missing peaks are removed from all isomers
-
-    removedC = []
 
     for iso in Isomers:
 
@@ -85,10 +81,9 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
         exp_inds = []
 
-        print("iso Cshifts" , iso.Cshifts , len(iso.Cshifts ))
-        print("iso Cexp", iso.Cexp, len(iso.Cexp))
-        print("iso Clabels", iso.Clabels, len(iso.Clabels))
-
+        #print("iso Cshifts" , iso.Cshifts , len(iso.Cshifts ))
+        #print("iso Cexp", iso.Cexp, len(iso.Cexp))
+        #print("iso Clabels", iso.Clabels, len(iso.Clabels))
 
         for shift, exp, label in zip(iso.Cshifts, iso.Cexp, iso.Clabels):
 
@@ -100,29 +95,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
                 dp5Data.Cinds[-1].append(int(label[1:]) - 1)
                 exp_inds.append(a_ind)
 
-            '''
-            elif label not in removedC:
-
-                removedC.append(label)
-
-            a_ind += 1
-
-        for l in removedC:
-
-            for j, Clabel in enumerate(dp5Data.Clabels):
-
-                if l in Clabel:
-                    i = Clabel.index(l)
-
-                    dp5Data.Cshifts[j].pop(i)
-
-                    dp5Data.Cexp[j].pop(i)
-
-                    dp5Data.Clabels[j].pop(i)
-
-            '''
-            
-        print("len conf", len(iso.ConformerCShifts))
+        #print("len conf", len(iso.ConformerCShifts))
 
         if len(iso.ConformerCShifts) > 1:
 
@@ -130,14 +103,12 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
                 dp5Data.ConfCshifts[-1].append( [iso.ConformerCShifts[i][e] for e in exp_inds])
 
-        print("dp5Data.Cexp",dp5Data.Cexp[-1] , len(dp5Data.Cexp[-1]))
-        print("dp5Data.Cshift",dp5Data.Cshifts[-1] , len(dp5Data.Cshifts[-1]))
-        print("dp5Data.Clabels",dp5Data.Clabels[-1] , len(dp5Data.Clabels[-1]))
-        print("dp5Data.Cinds",dp5Data.Cinds[-1] , len(dp5Data.Cinds[-1]))
-        print("dp5Data.Confshift",dp5Data.ConfCshifts[-1] , len(dp5Data.ConfCshifts[-1]))
-        print()
-
-
+        #print("dp5Data.Cexp",dp5Data.Cexp[-1] , len(dp5Data.Cexp[-1]))
+        #print("dp5Data.Cshift",dp5Data.Cshifts[-1] , len(dp5Data.Cshifts[-1]))
+        #print("dp5Data.Clabels",dp5Data.Clabels[-1] , len(dp5Data.Clabels[-1]))
+        #print("dp5Data.Cinds",dp5Data.Cinds[-1] , len(dp5Data.Cinds[-1]))
+        #print("dp5Data.Confshift",dp5Data.ConfCshifts[-1] , len(dp5Data.ConfCshifts[-1]))
+        #print()
 
     # if the is nmr data append scaled shifts
 
