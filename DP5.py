@@ -101,6 +101,8 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
             a_ind += 1
 
+        print("len conf", len(iso.ConformerCShifts))
+
         if len(iso.ConformerCShifts) > 1:
 
             for i in range(len(iso.ConformerCShifts)):
