@@ -99,7 +99,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
         #print("len conf", len(iso.ConformerCShifts))
 
-        if len(iso.ConformerCShifts) > 1:
+        if len(iso.ConformerCShifts) > 0:
 
             for conf_shifts in iso.ConformerCShifts:
 
@@ -317,6 +317,8 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
 
         pool = mp.Pool(maxproc)
 
+
+
         if len(ConfCshifts) > 0:
 
             conf_shifts = ConfCshifts[iso]
@@ -328,6 +330,8 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
         ind1 = 0
 
         for shifts , conf_reps in zip(conf_shifts , AtomReps[iso])  :
+
+
 
 
 
