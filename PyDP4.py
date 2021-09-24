@@ -47,6 +47,8 @@ import argparse
 import importlib
 import getpass
 from pathlib import Path
+import warnings
+warnings.filterwarnings("ignore")
 
 DFTpackages = [['n', 'w', 'g', 'z', 'd'],['NWChem', 'NWChemZiggy', 'Gaussian', 'GaussianZiggy', 'GaussianDarwin']]
 
