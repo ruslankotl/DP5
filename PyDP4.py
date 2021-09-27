@@ -557,9 +557,6 @@ def main(settings):
 
         import pickle
 
-        quit()
-
-
         print("/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p")
 
 
