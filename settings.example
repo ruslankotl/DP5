@@ -16,4 +16,4 @@ NWChemPath=nwchem
 
 # Path to Gaussian executable. If it's in the path, can be just g09 or g16
 # If left empty, it will attempt to use g09 in GAUS_EXEDIR environment variable
-GausPath=
+
