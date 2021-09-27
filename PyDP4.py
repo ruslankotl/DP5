@@ -113,7 +113,7 @@ class Settings:
 
     # --- DFT ---
     NWChemPath = "nwchem"  # Path to nwchem executable. If it's in the path, can be just 'nwchem'
-    GausPath = "/usr/local/shared/gaussian/amd64_sse4/09-E01/g09"  # Path to Gaussian executable. If it's in the path, can be just 'g09' or 'g16'
+    GausPath = "/usr/local/shared/gaussian/amd64_sse4/09-E01/g09/l301.exe"  # Path to Gaussian executable. If it's in the path, can be just 'g09' or 'g16'
     # If left empty, it will attempt to use g09 in GAUS_EXEDIR environment variable
     MaxDFTOptCycles = 50  # Max number of DFT geometry optimization cycles to request.
     CalcFC = False  # Calculate QM force constants before optimization
