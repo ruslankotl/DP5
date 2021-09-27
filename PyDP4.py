@@ -367,8 +367,6 @@ def main(settings):
             for iso in Isomers:
                 print(iso.InputFile + ": " + str(iso.DFTEnergies))
 
-
-
     else:
         # Read DFT optimized geometries, if requested
         if ('o' in settings.Workflow):

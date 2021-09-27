@@ -658,21 +658,11 @@ def predict_Exp_shifts(Settings, Isomers):
 
         #if we've done MM her use this geom
 
-        if 'm' in Settings.Workflow:
-
-            conf = m.GetConformer(0)
-
-            for  j , atom_coords in enumerate(geom):
-
-                conf.SetAtomPosition(j, Point3D(float(atom_coords[0]), float(atom_coords[1]), float(atom_coords[2])))
-
         #else use rdkit optimisation
 
-        else:
+        AllChem.EmbedMolecule(m, useRandomCoords=True)
 
-            AllChem.EmbedMolecule(m, useRandomCoords=True)
-
-            AllChem.MMFFOptimizeMolecule(m)
+        AllChem.MMFFOptimizeMolecule(m)
 
         inds = []
 
