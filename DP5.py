@@ -652,8 +652,6 @@ def predict_Exp_shifts(Settings, Isomers):
 
         # make rdkit mol for each conformer
 
-        geom = iso.Conformers[0]
-
         m = Chem.MolFromMolFile(str(InputFile) + ".sdf", removeHs=False)
 
         #if we've done MM her use this geom
