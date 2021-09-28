@@ -150,6 +150,9 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
                 conf_data = iso.Conformers
 
+
+                print("conf" , conf_data)
+
             for i, geom in enumerate(conf_data):
 
                 m = Chem.MolFromMolFile(str(InputFile) + ".sdf", removeHs=False)
@@ -193,13 +196,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
             dp5Data.ErrorAtomReps.append(CNN_model.extract_Error_reps(model, iso_df, Settings))
 
-
-
         else:
-
-            print(iso_df)
-
-
 
             dp5Data.ExpAtomReps.append(CNN_model.extract_Exp_reps(model, iso_df, Settings))
 
