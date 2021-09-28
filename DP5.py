@@ -146,7 +146,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
                 conf_data = iso.DFTConformers
 
-            elif "m" in Settings:
+            elif "m" in Settings.Workflow:
 
                 conf_data = iso.Conformers
 
