@@ -321,8 +321,6 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
 
         pool = mp.Pool(maxproc)
 
-
-
         if len(ConfCshifts) > 0:
 
             conf_shifts = ConfCshifts[iso]
@@ -336,9 +334,6 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
         for shifts , conf_reps in zip(conf_shifts , AtomReps[iso])  :
 
 
-
-
-
             res[ind1] = pool.apply_async(kde_probfunction,
                                          [conf_shifts[ind1],conf_reps,Cexp[iso]])
 
@@ -347,6 +342,10 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
         for ind1 in range(len(res)):
 
             AtomProbs[iso][ind1] = res[ind1].get()
+
+
+
+    print("AtomProbs" , AtomProbs)
 
     return AtomProbs
 
