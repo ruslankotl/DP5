@@ -126,7 +126,10 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
                 dp5Data.Cscaled.append(dp5Data.Cshifts[iso])
 
-    for iso in Isomers:
+
+
+
+    for iso_ind , iso in enumerate(Isomers):
 
         InputFile = Path(iso.InputFile)
 
@@ -140,14 +143,16 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
         else:
 
+            conf_data = []
+
             if "o" in Settings.Workflow:
 
                 conf_data = iso.DFTConformers
 
-            else:
+            elif "m" in Settings:
 
                 conf_data = iso.Conformers
-
+            
             for i, geom in enumerate(conf_data):
 
                 m = Chem.MolFromMolFile(str(InputFile) + ".sdf", removeHs=False)
@@ -155,9 +160,11 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
                 conf = m.GetConformer(0)
 
                 for j, atom_coords in enumerate(geom):
-                    conf.SetAtomPosition(j, Point3D(float(atom_coords[0]), float(atom_coords[1]), float(atom_coords[2])))
+                    conf.SetAtomPosition(j, Point3D(float(atom_coords[0]), float(atom_coords[1]),
+                                                    float(atom_coords[2])))
 
                 dp5Data.Mols[-1].append(m)
+
 
     # make pandas df to go into CNN predicting model
 

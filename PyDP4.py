@@ -213,7 +213,7 @@ def main(settings):
 
     # Clean up input files if c in workflow - this generates a new set of 3d coordinates as a starting point
 
-    if 'c' in settings.Workflow and len(settings.InputFiles) > 0:
+    if 'c' in settings.Workflow or ("m" not in settings.Workflow and "o" not in settings.Workflow)  and len(settings.InputFiles) > 0:
         import StructureInput
 
         # if requested generate 3d coordinates to define any stereochemistry
@@ -403,7 +403,6 @@ def main(settings):
 
             iso.Cshifts = cshifts
             iso.Clabels = clabels
-
 
 
     if ('s' in settings.Workflow) or ('w' in settings.Workflow) or ("a" in settings.Workflow):
