@@ -150,9 +150,6 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
                 conf_data = iso.Conformers
 
-
-                print("conf" , conf_data)
-
             for i, geom in enumerate(conf_data):
 
                 m = Chem.MolFromMolFile(str(InputFile) + ".sdf", removeHs=False)
