@@ -343,10 +343,6 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
 
             AtomProbs[iso][ind1] = res[ind1].get()
 
-
-
-    print("AtomProbs" , AtomProbs)
-
     return AtomProbs
 
 
@@ -664,6 +660,8 @@ def predict_Exp_shifts(Settings, Isomers):
         AllChem.MMFFOptimizeMolecule(m)
 
         Isomers[i].Mols.append(m)
+
+        Isomers[i].Populations.append(1)
 
         inds = []
 
