@@ -301,7 +301,7 @@ def main(settings):
                   str(iso.RMSDCutoff) + 'A RMSD cutoff')
 
     if ('n' in settings.Workflow) or ('o' in settings.Workflow) \
-            or ('e' in settings.Workflow) or settings.AssumeDone:
+            or ('e' in settings.Workflow):
         DFT = ImportDFT(settings.DFT)
     else:
         print('\nNo DFT calculations were requested. Skipping...')
