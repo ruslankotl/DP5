@@ -197,6 +197,10 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
         else:
 
+            print(iso_df)
+
+
+
             dp5Data.ExpAtomReps.append(CNN_model.extract_Exp_reps(model, iso_df, Settings))
 
     return dp5Data
