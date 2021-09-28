@@ -397,7 +397,7 @@ def main(settings):
 
         #predict NMR shifts with an ML model instead
 
-        Cshifts , Clabels =  DP5.predict_Exp_shifts(settings,Isomers)
+        Cshifts , Clabels, Isomers =  DP5.predict_Exp_shifts(settings,Isomers)
 
         for iso , cshifts,clabels in zip(Isomers,Cshifts,Clabels):
 

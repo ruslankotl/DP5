@@ -686,4 +686,4 @@ def predict_Exp_shifts(Settings, Isomers):
 
     shifts = CNN_model.predict_shifts(Exp_model, iso_df ,Settings)
 
-    return shifts,labels
+    return shifts,labels,Isomers
