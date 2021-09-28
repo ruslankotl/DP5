@@ -371,17 +371,17 @@ def main(settings):
         # Read DFT optimized geometries, if requested
         if ('o' in settings.Workflow):
             Isomers = DFT.GetPrerunOptCalcs(Isomers)
+            Isomers = DFT.ReadGeometries(Isomers, settings)
+
         if ('e' in settings.Workflow):
             Isomers = DFT.GetPrerunECalcs(Isomers)
+            Isomers = DFT.ReadEnergies(Isomers, settings)
+
         if ('n' in settings.Workflow):
             Isomers = DFT.GetPrerunNMRCalcs(Isomers)
-
-        Isomers = DFT.ReadGeometries(Isomers, settings)
-
-        # Read DFT NMR data, if requested
-        if ('n' in settings.Workflow):
             Isomers = DFT.ReadShieldings(Isomers)
-            Isomers = DFT.ReadEnergies(Isomers, settings)
+
+
 
     if ('n' in settings.Workflow):
 
