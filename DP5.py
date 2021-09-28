@@ -126,9 +126,6 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
                 dp5Data.Cscaled.append(dp5Data.Cshifts[iso])
 
-
-
-
     for iso_ind , iso in enumerate(Isomers):
 
         InputFile = Path(iso.InputFile)
@@ -661,13 +658,13 @@ def predict_Exp_shifts(Settings, Isomers):
 
         m = Chem.MolFromMolFile(str(InputFile) + ".sdf", removeHs=False)
 
-        #if we've done MM her use this geom
-
         #else use rdkit optimisation
 
         AllChem.EmbedMolecule(m, useRandomCoords=True)
 
         AllChem.MMFFOptimizeMolecule(m)
+
+        Isomers[i].Mols.append(m)
 
         inds = []
 
