@@ -11,7 +11,6 @@ import pickle
 
 # Define Keras model
 
-
 from tensorflow.keras.layers import (Input, Embedding, Dense, BatchNormalization, Dropout,
                                  Concatenate, Multiply, Add,concatenate)
 
@@ -22,10 +21,13 @@ from nfp.preprocessing import MolPreprocessor, GraphSequence
 from nfp.layers import (MessageLayer, GRUStep, Squeeze, EdgeNetwork,
                                ReduceAtomToMol, ReduceBondToAtom,
                                GatherAtomToBond, ReduceAtomToPro)
+
 from nfp.models import GraphModel
 
 from pathlib import Path
 
+
+'''
 def rbf_expansion(distances, mu=0, delta=0.1, kmax=256):
     k = np.arange(0, kmax)
     logits = -(np.atleast_2d(distances).T - (-mu + delta * k)) ** 2 / delta
@@ -53,7 +55,6 @@ class RBFSequence(GraphSequence):
         del batch_data['distance']
 
         return batch_data
-
 
 def Mol_iter(dfr):
 
@@ -260,3 +261,4 @@ def predict_shifts(model,test,Settings):
 
 
 
+'''
