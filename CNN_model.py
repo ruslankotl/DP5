@@ -98,7 +98,7 @@ def build_model(Settings,model_type):
 
     # Construct input sequences
 
-    #preprocessor = pickle.load(open(Path(Settings.ScriptDir)/"mean_model_preprocessor.p","rb"))
+    preprocessor = pickle.load(open(Path(Settings.ScriptDir)/"mean_model_preprocessor.p","rb"))
 
     # Raw (integer) graph inputs
     atom_index = Input(shape=(1,), name='atom_index', dtype='int32')
@@ -168,7 +168,7 @@ def extract_Error_reps(model,test,Settings):
 
     test_sequence = RBFSequence(inputs_test, test.atom_index, batch_size)
 
-    pca = pickle.load(open(Path(Settings.ScriptDir) / "pca_10_ERRORrep_Error_decomp.p", "rb"))
+    #pca = pickle.load(open(Path(Settings.ScriptDir) / "pca_10_ERRORrep_Error_decomp.p", "rb"))
 
     reps = []
 
