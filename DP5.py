@@ -113,7 +113,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
                 dp5Data.Cscaled.append(dp5Data.Cshifts[iso])
 
-        
+
     for iso_ind , iso in enumerate(Isomers):
 
         dp5Data.CMAE.append(np.mean(np.array(dp5Data.Cshifts[iso_ind]) - np.array(dp5Data.Cexp[iso_ind])))
@@ -395,6 +395,8 @@ def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type,CMAE):
 
         DP5probs = []
 
+        print("CMAE" , CMAE)
+
         for iso in range(0, len(Mol_probs)):
 
             if CMAE[iso] < 2:
@@ -408,7 +410,7 @@ def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type,CMAE):
 
                 DP5AtomProbs[iso] = BAtomProbs[iso]
 
-                DP5probs[iso] = Mol_probs[iso]
+                DP5probs.append(Mol_probs[iso])
 
     else:
 
