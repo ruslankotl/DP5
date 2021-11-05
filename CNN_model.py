@@ -129,12 +129,12 @@ def build_model(Settings,model_type):
 
     trans_model_name = "NMRdb-CASCADEset_"+ model_type +"_mean_model_atom_features256.hdf5"
 
-    trans_model = load_model( str(Path(Settings.ScriptDir) /  trans_model_name), custom_objects={'GraphModel': GraphModel,
-                                                 'Squeeze': Squeeze,
-                                                 'GatherAtomToBond': GatherAtomToBond,
-                                                 'ReduceBondToAtom': ReduceBondToAtom,
-                                                 'ReduceAtomToPro': ReduceAtomToPro})
-
+    #trans_model = load_model( str(Path(Settings.ScriptDir) /  trans_model_name), custom_objects={'GraphModel': GraphModel,
+      #                                           'Squeeze': Squeeze,
+     #                                            'GatherAtomToBond': GatherAtomToBond,
+       #                                          'ReduceBondToAtom': ReduceBondToAtom,
+ #                                                'ReduceAtomToPro': ReduceAtomToPro})
+#
     model = GraphModel([
         atom_index, atom_types, distance_rbf, connectivity, n_pro], [atom_state])
 
@@ -168,7 +168,7 @@ def extract_Error_reps(model,test,Settings):
 
     test_sequence = RBFSequence(inputs_test, test.atom_index, batch_size)
 
-    #pca = pickle.load(open(Path(Settings.ScriptDir) / "pca_10_ERRORrep_Error_decomp.p", "rb"))
+    pca = pickle.load(open(Path(Settings.ScriptDir) / "pca_10_ERRORrep_Error_decomp.p", "rb"))
 
     reps = []
 
