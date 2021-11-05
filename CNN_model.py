@@ -232,7 +232,7 @@ def build_Exp_predicting_model(Settings):
     model.compile()
 
     return model
-'''
+
 def predict_shifts(model,test,Settings):
 
     batch_size = 1
@@ -255,3 +255,4 @@ def predict_shifts(model,test,Settings):
 
     return iso_shifts
 
+'''
