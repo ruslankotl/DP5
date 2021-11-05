@@ -52,7 +52,7 @@ class RBFSequence(GraphSequence):
         del batch_data['distance']
 
         return batch_data
-'''
+
 
 def Mol_iter(dfr):
 
@@ -66,7 +66,7 @@ def Mol_iter2(df):
 
 def atomic_number_tokenizer(atom):
     return atom.GetAtomicNum()
-
+    
 def message_block(atom_features,atom_state, bond_state, connectivity):
     atom_state = Dense(atom_features, use_bias=False)(atom_state)
 
@@ -95,7 +95,7 @@ def message_block(atom_features,atom_state, bond_state, connectivity):
     atom_state = Add()([atom_state, messages])
 
     return atom_state, bond_state
-
+'''
 def build_model(Settings,model_type):
 
     # Construct input sequences
