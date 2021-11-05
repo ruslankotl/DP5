@@ -14,7 +14,7 @@ except ImportError:
     from openbabel import *
 
 import pandas as pd
-import CNN_model
+#import CNN_model
 
 c_distance = 4.532297920317418
 
