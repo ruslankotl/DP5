@@ -22,7 +22,7 @@ from nfp.layers import ( Squeeze,ReduceBondToAtom,GatherAtomToBond, ReduceAtomTo
 
 from nfp.models import GraphModel
 
-#from pathlib import Path
+from pathlib import Path
 
 def rbf_expansion(distances, mu=0, delta=0.1, kmax=256):
     k = np.arange(0, kmax)
@@ -98,7 +98,7 @@ def build_model(Settings,model_type):
 
     # Construct input sequences
 
-    preprocessor = pickle.load(open(Path(Settings.ScriptDir)/"mean_model_preprocessor.p","rb"))
+    #preprocessor = pickle.load(open(Path(Settings.ScriptDir)/"mean_model_preprocessor.p","rb"))
 
     # Raw (integer) graph inputs
     atom_index = Input(shape=(1,), name='atom_index', dtype='int32')
