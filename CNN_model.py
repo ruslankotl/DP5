@@ -218,7 +218,7 @@ def extract_Exp_reps(model,test,Settings):
     #do pca on the reps
 
     return reps
-'''
+
 def build_Exp_predicting_model(Settings):
 
     filepath = "NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5"
@@ -232,7 +232,7 @@ def build_Exp_predicting_model(Settings):
     model.compile()
 
     return model
-
+'''
 def predict_shifts(model,test,Settings):
 
     batch_size = 1
