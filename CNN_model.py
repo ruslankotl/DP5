@@ -18,14 +18,15 @@ from tensorflow.keras.layers import (Input, Embedding, Dense,
 from tensorflow.keras.models import  load_model
 
 
-from nfp.preprocessing import  GraphSequence
+#from nfp.preprocessing import  GraphSequence
+
 #from nfp.layers import ( Squeeze,ReduceBondToAtom,GatherAtomToBond, ReduceAtomToPro)
 
 #from nfp.models import GraphModel
 
 #from pathlib import Path
 
-
+GraphSequence = []
 
 def rbf_expansion(distances, mu=0, delta=0.1, kmax=256):
     k = np.arange(0, kmax)
