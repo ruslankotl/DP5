@@ -1,3 +1,4 @@
+'''
 import numpy as np
 from numpy.random import seed
 
@@ -255,4 +256,3 @@ def predict_shifts(model,test,Settings):
 
     return iso_shifts
 
-'''
