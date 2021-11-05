@@ -513,7 +513,7 @@ def main(settings):
 
                 DP5data.DP5_Error_probs, DP5data.B_ErrorAtomProbs = DP5.Rescale_DP5(DP5data.Mol_Error_probs,
                                                                                      DP5data.B_ErrorAtomProbs, settings,
-                                                                                     "Error")
+                                                                                     "Error",DP5data.CMAE)
 
 
 
@@ -528,7 +528,7 @@ def main(settings):
                 DP5data.Mol_Exp_probs = DP5.Calculate_DP5(DP5data.B_ExpAtomProbs)
                 DP5data.DP5_Exp_probs, DP5data.DP5ExpAtomProbs = DP5.Rescale_DP5(DP5data.Mol_Exp_probs,
                                                                                  DP5data.B_ExpAtomProbs, settings,
-                                                                                 "Exp")
+                                                                                 "Exp",DP5data.CMAE)
 
                 final_ps = DP5data.DP5_Exp_probs
 
