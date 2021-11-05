@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.random import seed
 
-seed(1)
+#seed(1)
 
 #from tensorflow.random import set_seed
 
@@ -11,23 +11,21 @@ import pickle
 
 # Define Keras model
 
-from tensorflow.keras.layers import (Input, Embedding, Dense, BatchNormalization, Dropout,
-                                 Concatenate, Multiply, Add,concatenate)
+from tensorflow.keras.layers import (Input, Embedding, Dense,
+                                 Concatenate, Multiply, Add)
 
-from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.models import  load_model
 
 
-from nfp.preprocessing import MolPreprocessor, GraphSequence
-from nfp.layers import (MessageLayer, GRUStep, Squeeze, EdgeNetwork,
-                               ReduceAtomToMol, ReduceBondToAtom,
-                               GatherAtomToBond, ReduceAtomToPro)
+from nfp.preprocessing import  GraphSequence
+from nfp.layers import ( Squeeze,ReduceBondToAtom,GatherAtomToBond, ReduceAtomToPro)
 
 from nfp.models import GraphModel
 
 from pathlib import Path
 
 
-'''
+
 def rbf_expansion(distances, mu=0, delta=0.1, kmax=256):
     k = np.arange(0, kmax)
     logits = -(np.atleast_2d(distances).T - (-mu + delta * k)) ** 2 / delta
@@ -256,9 +254,3 @@ def predict_shifts(model,test,Settings):
 
     return iso_shifts
 
-
-
-
-
-
-'''
