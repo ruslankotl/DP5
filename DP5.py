@@ -105,8 +105,6 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
         for iso in range(0, len(Isomers)):
 
-            dp5Data.CMAE.append(np.mean(np.abs(np.array(dp5Data.Cscaled[iso]) - np.array(dp5Data.Cexp[iso]))))
-
             if len(dp5Data.Cshifts[iso]) > 3:
 
                 dp5Data.Cscaled.append(ScaleNMR(dp5Data.Cshifts[iso], dp5Data.Cexp[iso]))
@@ -115,11 +113,12 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
                 dp5Data.Cscaled.append(dp5Data.Cshifts[iso])
 
+            dp5Data.CMAE.append(np.mean(np.abs(np.array(dp5Data.Cscaled[iso]) - np.array(dp5Data.Cexp[iso]))))
+
 
     for iso_ind , iso in enumerate(Isomers):
 
         print("Cscaled" , dp5Data.Cscaled)
-
 
 
         InputFile = Path(iso.InputFile)
