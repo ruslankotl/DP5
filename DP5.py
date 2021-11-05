@@ -113,7 +113,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
                 dp5Data.Cscaled.append(dp5Data.Cshifts[iso])
 
-            dp5Data.CMAE.append(np.mean(np.abs(dp5Data.Cshifts[iso] -  dp5Data.Cexp[iso])))
+            dp5Data.CMAE.append(np.mean(   np.array(dp5Data.Cshifts[iso]) -  np.array(dp5Data.Cexp[iso])))
 
     for iso_ind , iso in enumerate(Isomers):
 
