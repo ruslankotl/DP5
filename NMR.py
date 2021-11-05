@@ -128,17 +128,29 @@ class NMRData:
         self.Omits = omits
 
     def ParseExp(self, exp):
-        # Replace all 'or' and 'OR' with ',', remove all spaces and 'any'
-        texp = re.sub(r"or|OR", ',', exp, flags=re.DOTALL)
-        texp = re.sub(r" |any", '', texp, flags=re.DOTALL)
 
-        # Get all assignments, split mulitassignments
-        expLabels = re.findall(r"(?<=\().*?(?=\)|;)", texp, flags=re.DOTALL)
-        expLabels = [x.split(',') for x in expLabels]
+        if len(exp) > 0:
 
-        # Remove assignments and get shifts
-        ShiftData = (re.sub(r"\(.*?\)", "", exp, flags=re.DOTALL)).split(',')
-        expShifts = [float(x) for x in ShiftData]
+            # Replace all 'or' and 'OR' with ',', remove all spaces and 'any'
+            texp = re.sub(r"or|OR", ',', exp, flags=re.DOTALL)
+            texp = re.sub(r" |any", '', texp, flags=re.DOTALL)
+
+            # Get all assignments, split mulitassignments
+            expLabels = re.findall(r"(?<=\().*?(?=\)|;)", texp, flags=re.DOTALL)
+            expLabels = [x.split(',') for x in expLabels]
+
+            # Remove assignments and get shifts
+
+            ShiftData = (re.sub(r"\(.*?\)", "", exp.strip(), flags=re.DOTALL)).split(',')
+
+            print(ShiftData)
+
+            expShifts = [float(x) for x in ShiftData]
+
+        else:
+
+            expLabels = []
+            expShifts = []
 
         return expLabels, expShifts
 

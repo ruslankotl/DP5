@@ -33,7 +33,7 @@ class DP5data:
         self.Hscaled = []  # Scaled Proton shifts used in DP5 calculation
         self.Hexp = []  # Proton experimental shifts used in DP5 calculation
         self.Hlabels = []  # Proton atom labels
-
+        self.CMAE = [] # Carbon Mean Absolute error
         self.ConfCshifts = []
 
         self.Mols = [] #qml compound objects for each isomer
@@ -81,10 +81,6 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
         exp_inds = []
 
-        #print("iso Cshifts" , iso.Cshifts , len(iso.Cshifts ))
-        #print("iso Cexp", iso.Cexp, len(iso.Cexp))
-        #print("iso Clabels", iso.Clabels, len(iso.Clabels))
-
         for shift, exp, label in zip(iso.Cshifts, iso.Cexp, iso.Clabels):
 
             if exp != '':
@@ -97,20 +93,11 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
             a_ind += 1
 
-        #print("len conf", len(iso.ConformerCShifts))
-
         if len(iso.ConformerCShifts) > 0:
 
             for conf_shifts in iso.ConformerCShifts:
 
                 dp5Data.ConfCshifts[-1].append( [conf_shifts[e] for e in exp_inds])
-
-        #print("dp5Data.Cexp",dp5Data.Cexp[-1] , len(dp5Data.Cexp[-1]))
-        #print("dp5Data.Cshift",dp5Data.Cshifts[-1] , len(dp5Data.Cshifts[-1]))
-        #print("dp5Data.Clabels",dp5Data.Clabels[-1] , len(dp5Data.Clabels[-1]))
-        #print("dp5Data.Cinds",dp5Data.Cinds[-1] , len(dp5Data.Cinds[-1]))
-        #print("dp5Data.Confshift",dp5Data.ConfCshifts[-1] , len(dp5Data.ConfCshifts[-1]))
-        #print()
 
     # if the is nmr data append scaled shifts
 
@@ -125,6 +112,8 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
             else:
 
                 dp5Data.Cscaled.append(dp5Data.Cshifts[iso])
+
+            dp5Data.CMAE.append(np.mean(np.abs(dp5Data.Cshifts[iso], dp5Data.Cexp[iso])))
 
     for iso_ind , iso in enumerate(Isomers):
 
@@ -359,6 +348,10 @@ def BoltzmannWeight_DP5(Isomers,AtomProbs):
 
     for iso,scaled_probs in zip( Isomers, AtomProbs):
 
+
+
+
+
         B_scaled_probs = [0] * len(scaled_probs[0])
 
         for population, conf_scaled_p in zip(iso.Populations, scaled_probs ):
@@ -383,14 +376,9 @@ def Calculate_DP5(BAtomProbs):
     return Molecular_probability
 
 
-def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type):
-
+def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type,CMAE):
 
     if DP5type == "Exp":
-
-        #incorrect_kde = pickle.load(open(Path(Settings.ScriptDir) / "Exp_incorrect_kde.p", "rb"))
-
-        #correct_kde = pickle.load(open(Path(Settings.ScriptDir) / "Exp_correct_kde.p", "rb"))
 
         DP5probs = Mol_probs
 
@@ -402,17 +390,25 @@ def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type):
 
         correct_kde = pickle.load(open(Path(Settings.ScriptDir) / "Error_correct_kde.p" ,"rb"))
 
-        i = 0
+        DP5AtomProbs = [ [] for iso in range(0,len(Mol_probs)) ]
 
-        DP5AtomProbs = [[] for i in range(0, len(BAtomProbs))]
+        DP5probs = []
 
-        for scaled in BAtomProbs:
-            DP5AtomProbs[i] = [float(correct_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in scaled]
+        for iso in range(0, len(Mol_probs)):
 
-            i += 1
 
-        DP5probs = [float(correct_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in
-                    Mol_probs]  # Final DP5S
+            if CMAE[iso] < 2:
+
+                DP5AtomProbs[iso] = [float(correct_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in BAtomProbs[iso]]
+
+                DP5probs.append(float(correct_kde.pdf(Mol_probs[iso]) / (incorrect_kde.pdf(Mol_probs[iso]) + correct_kde.pdf(Mol_probs[iso]))))
+
+
+            else:
+
+                DP5AtomProbs[iso] = BAtomProbs[iso]
+
+                DP5probs[iso] = Mol_probs[iso]
 
     else:
 
@@ -420,9 +416,8 @@ def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type):
 
         DP5AtomProbs = []
 
-
-
     return DP5probs, DP5AtomProbs
+
 
 
 def Pickle_res(dp5Data,Settings):

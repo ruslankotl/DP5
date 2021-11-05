@@ -192,7 +192,6 @@ class Isomer:
 
 def main(settings):
 
-
     print("Current working directory: " + os.getcwd())
     print("Initial input files: " + str(settings.InputFiles))
     print("NMR file: " + str(settings.NMRsource))
@@ -381,8 +380,6 @@ def main(settings):
             Isomers = DFT.GetPrerunNMRCalcs(Isomers)
             Isomers = DFT.ReadShieldings(Isomers)
 
-
-
     if ('n' in settings.Workflow):
 
         print('\nSetting TMS computational NMR shielding constant references')
@@ -391,7 +388,6 @@ def main(settings):
         print('\nConverting DFT data to NMR shifts...')
         Isomers = NMR.CalcBoltzmannWeightedShieldings(Isomers)
         Isomers = NMR.CalcNMRShifts(Isomers, settings)
-
 
     elif ('s' in settings.Workflow) or ('w' in settings.Workflow):
 
@@ -404,9 +400,7 @@ def main(settings):
             iso.Cshifts = cshifts
             iso.Clabels = clabels
 
-
     if ('s' in settings.Workflow) or ('w' in settings.Workflow) or ("a" in settings.Workflow):
-
 
         print('\nReading experimental NMR data...')
         NMRData = NMR.NMRData(settings)
