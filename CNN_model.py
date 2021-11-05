@@ -95,7 +95,8 @@ def message_block(atom_features,atom_state, bond_state, connectivity):
     atom_state = Add()([atom_state, messages])
 
     return atom_state, bond_state
-'''
+
+
 def build_model(Settings,model_type):
 
     # Construct input sequences
@@ -159,7 +160,7 @@ def build_model(Settings,model_type):
             model_layer.set_weights(trans_layer.get_weights())
 
     return model
-
+'''
 def extract_Error_reps(model,test,Settings):
 
     batch_size = 1
