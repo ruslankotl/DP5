@@ -396,7 +396,6 @@ def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type,CMAE):
 
         for iso in range(0, len(Mol_probs)):
 
-
             if CMAE[iso] < 2:
 
                 DP5AtomProbs[iso] = [float(correct_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in BAtomProbs[iso]]
