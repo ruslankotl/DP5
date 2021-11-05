@@ -12,8 +12,8 @@ import pickle
 
 # Define Keras model
 
-#from tensorflow.keras.layers import (Input, Embedding, Dense,
- #                                Concatenate, Multiply, Add)
+from tensorflow.keras.layers import (Input, Embedding, Dense,
+                                 Concatenate, Multiply, Add)
 
 #from tensorflow.keras.models import  load_model
 
