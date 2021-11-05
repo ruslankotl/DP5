@@ -24,6 +24,7 @@ from nfp.models import GraphModel
 
 from pathlib import Path
 
+'''
 def rbf_expansion(distances, mu=0, delta=0.1, kmax=256):
     k = np.arange(0, kmax)
     logits = -(np.atleast_2d(distances).T - (-mu + delta * k)) ** 2 / delta
@@ -51,6 +52,7 @@ class RBFSequence(GraphSequence):
         del batch_data['distance']
 
         return batch_data
+'''
 
 def Mol_iter(dfr):
 
@@ -129,12 +131,12 @@ def build_model(Settings,model_type):
 
     trans_model_name = "NMRdb-CASCADEset_"+ model_type +"_mean_model_atom_features256.hdf5"
 
-    #trans_model = load_model( str(Path(Settings.ScriptDir) /  trans_model_name), custom_objects={'GraphModel': GraphModel,
-      #                                           'Squeeze': Squeeze,
-     #                                            'GatherAtomToBond': GatherAtomToBond,
-       #                                          'ReduceBondToAtom': ReduceBondToAtom,
- #                                                'ReduceAtomToPro': ReduceAtomToPro})
-#
+    trans_model = load_model( str(Path(Settings.ScriptDir) /  trans_model_name), custom_objects={'GraphModel': GraphModel,
+                                                 'Squeeze': Squeeze,
+                                                 'GatherAtomToBond': GatherAtomToBond,
+                                                 'ReduceBondToAtom': ReduceBondToAtom,
+                                                 'ReduceAtomToPro': ReduceAtomToPro})
+
     model = GraphModel([
         atom_index, atom_types, distance_rbf, connectivity, n_pro], [atom_state])
 
