@@ -118,9 +118,6 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
 
     for iso_ind , iso in enumerate(Isomers):
 
-        print("Cscaled" , dp5Data.Cscaled)
-
-
         InputFile = Path(iso.InputFile)
 
         # make rdkit mol for each conformer
@@ -352,10 +349,6 @@ def BoltzmannWeight_DP5(Isomers,AtomProbs):
 
     for iso,scaled_probs in zip( Isomers, AtomProbs):
 
-
-
-
-
         B_scaled_probs = [0] * len(scaled_probs[0])
 
         for population, conf_scaled_p in zip(iso.Populations, scaled_probs ):
@@ -375,7 +368,9 @@ def Calculate_DP5(BAtomProbs):
 
     for scaled_probs in BAtomProbs:
 
-         Molecular_probability.append(gmean([1 - p_si for p_si in scaled_probs]))
+         #Molecular_probability.append(gmean([1 - p_si for p_si in scaled_probs]))
+
+        Molecular_probability.append([1 - p_si for p_si in scaled_probs])
 
     return Molecular_probability
 
@@ -422,7 +417,6 @@ def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type,CMAE):
         DP5AtomProbs = []
 
     return DP5probs, DP5AtomProbs
-
 
 
 def Pickle_res(dp5Data,Settings):
