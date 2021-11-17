@@ -368,24 +368,37 @@ def Calculate_DP5(BAtomProbs):
 
     for scaled_probs in BAtomProbs:
 
-        #Molecular_probability.append(gmean([ 1  - p_si for p_si in scaled_probs]))
-
         #Molecular_probability.append( 1.0 - gmean(scaled_probs))
+
+        Molecular_probability.append(gmean([ 1  - p_si for p_si in scaled_probs]))
 
         #Molecular_probability.append(np.product([1 - p_si for p_si in scaled_probs]))
 
-        Molecular_probability.append( 1 - np.product([ p_si for p_si in scaled_probs]))
+        #Molecular_probability.append( 1 - np.product([ p_si for p_si in scaled_probs]))
 
     return Molecular_probability
+
+def Exp_scaling_function(x):
+
+    # Empirical Scaling Function
+
+    return 0.72 / (1 + np.exp(- 14.14943628 * (x - 0.29854536)))
 
 
 def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type,CMAE):
 
     if DP5type == "Exp":
 
-        DP5probs = Mol_probs
+        DP5AtomProbs = [ [] for iso in range(0,len(Mol_probs)) ]
 
-        DP5AtomProbs = BAtomProbs
+        DP5probs = []
+
+        for iso in range(0, len(Mol_probs)):
+
+            DP5AtomProbs[iso] = [ Exp_scaling_function(x) for x in BAtomProbs[iso]]
+
+            DP5probs.append(float( Exp_scaling_function(Mol_probs[iso]) ))
+
 
     elif DP5type == "Error":
 
