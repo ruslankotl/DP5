@@ -526,6 +526,7 @@ def main(settings):
                 DP5data.B_ExpAtomProbs = DP5.BoltzmannWeight_DP5(Isomers, DP5data.ExpAtomProbs)
 
                 DP5data.Mol_Exp_probs = DP5.Calculate_DP5(DP5data.B_ExpAtomProbs)
+
                 DP5data.DP5_Exp_probs, DP5data.DP5ExpAtomProbs = DP5.Rescale_DP5(DP5data.Mol_Exp_probs,
                                                                                  DP5data.B_ExpAtomProbs, settings,
                                                                                  "Exp",DP5data.CMAE)
