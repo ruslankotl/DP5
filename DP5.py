@@ -370,7 +370,7 @@ def Calculate_DP5(BAtomProbs):
 
         #Molecular_probability.append( 1.0 - gmean(scaled_probs))
 
-        Molecular_probability.append(gmean([ 1  - p_si for p_si in scaled_probs]))
+        Molecular_probability.append(gmean([ p_si for p_si in scaled_probs]))
 
         #Molecular_probability.append(np.product([1 - p_si for p_si in scaled_probs]))
 
