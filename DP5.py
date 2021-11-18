@@ -382,7 +382,7 @@ def Exp_scaling_function(x):
 
     # Empirical Scaling Function
 
-    return 0.72 / (1 + np.exp(- 14.14943628 * (x - 0.29854536)))
+    return 0.72 / (1 + np.exp(- 17.16382728 * (x - 0.28914008)))
 
 
 def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type,CMAE):
