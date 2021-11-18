@@ -397,6 +397,8 @@ def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type,CMAE):
 
             DP5AtomProbs[iso] = [ Exp_scaling_function(x) for x in BAtomProbs[iso]]
 
+            print("helllllllo")
+
             print(Mol_probs[iso])
 
             DP5probs.append(float( Exp_scaling_function(Mol_probs[iso]) ))
