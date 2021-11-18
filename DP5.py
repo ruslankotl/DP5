@@ -357,7 +357,7 @@ def BoltzmannWeight_DP5(Isomers,AtomProbs):
 
                 B_scaled_probs[i] += conf_scaled_p[i] * population
 
-        BAtomProbs.append(B_scaled_probs)
+        BAtomProbs.append([1 - p for p in B_scaled_probs])
 
     return BAtomProbs
 
