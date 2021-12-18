@@ -497,7 +497,6 @@ def main(settings):
             os.mkdir(Path(settings.OutputFolder))
 
         if not os.path.exists(Path(settings.OutputFolder) / 'dp5'):
-
             os.mkdir(Path(settings.OutputFolder) / 'dp5')
 
             DP5data = DP5.ProcessIsomers(DP5data, Isomers, settings)
@@ -515,11 +514,12 @@ def main(settings):
                                                                                      DP5data.B_ErrorAtomProbs, settings,
                                                                                      "Error",DP5data.CMAE)
 
-
-
                 final_ps = DP5data.DP5_Error_probs
 
             else:
+
+
+                print("here")
 
                 DP5data.ExpAtomProbs = DP5.kde_probs(Isomers, settings, "Exp", DP5data.ExpAtomReps, [], DP5data.Cexp)
 
@@ -555,6 +555,8 @@ def main(settings):
 
 
         res_dict = pickle.load( open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "rb+"))
+
+
         res_dict[str(settings.InputFiles[0])] = final_ps
 
         pickle.dump(res_dict, open(  "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "wb+"))
