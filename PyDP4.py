@@ -518,8 +518,6 @@ def main(settings):
 
             else:
 
-                print("here")
-
                 DP5data.ExpAtomProbs = DP5.kde_probs(Isomers, settings, "Exp", DP5data.ExpAtomReps, [], DP5data.Cexp)
 
                 DP5data.B_ExpAtomProbs = DP5.BoltzmannWeight_DP5(Isomers, DP5data.ExpAtomProbs)
@@ -553,7 +551,7 @@ def main(settings):
 
         res_dict = pickle.load( open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "rb+"))
 
-        print("here2")
+
 
         res_dict[str(settings.InputFiles[0])] = final_ps
 
