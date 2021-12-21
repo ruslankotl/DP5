@@ -59,12 +59,12 @@ def SetupTinker(settings):
 
         convinp = sdftinkerxyzpy.main(inpf)
 
-        f = open(inpf + '.key', 'w+')
-        key = f.readlines()
-        key[2] = 'PARAMETERS        ' + settings.TinkerPath + 'params/mmff.prm\n'
-        f.seek(0)
-        f.writelines(key)
-        f.close()
+        #f = open(inpf + '.key', 'w+')
+        #key = f.readlines()
+        #key[2] = 'PARAMETERS        ' + settings.TinkerPath + 'params/mmff.prm\n'
+        #f.seek(0)
+        #f.writelines(key)
+        #f.close()
 
         TinkerInputs.append(inpf)
         print("Tinker input for " + inpf + " prepared.")
