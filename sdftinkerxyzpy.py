@@ -380,7 +380,7 @@ def main(sdf_file):
         for connection in bond_list:
             attached_atoms += "{:>5}".format(str(connection))+" "
 
-        xyz = open(sdf_file + ".xyz")
+        xyz = open(sdf_file + ".xyz","w+")
 
         xyz.write("{:>6} {:>2} {:13.6f} {:11.6f} {:11.6f} {:>5} {}".format(
         atom.GetIdx()+1,
