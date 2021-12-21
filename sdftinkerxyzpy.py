@@ -367,7 +367,7 @@ def main(sdf_file):
 
     xyz = open(sdf_file + ".xyz", "w+")
 
-    xyz.write("{:>6}  {}".format(m.GetNumAtoms(),sdf_file))
+    xyz.write("{:>6}  {}\n".format(m.GetNumAtoms(),sdf_file))
 
     for atom in m.GetAtoms():
 
