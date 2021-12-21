@@ -101,7 +101,7 @@ class Settings:
     Rot5Cycle = False  # Special dealing with 5-membered saturated rings, see FiveConf.py
     RingAtoms = []  # Define the 5-membered ring, useful if several are present in molecule
     SCHRODINGER = ''  # Define the root folder for Schrodinger software
-    TinkerPath = '/home/ah809/tinker/'  # Define the root folder for Tinker software,
+    TinkerPath = '/home/ah809/tinker'  # Define the root folder for Tinker software,
     # must contain bin/scan and params/mmff.prm for the process to work
 
     # --- Conformer pruning ---
