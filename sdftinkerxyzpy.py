@@ -369,8 +369,6 @@ def main(sdf_file):
 
     xyz.write("{:>6}  {}".format(m.GetNumAtoms(),sdf_file))
 
-    xyz.write(m.GetNumAtoms())
-
     for atom in m.GetAtoms():
 
         bond_list = []
