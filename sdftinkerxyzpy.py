@@ -364,9 +364,12 @@ def main(sdf_file):
 
     conf = m.GetConformer()
     mmff_props = AllChem.MMFFGetMoleculeProperties(m)
-    print("{:>6}  {}".format(m.GetNumAtoms(),sys.argv[1]))
 
     xyz = open(sdf_file + ".xyz", "w+")
+
+    xyz.write("{:>6}  {}".format(m.GetNumAtoms(),sdf_file))
+
+    xyz.write(m.GetNumAtoms())
 
     for atom in m.GetAtoms():
 
