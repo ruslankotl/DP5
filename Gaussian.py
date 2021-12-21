@@ -17,7 +17,7 @@ import time
 import glob
 import shutil
 import math
-
+from subprocess import STDOUT, check_output
 gasConstant = 8.3145
 temperature = 298.15
 hartreeEnergy = 2625.499629554010
@@ -311,7 +311,7 @@ def RunCalcs(GausJobs, settings):
     for f in GausJobs:
         time.sleep(3)
         print(GausPrefix + " < " + f + ' > ' + f[:-3] + 'out')
-        outp = subprocess.check_output(GausPrefix + " < "  + f + ' > ' + f[:-3] + 'out', shell=True)
+        outp = subprocess.check_output(GausPrefix + " < "  + f + ' > ' + f[:-3] + 'out', shell=True, stderr=STDOUT, timeout=86400)
 
         NCompleted += 1
         if IsGausCompleted(f[:-4] + '.out'):
