@@ -382,14 +382,14 @@ def main(sdf_file):
 
         xyz = open(sdf_file + ".xyz","w+")
 
-        xyz.write("{:>6} {:>2} {:13.6f} {:11.6f} {:11.6f} {:>5} {}".format(
+        xyz.write("{:>6} {:>2} {:13.6f} {:11.6f} {:11.6f} {:>5} {}\n".format(
         atom.GetIdx()+1,
         atom.GetSymbol(),
         list(conf.GetAtomPosition(atom.GetIdx()))[0],
         list(conf.GetAtomPosition(atom.GetIdx()))[1],
         list(conf.GetAtomPosition(atom.GetIdx()))[2],
         getMMFF_large_atom_type(mmff_props , atom, m ),
-        attached_atoms))
+        attached_atoms) )
 
         xyz.close()
 
