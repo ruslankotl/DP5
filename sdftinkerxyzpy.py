@@ -366,6 +366,8 @@ def main(sdf_file):
     mmff_props = AllChem.MMFFGetMoleculeProperties(m)
     print("{:>6}  {}".format(m.GetNumAtoms(),sys.argv[1]))
 
+    xyz = open(sdf_file + ".xyz", "w+")
+
     for atom in m.GetAtoms():
 
         bond_list = []
@@ -380,7 +382,7 @@ def main(sdf_file):
         for connection in bond_list:
             attached_atoms += "{:>5}".format(str(connection))+" "
 
-        xyz = open(sdf_file + ".xyz","w+")
+
 
         xyz.write("{:>6} {:>2} {:13.6f} {:11.6f} {:11.6f} {:>5} {}\n".format(
         atom.GetIdx()+1,
@@ -391,6 +393,6 @@ def main(sdf_file):
         getMMFF_large_atom_type(mmff_props , atom, m ),
         attached_atoms) )
 
-        xyz.close()
+    xyz.close()
 
 
