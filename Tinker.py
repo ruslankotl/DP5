@@ -59,8 +59,7 @@ def SetupTinker(settings):
 
         convinp = sdftinkerxyzpy.main(inpf)
 
-
-        f = open(inpf + '.key', 'r+')
+        f = open(inpf + '.key', 'w+')
         key = f.readlines()
         key[2] = 'PARAMETERS        ' + settings.TinkerPath + 'params/mmff.prm\n'
         f.seek(0)
