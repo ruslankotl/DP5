@@ -8,7 +8,7 @@ import sys, os
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdForceFieldHelpers
-#from rdkit.Chem import ChemicalForceFields
+from rdkit.Chem import ChemicalForceFields
 
 ###############################################################################
 # atom      1     1   CR       "ALKYL CARBON, SP3"         6      12.000    4
@@ -225,7 +225,7 @@ from rdkit.Chem import rdForceFieldHelpers
 # atom    214    99 MG+2       "MAGNESIUM(+2) CATION"     12      24.305    0
 ###############################################################################
 
-def getMMFF_large_atom_type():
+def getMMFF_large_atom_type(mmff_props , atom, m):
   # Small to large numbers
   small_to_large_list = [[[]],
       [[1]],
@@ -388,7 +388,7 @@ def main(sdf_file):
         list(conf.GetAtomPosition(atom.GetIdx()))[0],
         list(conf.GetAtomPosition(atom.GetIdx()))[1],
         list(conf.GetAtomPosition(atom.GetIdx()))[2],
-        getMMFF_large_atom_type(),
+        getMMFF_large_atom_type(mmff_props , atom, m ),
         attached_atoms))
 
         xyz.close()
