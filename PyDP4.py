@@ -513,8 +513,6 @@ def main(settings):
                                                                                      DP5data.B_ErrorAtomProbs, settings,
                                                                                      "Error",DP5data.CMAE)
 
-                final_ps = DP5data.DP5_Error_probs
-
             else:
 
                 DP5data.ExpAtomProbs = DP5.kde_probs(Isomers, settings, "Exp", DP5data.ExpAtomReps, [], DP5data.Cexp)
@@ -526,8 +524,6 @@ def main(settings):
                 DP5data.DP5_Exp_probs, DP5data.DP5ExpAtomProbs = DP5.Rescale_DP5(DP5data.Mol_Exp_probs,
                                                                                  DP5data.B_ExpAtomProbs, settings,
                                                                                  "Exp",DP5data.CMAE)
-
-                final_ps = DP5data.DP5_Exp_probs
 
             DP5data = DP5.Pickle_res(DP5data, settings)
 
@@ -541,7 +537,7 @@ def main(settings):
 
             f = open("/".join(str(settings.OutputFolder).split("/")[:-1]) + "/abs_mean_max", "a+")
 
-            f.write( str(DP5data.CMAE) + " "  +str(DP5data.CMax) )
+            f.write( str(DP5data.CMAE) + " "  +str(DP5data.CMax)  + "\n")
 
             quit()
 

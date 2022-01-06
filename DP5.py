@@ -442,6 +442,8 @@ def Pickle_res(dp5Data,Settings):
     data_dic = {"Cshifts": dp5Data.Cshifts,
                 "Cscaled": dp5Data.Cscaled,
                 "Cexp": dp5Data.Cexp,
+                "CMAE": dp5Data.CMAE,
+                "CMax": dp5Data.CMax,
                 "Clabels": dp5Data.Clabels,
                 "Hshifts": dp5Data.Hshifts,
                 "Hscaled": dp5Data.Hscaled,
@@ -485,6 +487,8 @@ def UnPickle_res(dp5Data,Settings):
     dp5Data.Cshifts = data_dic["Cshifts"]
     dp5Data.Cscaled = data_dic["Cscaled"]
     dp5Data.Cexp = data_dic["Cexp"]
+    dp5Data.CMAE = data_dic["CMAE"]
+    dp5Data.CMax = data_dic["CMax"]
     dp5Data.Clabels = data_dic["Clabels"]
     dp5Data.Hshifts = data_dic["Hshifts"]
     dp5Data.Hscaled = data_dic["Hscaled"]
