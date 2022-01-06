@@ -34,6 +34,7 @@ class DP5data:
         self.Hexp = []  # Proton experimental shifts used in DP5 calculation
         self.Hlabels = []  # Proton atom labels
         self.CMAE = [] # Carbon Mean Absolute error
+        self.CMax = [] # Carbon Max Absolute error
         self.ConfCshifts = []
 
         self.Mols = [] #qml compound objects for each isomer
@@ -114,7 +115,7 @@ def ProcessIsomers(dp5Data, Isomers, Settings):
                 dp5Data.Cscaled.append(dp5Data.Cshifts[iso])
 
             dp5Data.CMAE.append(np.mean(np.abs(np.array(dp5Data.Cscaled[iso]) - np.array(dp5Data.Cexp[iso]))))
-
+            dp5Data.CMax.append(np.max(np.abs(np.array(dp5Data.Cscaled[iso]) - np.array(dp5Data.Cexp[iso]))))
 
     for iso_ind , iso in enumerate(Isomers):
 

@@ -1,6 +1,6 @@
 import os
 import argparse
-from from pathlib import Path
+from pathlib import Path
 import shutil
 import re
 
@@ -26,7 +26,6 @@ parser = argparse.ArgumentParser()
 
 # The output folder must be specified
 # the input data will be copied to this location and DP5 called from there.
-
 
 parser.add_argument('--InputFile', type=list)
 
@@ -88,3 +87,4 @@ for line in f.readlines():
     line_n +=1
 
 #now run the PyDP4commands
+

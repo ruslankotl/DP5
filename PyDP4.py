@@ -502,7 +502,6 @@ def main(settings):
             DP5data = DP5.ProcessIsomers(DP5data, Isomers, settings)
 
             if "n" in settings.Workflow:
-                # Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp
 
                 DP5data.ErrorAtomProbs = DP5.kde_probs(Isomers, settings, "Error", DP5data.ErrorAtomReps,DP5data.ConfCshifts, DP5data.Cexp)
 
@@ -540,22 +539,15 @@ def main(settings):
 
             DP5data.Output = DP5.MakeOutput( Isomers, settings,DP5data,DP5data.DP5_Error_probs,DP5data.B_ErrorAtomProbs)
 
+            f = open("/".join(str(settings.OutputFolder).split("/")[:-1]) + "/abs_mean_max", "a+")
+
+            f.write( str(DP5data.CMAE) + " "  +str(DP5data.CMax) )
+
+            quit()
+
         else:
 
             DP5data.Output = DP5.MakeOutput( Isomers, settings,DP5data,DP5data.DP5_Exp_probs,DP5data.B_ExpAtomProbs)
-
-        import pickle
-
-
-        print("/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p")
-
-        res_dict = pickle.load( open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "rb+"))
-
-
-
-        res_dict[str(settings.InputFiles[0])] = final_ps
-
-        pickle.dump(res_dict, open(  "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "wb+"))
 
     else:
 
@@ -578,14 +570,6 @@ def main(settings):
             DP4data = DP4.CalcDP4(DP4data)
 
             DP4data = DP4.MakeOutput(DP4data, Isomers, settings)
-
-            import pickle
-
-            res_dict = pickle.load(open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) + "/dp4_run.p", "rb+"))
-
-            res_dict[str(settings.InputFiles[0])] = DP4data.CDP4probs
-
-            pickle.dump(res_dict, open("/".join(str(settings.OutputFolder).split("/" )[:-1])+"/dp4_run.p", "wb+"))
 
     else:
         print('\nNo DP4 analysis requested.')
