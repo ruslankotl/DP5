@@ -513,6 +513,8 @@ def main(settings):
                                                                                      DP5data.B_ErrorAtomProbs, settings,
                                                                                      "Error",DP5data.CMAE)
 
+                final_ps = DP5data.DP5_Error_probs
+
             else:
 
                 DP5data.ExpAtomProbs = DP5.kde_probs(Isomers, settings, "Exp", DP5data.ExpAtomReps, [], DP5data.Cexp)
@@ -524,6 +526,8 @@ def main(settings):
                 DP5data.DP5_Exp_probs, DP5data.DP5ExpAtomProbs = DP5.Rescale_DP5(DP5data.Mol_Exp_probs,
                                                                                  DP5data.B_ExpAtomProbs, settings,
                                                                                  "Exp",DP5data.CMAE)
+
+                final_ps = DP5data.DP5_Exp_probs
 
             DP5data = DP5.Pickle_res(DP5data, settings)
 
@@ -544,6 +548,19 @@ def main(settings):
         else:
 
             DP5data.Output = DP5.MakeOutput( Isomers, settings,DP5data,DP5data.DP5_Exp_probs,DP5data.B_ExpAtomProbs)
+
+        import pickle
+
+
+        print("/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p")
+
+        res_dict = pickle.load( open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "rb+"))
+
+
+
+        res_dict[str(settings.InputFiles[0])] = final_ps
+
+        pickle.dump(res_dict, open(  "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "wb+"))
 
     else:
 
@@ -566,6 +583,14 @@ def main(settings):
             DP4data = DP4.CalcDP4(DP4data)
 
             DP4data = DP4.MakeOutput(DP4data, Isomers, settings)
+
+            import pickle
+
+            res_dict = pickle.load(open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) + "/dp4_run.p", "rb+"))
+
+            res_dict[str(settings.InputFiles[0])] = DP4data.CDP4probs
+
+            pickle.dump(res_dict, open("/".join(str(settings.OutputFolder).split("/" )[:-1])+"/dp4_run.p", "wb+"))
 
     else:
         print('\nNo DP4 analysis requested.')
