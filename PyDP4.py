@@ -539,11 +539,9 @@ def main(settings):
 
             DP5data.Output = DP5.MakeOutput( Isomers, settings,DP5data,DP5data.DP5_Error_probs,DP5data.B_ErrorAtomProbs)
 
-            #f = open("/".join(str(settings.OutputFolder).split("/")[:-1]) + "/abs_mean_max_bayes", "a+")
+            f = open("/".join(str(settings.OutputFolder).split("/")[:-1]) + "/abs_mean_max_bayes", "a+")
 
-            #f.write( str(DP5data.CMAE) + " "  +str(DP5data.CMax)  + "\n")
-
-            #quit()
+            f.write( str(DP5data.CMAE) + " "  +str(DP5data.CMax)  + "\n")
 
         else:
 
