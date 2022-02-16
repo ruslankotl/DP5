@@ -539,9 +539,9 @@ def main(settings):
 
             DP5data.Output = DP5.MakeOutput( Isomers, settings,DP5data,DP5data.DP5_Error_probs,DP5data.B_ErrorAtomProbs)
 
-            f = open("/".join(str(settings.OutputFolder).split("/")[:-1]) + "/abs_mean_max_bayes", "a+")
+            #f = open("/".join(str(settings.OutputFolder).split("/")[:-1]) + "/abs_mean_max_bayes", "a+")
 
-            f.write( str(DP5data.CMAE) + " "  +str(DP5data.CMax)  + "\n")
+            #f.write( str(DP5data.CMAE) + " "  +str(DP5data.CMax)  + "\n")
 
         else:
 
@@ -549,14 +549,21 @@ def main(settings):
 
         import pickle
 
-
         print("/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p")
 
         res_dict = pickle.load( open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "rb+"))
 
-        res_dict[str(settings.InputFiles[0])] = final_ps
+        if settings.NMRsource == "S13a_NMR":
 
-        pickle.dump(res_dict, open(  "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "wb+"))
+            res_dict[str(settings.InputFiles[0])[0]] = final_ps[0]
+
+            pickle.dump(res_dict, open(  "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "wb+"))
+
+        elif settings.NMRsource == "S13b_NMR":
+
+            res_dict[str(settings.InputFiles[0])[1]] = final_ps[1]
+
+            pickle.dump(res_dict, open("/".join(str(settings.OutputFolder).split("/")[:-1]) + "/dp5_run.p", "wb+"))
 
     else:
 
