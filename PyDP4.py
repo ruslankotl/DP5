@@ -554,7 +554,7 @@ def main(settings):
         res_dict = pickle.load( open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "rb+"))
 
 
-        print(NMRData.InputPath.name)
+        print(NMRData.InputPath[0].name)
 
         quit()
 
