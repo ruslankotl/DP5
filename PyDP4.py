@@ -553,22 +553,16 @@ def main(settings):
 
         res_dict = pickle.load( open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "rb+"))
 
-
-        print(NMRData.InputPath[0].name)
-
-        quit()
-
         if settings.NMRsource == "S13a_NMR":
 
-            res_dict[str(settings.InputFiles[0])[0]] = final_ps[0]
+            res_dict[str(settings.InputFiles[0])][0] = final_ps[0]
 
-            pickle.dump(res_dict, open(  "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "wb+"))
 
         elif settings.NMRsource == "S13b_NMR":
 
-            res_dict[str(settings.InputFiles[0])[1]] = final_ps[1]
+            res_dict[str(settings.InputFiles[0])][1] = final_ps[1]
 
-            pickle.dump(res_dict, open("/".join(str(settings.OutputFolder).split("/")[:-1]) + "/dp5_run.p", "wb+"))
+        pickle.dump(res_dict, open("/".join(str(settings.OutputFolder).split("/")[:-1]) + "/dp5_run.p", "wb+"))
 
     else:
 
@@ -596,7 +590,12 @@ def main(settings):
 
             res_dict = pickle.load(open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) + "/dp4_run.p", "rb+"))
 
-            res_dict[str(settings.InputFiles[0])] = DP4data.CDP4probs
+            if settings.NMRsource == "S13a_NMR":
+
+                res_dict[str(settings.InputFiles[0])][0] = DP4data.CDP4probs[0]
+
+            if settings.NMRsource == "S13b_NMR":
+                res_dict[str(settings.InputFiles[0])][1] = DP4data.CDP4probs[1]
 
             pickle.dump(res_dict, open("/".join(str(settings.OutputFolder).split("/" )[:-1])+"/dp4_run.p", "wb+"))
 
