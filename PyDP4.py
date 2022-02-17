@@ -553,6 +553,10 @@ def main(settings):
 
         res_dict = pickle.load( open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "rb+"))
 
+        print(settings.NMRsource)
+
+        quit()
+
         if settings.NMRsource == "S13a_NMR":
 
             print("helllllllllloooooooooooooooo")
