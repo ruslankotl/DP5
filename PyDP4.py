@@ -549,24 +549,11 @@ def main(settings):
 
         import pickle
 
-        print("/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p")
-
         res_dict = pickle.load( open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "rb+"))
 
         if settings.NMRsource[0].name == "S13a_NMR":
 
-            print("helllllllllloooooooooooooooo")
-
-            print(settings.NMRsource)
-
-            print(str(settings.InputFiles[0]))
-
-            print([ final_ps[0]])
-
             res_dict[str(settings.InputFiles[0])] = [ final_ps[0]]
-
-            quit()
-
 
         elif settings.NMRsource[0].name == "S13b_NMR":
 
