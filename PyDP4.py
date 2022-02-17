@@ -541,7 +541,7 @@ def main(settings):
 
             f = open("/".join(str(settings.OutputFolder).split("/")[:-1]) + "/abs_mean_max_bayes", "a+")
 
-            f.write( str(DP5data.CMAE) + " "  +str(DP5data.CMax)  + "\n")
+            f.write( str(settings.NMRsource[0].name)+ " "+str(DP5data.CMAE) + " "  +str(DP5data.CMax)  + "\n")
 
             quit()
 
