@@ -404,15 +404,15 @@ def Rescale_DP5(Mol_probs,BAtomProbs,Settings,DP5type,CMAE):
 
             #DP5probs.append(float( Exp_scaling_function(Mol_probs[iso]) ))
 
-            #DP5AtomProbs[iso] = [ x for x in BAtomProbs[iso]]
+            DP5AtomProbs[iso] = [ x for x in BAtomProbs[iso]]
 
-            #DP5probs.append(float( Mol_probs[iso]) )
+            DP5probs.append(float( Mol_probs[iso]) )
 
-            DP5AtomProbs[iso] = [float(correct_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in
-                                 BAtomProbs[iso]]
+            #DP5AtomProbs[iso] = [float(correct_kde.pdf(x) / (incorrect_kde.pdf(x) + correct_kde.pdf(x))) for x in
+             #                    BAtomProbs[iso]]
 
-            DP5probs.append(float(correct_kde.pdf(Mol_probs[iso]) / (
-                        incorrect_kde.pdf(Mol_probs[iso]) + correct_kde.pdf(Mol_probs[iso]))))
+            #DP5probs.append(float(correct_kde.pdf(Mol_probs[iso]) / (
+             #           incorrect_kde.pdf(Mol_probs[iso]) + correct_kde.pdf(Mol_probs[iso]))))
 
 
 
