@@ -555,7 +555,17 @@ def main(settings):
 
         if settings.NMRsource == "S13a_NMR":
 
+            print("helllllllllloooooooooooooooo")
+
+            print(settings.NMRsource)
+
+            print(str(settings.InputFiles[0]))
+
+            print([ final_ps[0]])
+
             res_dict[str(settings.InputFiles[0])] = [ final_ps[0]]
+
+            quit()
 
 
         elif settings.NMRsource == "S13b_NMR":
