@@ -19,8 +19,6 @@ def GenerateSDFFromTxt(InputFile,inp_type):
 
     cwd = os.getcwd()
 
-    InputFile
-
     if os.path.exists(os.path.join(cwd, InputFile)):
 
         fullf = os.path.join(cwd, InputFile)
@@ -100,6 +98,8 @@ def GenerateSDFFromTxt(InputFile,inp_type):
 
         print('unrecognised')
 
+    f.close()
+
     GeneratedFiles = GenerateSDFFromMols(Mols,inp_type )
 
     return GeneratedFiles
@@ -114,7 +114,7 @@ def GenerateSDFFromMols(mols,inp_type):
 
         m = AllChem.AddHs(m, addCoords=True)
 
-        AllChem.EmbedMolecule(m)
+        AllChem.EmbedMolecule(m, randomSeed=42)
 
         AllChem.MMFFOptimizeMolecule(m)
 
@@ -152,7 +152,7 @@ def CleanUp(InputFiles):
 
         m = AllChem.AddHs(m, addCoords=True)
 
-        AllChem.EmbedMolecule(m)
+        AllChem.EmbedMolecule(m, randomSeed=42)
 
         AllChem.MMFFOptimizeMolecule(m)
 

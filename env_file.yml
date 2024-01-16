@@ -1,0 +1,25 @@
+name: dp5_cascade
+channels:
+  - anaconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python==3.10
+  - pip
+  - pip:
+    - tensorflow[and-cuda]==2.14
+    - nvidia-tensorrt
+    - keras
+    - scipy<1.10
+    - numpy
+    - matplotlib
+    - multiprocess
+    - scikit-learn
+    - nmrglue
+    - statsmodels
+    - lmfit
+    - openbabel-wheel
+    - pathos
+    - pandas
+    - rdkit
+    - tqdm

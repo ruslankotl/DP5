@@ -1,3 +1,9 @@
 *.pyc
 .idea
 venv
+smiles_test
+AT1
+*.log
+S3
+__pycache__
+

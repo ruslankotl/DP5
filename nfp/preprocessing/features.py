@@ -1,13 +1,13 @@
 class Tokenizer(object):
     """ A class to turn arbitrary inputs into integer classes. """
-    
+
     def __init__(self):
         # the default class for an unseen entry during test-time
         self._data = {'unk': 1}
         self.num_classes = 1
         self.train = True
         self.unknown = []
-    
+
     def __call__(self, item):
         """ Check to see if the Tokenizer has seen `item` before, and if so,
         return the integer class associated with it. Otherwise, if we're
@@ -27,7 +27,7 @@ class Tokenizer(object):
                 # Record the unknown item, then return the unknown label
                 self.unknown += [item]
                 return self._data['unk']
-                
+
     def _add_token(self, item):
         self.num_classes += 1
         self._data[item] = self.num_classes
@@ -45,6 +45,9 @@ def get_ring_size(obj, max_size=12):
                 return i
         else:
             return 'max'
+
+def atom_features(atom):
+    return atom.GetAtomicNum()
 
 
 def atom_features_v1(atom):
@@ -68,18 +71,15 @@ def atom_features_v2(atom):
              'GetNumImplicitHs', 'GetNumRadicalElectrons', 'GetSymbol',
              'GetTotalDegree', 'GetTotalNumHs', 'GetTotalValence']
 
-    atom_type = [getattr(atom, prop)() for prop in props] 
+    atom_type = [getattr(atom, prop)() for prop in props]
     atom_type += [get_ring_size(atom)]
 
     return str(tuple(atom_type))
 
-def atom_features(atom):
-    return atom.GetAtomicNum()
-
 
 def bond_features_v1(bond, **kwargs):
     """ Return an integer hash representing the bond type.
-    
+
     flipped : bool
         Only valid for 'v3' version, whether to swap the begin and end atom types
 
@@ -126,5 +126,3 @@ def bond_features_v3(bond, flipped=False):
         bond.GetEndAtom().GetSymbol(),
         start_atom,
         end_atom))
-
-

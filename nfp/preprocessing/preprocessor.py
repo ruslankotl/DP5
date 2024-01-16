@@ -7,8 +7,8 @@ from scipy.linalg import eigh
 from rdkit import Chem
 from rdkit.Chem import MolFromSmiles, MolToSmiles, AddHs
 
-from nfp.preprocessing import features
-from nfp.preprocessing.features import Tokenizer
+from . import features
+from .features import Tokenizer
 import time
 
 
@@ -39,7 +39,7 @@ class SmilesPreprocessor(object):
         self.explicit_hs = explicit_hs
 
         if atom_features is None:
-            atom_features = features.atom_features_v1
+            atom_features = features.atom_features
 
         if bond_features is None:
             bond_features = features.bond_features_v1
@@ -90,7 +90,7 @@ class SmilesPreprocessor(object):
         Returns
         dict with entries
         'n_atom' : number of atoms in the molecule
-        'n_bond' : number of bonds in the molecule 
+        'n_bond' : number of bonds in the molecule
         'atom' : (n_atom,) length list of atom classes
         'bond' : (n_bond,) list of bond classes
         'connectivity' : (n_bond, 2) array of source atom, target atom pairs.
@@ -107,7 +107,7 @@ class SmilesPreprocessor(object):
         # If its an isolated atom, add a self-link
         if n_bond == 0:
             n_bond = 1
-        
+
         atom_feature_matrix = np.zeros(n_atom, dtype='int')
         bond_feature_matrix = np.zeros(n_bond, dtype='int')
         connectivity = np.zeros((n_bond, 2), dtype='int')
@@ -152,7 +152,7 @@ class SmilesPreprocessor(object):
             'bond': bond_feature_matrix,
             'connectivity': connectivity,
         }
-    
+
 
 class ConnectivityAPreprocessor(object):
     """ Given a list of SMILES strings, encode these molecules as atom and
@@ -232,7 +232,7 @@ class ConnectivityAPreprocessor(object):
         Returns
         dict with entries
         'n_atom' : number of atoms in the molecule
-        'n_bond' : number of bonds in the molecule 
+        'n_bond' : number of bonds in the molecule
         'atom' : (n_atom,) length list of atom classes
         'bond' : (n_bond,) list of bond classes
         'connectivity' : (n_bond, 2) array of source atom, target atom pairs.
@@ -249,7 +249,7 @@ class ConnectivityAPreprocessor(object):
         # If its an isolated atom, add a self-link
         if n_bond == 0:
             n_bond = 1
-        
+
         atom_feature_matrix = np.zeros(n_atom, dtype='int')
         bond_feature_matrix = np.zeros(n_bond, dtype='int')
         connectivity = np.zeros((n_bond, 2), dtype='int')
@@ -299,11 +299,11 @@ class MolPreprocessor(SmilesPreprocessor):
     """ I should refactor this into a base class and separate
     SmilesPreprocessor classes. But the idea is that we only need to redefine
     the `construct_feature_matrices` method to have a working preprocessor that
-    handles 3D structures. 
+    handles 3D structures.
 
     We'll pass an iterator of mol objects instead of SMILES strings this time,
     though.
-    
+
     """
 
     def __init__(self, n_neighbors, cutoff, **kwargs):
@@ -328,14 +328,14 @@ class MolPreprocessor(SmilesPreprocessor):
         'bond' : (n_bond,) list of bond classes. 0 for no bond
         'distance' : (n_bond,) list of bond distances
         'connectivity' : (n_bond, 2) array of source atom, target atom pairs.
-            
+
         """
 
         n_atom = len(mol.GetAtoms())
 
         # n_bond is actually the number of atom-atom pairs, so this is defined
         # by the number of neighbors for each atom.
-        #if there is cutoff, 
+        #if there is cutoff,
         distance_matrix = Chem.Get3DDistanceMatrix(mol)
 
         if self.n_neighbors <= (n_atom - 1):
@@ -356,7 +356,7 @@ class MolPreprocessor(SmilesPreprocessor):
         # Hopefully we've filtered out all problem mols by now.
         if mol is None:
             raise RuntimeError("Issue in loading mol")
-        
+
         # Get a list of the atoms in the molecule.
         atom_seq = mol.GetAtoms()
         atoms = [atom_seq[i] for i in range(n_atom)]
@@ -365,11 +365,11 @@ class MolPreprocessor(SmilesPreprocessor):
         # neighbor of the current atom.
         bond_index = 0  # keep track of our current bond.
         for n, atom in enumerate(atoms):
-            
+
             # update atom feature matrix
             atom_feature_matrix[n] = self.atom_tokenizer(
                 self.atom_features(atom))
-            
+
             # if n_neighbors is greater than total atoms, then each atom is a
             # neighbor.
             if (self.n_neighbors + 1) > len(mol.GetAtoms()):
@@ -387,7 +387,7 @@ class MolPreprocessor(SmilesPreprocessor):
             neighbor_inds = distance_matrix[n, :].argsort()[1:end_index]
             if len(neighbor_inds)==0: neighbor_inds = [n]
             for neighbor in neighbor_inds:
-                
+
                 # update bond feature matrix
                 bond = mol.GetBondBetweenAtoms(n, int(neighbor))
                 if bond is None:
@@ -399,11 +399,11 @@ class MolPreprocessor(SmilesPreprocessor):
 
                 distance = distance_matrix[n, neighbor]
                 bond_distance_matrix[bond_index] = distance
-                
+
                 # update connectivity matrix
                 connectivity[bond_index, 0] = n
                 connectivity[bond_index, 1] = neighbor
-                
+
                 bond_index += 1
         print(connectivity)
 
@@ -432,8 +432,8 @@ class MolBPreprocessor(MolPreprocessor):
 
     def construct_feature_matrices(self, entry):
         """
-        Given an entry contining rdkit molecule, bond_index and for the target property, 
-        return atom 
+        Given an entry contining rdkit molecule, bond_index and for the target property,
+        return atom
         feature matrices, bond feature matrices, distance matrices, connectivity matrices and bond
         ref matrices.
 
@@ -443,13 +443,13 @@ class MolBPreprocessor(MolPreprocessor):
         'bond_index' : ref array to the bond index
         """
         mol, bond_index_array = entry
-        
+
         n_atom = len(mol.GetAtoms())
         n_pro = len(bond_index_array)
 
         # n_bond is actually the number of atom-atom pairs, so this is defined
         # by the number of neighbors for each atom.
-        #if there is cutoff, 
+        #if there is cutoff,
         distance_matrix = Chem.Get3DDistanceMatrix(mol)
 
         if self.n_neighbors <= (n_atom - 1):
@@ -471,7 +471,7 @@ class MolBPreprocessor(MolPreprocessor):
         # Hopefully we've filtered out all problem mols by now.
         if mol is None:
             raise RuntimeError("Issue in loading mol")
-        
+
         # Get a list of the atoms in the molecule.
         atom_seq = mol.GetAtoms()
         atoms = [atom_seq[i] for i in range(n_atom)]
@@ -483,7 +483,7 @@ class MolBPreprocessor(MolPreprocessor):
             # update atom feature matrix
             atom_feature_matrix[n] = self.atom_tokenizer(
                 self.atom_features(atom))
-            
+
             # if n_neighbors is greater than total atoms, then each atom is a
             # neighbor.
             if (self.n_neighbors + 1) > len(mol.GetAtoms()):
@@ -501,7 +501,7 @@ class MolBPreprocessor(MolPreprocessor):
             neighbor_inds = distance_matrix[n, :].argsort()[1:end_index]
             if len(neighbor_inds)==0: neighbor_inds = [n]
             for neighbor in neighbor_inds:
-                
+
                 # update bond feature matrix
                 bond = mol.GetBondBetweenAtoms(n, int(neighbor))
                 if bond is None:
@@ -517,11 +517,11 @@ class MolBPreprocessor(MolPreprocessor):
 
                 distance = distance_matrix[n, neighbor]
                 bond_distance_matrix[bond_index] = distance
-                 
+
                 # update connectivity matrix
                 connectivity[bond_index, 0] = n
                 connectivity[bond_index, 1] = neighbor
-                
+
                 bond_index += 1
         return {
             'n_atom': n_atom,
@@ -549,8 +549,8 @@ class MolAPreprocessor(MolPreprocessor):
 
     def construct_feature_matrices(self, entry):
         """
-        Given an entry contining rdkit molecule, bond_index and for the target property, 
-        return atom 
+        Given an entry contining rdkit molecule, bond_index and for the target property,
+        return atom
         feature matrices, bond feature matrices, distance matrices, connectivity matrices and bond
         ref matrices.
 
@@ -560,13 +560,13 @@ class MolAPreprocessor(MolPreprocessor):
         'bond_index' : ref array to the bond index
         """
         mol, atom_index_array = entry
-        
+
         n_atom = len(mol.GetAtoms())
         n_pro = len(atom_index_array)
 
         # n_bond is actually the number of atom-atom pairs, so this is defined
         # by the number of neighbors for each atom.
-        #if there is cutoff, 
+        #if there is cutoff,
         distance_matrix = Chem.Get3DDistanceMatrix(mol)
 
         #if self.n_neighbors <= (n_atom - 1):
@@ -588,7 +588,7 @@ class MolAPreprocessor(MolPreprocessor):
         # Hopefully we've filtered out all problem mols by now.
         if mol is None:
             raise RuntimeError("Issue in loading mol")
-        
+
         # Get a list of the atoms in the molecule.
         atom_seq = mol.GetAtoms()
         atoms = [atom_seq[i] for i in range(n_atom)]
@@ -596,16 +596,14 @@ class MolAPreprocessor(MolPreprocessor):
         # Here we loop over each atom, and the inner loop iterates over each
         # neighbor of the current atom.
         bond_index = 0  # keep track of our current bond.
-
         for n, atom in enumerate(atoms):
-
             # update atom feature matrix
             atom_feature_matrix[n] = self.atom_tokenizer(
                 self.atom_features(atom))
             try:
                 atom_index_matrix[n] = atom_index_array.tolist().index(atom.GetIdx())
             except:
-                pass 
+                pass
             # if n_neighbors is greater than total atoms, then each atom is a
             # neighbor.
             if (self.n_neighbors + 1) > len(mol.GetAtoms()):
@@ -623,28 +621,23 @@ class MolAPreprocessor(MolPreprocessor):
             neighbor_inds = distance_matrix[n, :].argsort()[1:end_index]
             if len(neighbor_inds)==0: neighbor_inds = [n]
             for neighbor in neighbor_inds:
-                
+
                 # update bond feature matrix
                 bond = mol.GetBondBetweenAtoms(n, int(neighbor))
-                try:
-                    if bond is None:
-                        bond_feature_matrix[bond_index] = 0
-                    else:
-                        rev = False if bond.GetBeginAtomIdx() == n else True
-                        bond_feature_matrix[bond_index] = self.bond_tokenizer(
-                            self.bond_features(bond, flipped=rev))
-                except:
-                    print('AAAAAAAAAAAAAAA')
-                    print(mol.GetProp('_Name'))
-                    print(mol.GetProp('ConfId'))
+                if bond is None:
+                    bond_feature_matrix[bond_index] = 0
+                else:
+                    rev = False if bond.GetBeginAtomIdx() == n else True
+                    bond_feature_matrix[bond_index] = self.bond_tokenizer(
+                        self.bond_features(bond, flipped=rev))
 
                 distance = distance_matrix[n, neighbor]
                 bond_distance_matrix[bond_index] = distance
-                 
+
                 # update connectivity matrix
                 connectivity[bond_index, 0] = n
                 connectivity[bond_index, 1] = neighbor
-                
+
                 bond_index += 1
         return {
             'n_atom': n_atom,
@@ -658,7 +651,7 @@ class MolAPreprocessor(MolPreprocessor):
         }
 
 
-# TODO: rewrite this                                
+# TODO: rewrite this
 # class LaplacianSmilesPreprocessor(SmilesPreprocessor):
 #     """ Extends the SmilesPreprocessor class to also return eigenvalues and
 #     eigenvectors of the graph laplacian matrix.
@@ -703,7 +696,7 @@ class MolAPreprocessor(MolPreprocessor):
 #
 #     def fit(self, smiles_iterator):
 #         results = self._fit(smiles_iterator)
-#         return {'atom': results[0], 
+#         return {'atom': results[0],
 #                 'connectivity': results[1],
 #                 'w': results[2],
 #                 'v': results[3]}
@@ -711,7 +704,7 @@ class MolAPreprocessor(MolPreprocessor):
 #
 #     def predict(self, smiles_iterator):
 #         results = self._predict(smiles_iterator)
-#         return {'atom': results[0], 
+#         return {'atom': results[0],
 #                 'connectivity': results[1],
 #                 'w': results[2],
 #                 'v': results[3]}

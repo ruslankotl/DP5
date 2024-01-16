@@ -1,4 +1,4 @@
-from keras.engine import Layer
+from keras.layers import Layer
 
 from keras import activations
 from keras import initializers

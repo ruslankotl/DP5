@@ -306,9 +306,9 @@ def kde_probs(Isomers,Settings,DP5type, AtomReps, ConfCshifts,Cexp):
 
         AtomProbs[iso] = [[] for i in AtomReps[iso]]
 
-        maxproc = 4
+        maxproc = None
 
-        pool = mp.Pool(maxproc)
+        pool = mp.Pool(processes=maxproc)
 
         if len(ConfCshifts) > 0:
 
@@ -684,9 +684,9 @@ def predict_Exp_shifts(Settings, Isomers):
 
         #else use rdkit optimisation
 
-        AllChem.EmbedMolecule(m, useRandomCoords=True)
+        #AllChem.EmbedMolecule(m, useRandomCoords=True, randomSeed=42)
 
-        AllChem.MMFFOptimizeMolecule(m)
+        #AllChem.MMFFOptimizeMolecule(m)
 
         Isomers[i].Mols.append(m)
 

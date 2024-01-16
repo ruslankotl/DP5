@@ -1,7 +1,7 @@
 import numpy as np
 from random import shuffle
 
-from keras.utils import Sequence
+from tensorflow.keras.utils import Sequence
 
 
 class GraphSequence(Sequence):
@@ -65,8 +65,8 @@ class GraphSequence(Sequence):
         # Compute graph indices with shape (n_atom,) that indicate to which
         # molecule each atom belongs.
         n_graphs = len(batch_indexes)
-        batch_data['node_graph_indices'] = np.repeat(
-            np.arange(n_graphs), batch_data['n_atom'])
+        # batch_data['node_graph_indices'] = np.repeat(
+        #     np.arange(n_graphs), batch_data['n_atom'])
 
         batch_data = self.process_data(batch_data)
 

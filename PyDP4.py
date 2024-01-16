@@ -35,11 +35,6 @@ The main file, that should be called to start the PyDP4 workflow.
 Interprets the arguments and takes care of the general workflow logic.
 """
 
-import NMR
-import Tinker
-import MacroModel
-import DP5 as DP5
-import DP4 as DP4
 import sys
 import os
 import datetime
@@ -49,19 +44,17 @@ import getpass
 from pathlib import Path
 import warnings
 warnings.filterwarnings("ignore")
+import faulthandler
+faulthandler.enable()
 
+import NMR
+import DP5 as DP5
+import DP4 as DP4
+import ConfPrune
+
+MMpackages = [['m', 't', 'e'],['MacroModel','Tinker', 'ETKDG']]
 DFTpackages = [['n', 'w', 'g', 'z', 'd'],['NWChem', 'NWChemZiggy', 'Gaussian', 'GaussianZiggy', 'GaussianDarwin']]
 
-if os.name == 'nt':
-    import pyximport
-
-    pyximport.install()
-    import ConfPrune
-else:
-    import pyximport
-
-    pyximport.install()
-    import ConfPrune
 
 # Assigning the config default values
 # Settings are defined roughly in the order they are used in the script
@@ -212,9 +205,7 @@ def main(settings):
 
     # Clean up input files if c in workflow - this generates a new set of 3d coordinates as a starting point
 
-    if 'c' in settings.Workflow or ("m" not in settings.Workflow and "o" not in settings.Workflow)  and len(settings.InputFiles) > 0:
-        import StructureInput
-
+    if 'c' in settings.Workflow   and len(settings.InputFiles) > 0:
         # if requested generate 3d coordinates to define any stereochemistry
 
         settings.InputFiles = StructureInput.CleanUp(settings.InputFiles)
@@ -230,22 +221,17 @@ def main(settings):
 
     if ('g' in settings.Workflow):
 
-        import InchiGen
+        from DiastereomerGeneration import GenDiastereomers
         print("\nGenerating diastereomers...")
 
         FinalInputFiles = []
 
-        nStereo = [StructureInput.NumberofStereoCentres(InpFile) for InpFile in settings.InputFiles]
-
-        if len(settings.InputFiles) == 1:
-
-            FinalInputFiles.extend(
-                InchiGen.GenDiastereomers(settings.InputFiles[0], nStereo[0], settings.SelectedStereocentres))
-
-        else:
-
-            for InpFile, nStereoCentres in zip(settings.InputFiles, nStereo):
-                FinalInputFiles.extend(InchiGen.GenDiastereomers(InpFile, nStereoCentres, []))
+        if len(settings.InputFiles) > 1:
+            settings.SelectedStereocentres = []
+        
+        for InpFile in settings.InputFiles:
+            DiastereomerFilenames = GenDiastereomers(InpFile, protected_atoms=settings.SelectedStereocentres,double_bonds=True)
+            FinalInputFiles.extend(DiastereomerFilenames)
 
         settings.InputFiles = list(FinalInputFiles)
 
@@ -264,28 +250,17 @@ def main(settings):
 
         #print("Performing conformational search using ", end="")
 
-        if settings.MM == 't':
-            print("Tinker")
-            print('\nSetting up Tinker files...')
-            TinkerInputs = Tinker.SetupTinker(settings)
-
-            print('\nRunning Tinker...')
-            TinkerOutputs = Tinker.RunTinker(TinkerInputs, settings)
-
-            Isomers = Tinker.ReadConformers(TinkerOutputs, Isomers, settings)
-
-        elif settings.MM == 'm':
-            print("MacroModel")
-            print('\nSetting up MacroModel files...')
-            MacroModelInputs = MacroModel.SetupMacroModel(settings)
-            print("MacroModel inputs: " + str(MacroModelInputs))
-            print('Running MacroModel...')
-            MacroModelOutputs = MacroModel.RunMacroModel(MacroModelInputs, settings)
-            print('\nReading conformers...')
-            Isomers = MacroModel.ReadConformers(MacroModelOutputs, Isomers, settings)
-            print('Energy window: ' + str(settings.MaxCutoffEnergy) + ' kJ/mol')
-            for iso in Isomers:
-                print(iso.InputFile + ": " + str(len(iso.Conformers)) + ' conformers read within energy window')
+        MM = ImportMM(settings.MM)
+        print("Performing conformational search")
+        print('\nSetting up files...')
+        MMInputs = MM.SetupMM(settings)
+        print('MM inputs: '+str(MMInputs))
+        print('Running MM:')
+        MMOutputs = MM.RunMM(MMInputs, settings)
+        print('\nReading conformers...')
+        Isomers = MM.ReadConformers(MMOutputs, Isomers, settings)
+        for iso in Isomers:
+            print(iso.InputFile + ": " + str(len(iso.Conformers)) + ' conformers read within energy window')
     else:
         print('No conformational search was requested. Skipping...')
         settings.ConfPrune = False
@@ -529,6 +504,8 @@ def main(settings):
 
                 final_ps = DP5data.DP5_Exp_probs
 
+            print('Saving DP5 probabilities...')
+
             DP5data = DP5.Pickle_res(DP5data, settings)
 
         else:
@@ -549,25 +526,12 @@ def main(settings):
 
             DP5data.Output = DP5.MakeOutput( Isomers, settings,DP5data,DP5data.DP5_Exp_probs,DP5data.B_ExpAtomProbs)
 
-        import pickle
-
-        res_dict = pickle.load( open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) +  "/dp5_run.p", "rb+"))
-
-        if settings.NMRsource[0].name == "S13a_NMR":
-
-            res_dict[str(settings.InputFiles[0])] = [ final_ps[0]]
-
-        elif settings.NMRsource[0].name == "S13b_NMR":
-
-            res_dict[str(settings.InputFiles[0])].append(final_ps[1])
-
-        pickle.dump(res_dict, open("/".join(str(settings.OutputFolder).split("/")[:-1]) + "/dp5_run.p", "wb+"))
 
     else:
 
         DP5data = []
 
-    if ('s' in settings.Workflow) and ('n' in settings.Workflow):
+    if ('s' in settings.Workflow):
 
         if len(Isomers) < 2:
 
@@ -587,16 +551,6 @@ def main(settings):
 
             import pickle
 
-            res_dict = pickle.load(open( "/".join(str(settings.OutputFolder).split("/" )[:-1]) + "/dp4_run.p", "rb+"))
-
-            if settings.NMRsource[0].name == "S13a_NMR":
-
-                res_dict[str(settings.InputFiles[0])] = [DP4data.CDP4probs[0]]
-
-            if settings.NMRsource[0].name == "S13b_NMR":
-                res_dict[str(settings.InputFiles[0])].append( DP4data.CDP4probs[1])
-
-            pickle.dump(res_dict, open("/".join(str(settings.OutputFolder).split("/" )[:-1])+"/dp4_run.p", "wb+"))
 
     else:
         print('\nNo DP4 analysis requested.')
@@ -608,6 +562,17 @@ def main(settings):
     print("workflow" , settings.Workflow)
 
     return NMRData, Isomers, settings, DP4data, DP5data
+
+
+# Selects which MM package to import, returns imported module
+def ImportMM(mm):
+    if mm in MMpackages[0]:
+        MMindex = MMpackages[0].index(mm)
+        MM = importlib.import_module(MMpackages[1][MMindex])
+    else:
+        print("Invalid MM package selected")
+        quit()
+    return MM
 
 
 # Selects which DFT package to import, returns imported module
@@ -727,7 +692,7 @@ if __name__ == '__main__':
                                                  "s for computational and experimental NMR data extraction and stats analysis, default is 'gmns'",
                         default=settings.Workflow)
     parser.add_argument('-m', '--mm', help="Select molecular mechanics program,\
-    t for tinker or m for macromodel, default is m", choices=['t', 'm'],
+    t for tinker or m for macromodel, default is m", choices=['t', 'm', 'e'],
                         default='m')
     parser.add_argument('-d', '--dft', help="Select DFT program, \
     g for Gaussian, n for NWChem, z for Gaussian on ziggy, d for Gaussian on \

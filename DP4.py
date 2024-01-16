@@ -13,6 +13,7 @@ from scipy import stats
 import bisect
 import os
 import numpy as np
+import pickle
 
 # Standard DP4 parameters
 meanC = 0.0
@@ -319,6 +320,8 @@ def MakeOutput(DP4Data, Isomers, Settings):
 
     print(DP4Data.output)
 
+    save_results(DP4Data, Settings)
+
     if Settings.OutputFolder == '':
 
         out = open(str(os.getcwd()) + "/" + str(Settings.InputFiles[0] + "NMR.dp4"), "w+")
@@ -327,8 +330,35 @@ def MakeOutput(DP4Data, Isomers, Settings):
 
         out = open(os.path.join(Settings.OutputFolder, str(Settings.InputFiles[0] + "NMR.dp4")), "w+")
 
+
     out.write(DP4Data.output)
 
     out.close()
 
     return DP4Data
+
+def save_results(DP4Data:DP4data, settings):
+        data_dic = {"Cshifts": DP4Data.Cshifts,
+                    "Cexp": DP4Data.Cexp,
+                    "Clabels": DP4Data.Clabels,
+                    "Hshifts": DP4Data.Hshifts,
+                    "Hexp": DP4Data.Hexp,
+                    "Hlabels": DP4Data.Hlabels,
+                    "Cscaled": DP4Data.Cscaled,
+                    "Hscaled": DP4Data.Hscaled,
+                    "Cerrors": DP4Data.Cerrors,
+                    "Herrors": DP4Data.Herrors,
+                    "Cprobs": DP4Data.Cprobs,
+                    "Hprobs": DP4Data.Hprobs,
+                    "CDP4probs": DP4Data.CDP4probs,
+                    "HDP4probs": DP4Data.HDP4probs,
+                    "DP4probs": DP4Data.DP4probs
+                    }
+        new_folder = os.path.join(settings.OutputFolder, "dp4")
+        try:
+            os.mkdir(new_folder)
+        except OSError:
+            pass
+        data_path = os.path.join(new_folder, "data_dic.p")
+        with open(data_path, "wb") as path:
+            pickle.dump(data_dic, path)
