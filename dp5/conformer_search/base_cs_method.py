@@ -21,7 +21,7 @@ class BaseConfSearch(ABC):
     def __repr__(self) -> str:
         raise NotImplementedError("No __repr__ attribute provided.")
 
-    def run(self) -> list:
+    def __call__(self) -> list:
         """
         Handles input preparation, execution, and processing. The only method called externally.
         

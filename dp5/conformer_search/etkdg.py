@@ -23,13 +23,6 @@ class ConfSearchMethod(BaseConfSearch):
     def __repr__(self) -> str:
         return "ETKDG"
 
-    def run(self):
-        logger.info(f"Using {self} as conformer search method")
-        self.inputs = self.prepare_input()
-        self.outputs = self._run()
-        logger.debug(f"Conformer search output: {self.outputs}")
-        
-        return self.parse_output()
 
     def _run(self):
         efilter = self.settings['energy_cutoff'] / 4.184

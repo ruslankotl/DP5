@@ -40,11 +40,6 @@ class ConfSearchMethod(BaseConfSearch):
     def __repr__(self):
         return "Tinker"
     
-    def run(self):
-        self.inputs = self.prepare_input()
-        self.outputs = self._run()
-        
-        return self.parse_output()
     
     def prepare_input(self):
         for input in self.inputs:

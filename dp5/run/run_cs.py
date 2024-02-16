@@ -51,7 +51,7 @@ def conf_search(mols, config) -> List:
 
     
     logger.info(f"Using {config['method']} for conformational search")
-    cs_data = method.run()
+    cs_data = method()
     logger.info("Conformational search complete")
 
     merged_data = []

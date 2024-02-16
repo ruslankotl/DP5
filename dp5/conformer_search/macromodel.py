@@ -53,14 +53,6 @@ class ConfSearchMethod(BaseConfSearch):
     def __repr__(self):
         return "MacroModel"
 
-    def run(self):
-        logger.info(f"Using {self} as conformer search method")
-        self.inputs = self.prepare_input()
-        self.outputs = self._run()
-        logger.debug(f"Conformer search output: {self.outputs}")
-        
-        return self.parse_output()
-
 
     def prepare_input(self):
         if os.name == 'nt':
