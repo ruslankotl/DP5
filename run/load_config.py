@@ -18,7 +18,7 @@ from dp5.run import runner, setup_logger
 
 LOGLEVEL_CHOICES = tuple(level.lower() for level in logging._nameToLevel.keys())
 
-DEFAULT_BASE_CONFIG_PATH = (Path(__file__).parent / 'config/default_config.toml').resolve()
+DEFAULT_BASE_CONFIG_PATH = (Path(__file__).parent.parent / 'config/default_config.toml').resolve()
 
 def main(): 
 
