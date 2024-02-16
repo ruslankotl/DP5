@@ -1,0 +1,21 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Python: DP5 Prediction",
+            "type": "python",
+            "request": "launch",
+            "cwd": "/home/rk582/DP5/S11",
+            "env": {"PYTHONPATH": "/home/rk582/miniconda3/envs/dp5_cascade/bin/python"},
+            "program": "/home/rk582/DP5/dp5/run/load_config.py",
+            "console": "integratedTerminal",
+            "args": ["-s", "S11a_.sdf", "S11b_.sdf", "-n", "S11_NMR", "-w", "nmoe", "--log_level", "debug", "-c", "../dp5/config/default_config.toml"],
+            "justMyCode": false
+        }
+        
+    ]
+}

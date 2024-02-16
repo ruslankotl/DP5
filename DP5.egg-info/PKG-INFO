@@ -1,0 +1,11 @@
+Metadata-Version: 2.1
+Name: DP5
+Version: 0.1
+Requires-Dist: tomli
+Requires-Dist: numpy
+Requires-Dist: rdkit
+Requires-Dist: lmfit
+Requires-Dist: matplotlib
+Requires-Dist: openbabel-wheel
+Requires-Dist: scipy<1.10
+Requires-Dist: nmrglue

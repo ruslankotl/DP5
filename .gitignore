@@ -1,0 +1,10 @@
+*.pyc
+.idea
+venv
+e
+orca
+S*
+opt
+nmr
+my*
+*.cpython

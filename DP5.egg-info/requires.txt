@@ -1,0 +1,8 @@
+tomli
+numpy
+rdkit
+lmfit
+matplotlib
+openbabel-wheel
+scipy<1.10
+nmrglue
