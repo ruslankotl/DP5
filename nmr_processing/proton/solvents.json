@@ -1,0 +1,32 @@
+{
+    "chloroform":[
+        {"exp_ppm": 7.26,
+        "Jv": []}
+    ],
+
+    "dimethylsulfoxide":[
+        {"exp_ppm": 2.50,
+        "Jv": [1.9,1.9]}       
+    ],
+
+    "methanol":[
+        {"exp_ppm": 3.31,
+        "Jv": [1.7, 1.7]},
+        {"exp_ppm": 4.78,
+        "Jv": []} 
+    ],
+
+    "benzene":[
+        {"exp_ppm": 7.16,
+        "Jv":[]}
+    ],
+
+    "pyridine":[
+        {"exp_ppm": 8.74,
+        "Jv":[]},
+        {"exp_ppm": 7.58,
+        "Jv":[]},
+        {"exp_ppm": 7.22,
+        "Jv":[]}
+    ]
+}
