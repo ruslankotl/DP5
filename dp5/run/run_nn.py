@@ -22,9 +22,10 @@ def get_nn_shifts(mols):
     - list of lists of 1H chemical shifts for each atom in a molecule
     - list of lists of H atomic labels      
     """
-    C_shifts, C_labels, H_shifts, H_labels = [], [], [], []
 
     C_shifts, C_labels = predict_cascade_shifts(mols)
+
+    H_shifts, H_labels = [[[]]], [[]]
 
     # will add H_shifts and H_labels later!
 

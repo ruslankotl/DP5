@@ -114,7 +114,7 @@ class Molecules:
         """Should get C and H shifts"""
         mols = [mol.create_rdkit_mols() for mol in self.mols]
         cascade_shifts_labels = get_nn_shifts(mols)
-        for mol, m_shift_label in zip(self.mols, cascade_shifts_labels):
+        for mol, *m_shift_label in zip(self.mols, *cascade_shifts_labels):
             mol.add_nn_shifts(m_shift_label)
 
     def assign_nmr_spectra(self, nmrdata):
