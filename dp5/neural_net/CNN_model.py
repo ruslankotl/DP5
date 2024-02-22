@@ -236,10 +236,7 @@ def load_NMR_prediction_model(filepath = "NMRdb-CASCADEset_Exp_mean_model_atom_f
                                                  'Squeeze': Squeeze,
                                                  'GatherAtomToBond': GatherAtomToBond,
                                                  'ReduceBondToAtom': ReduceBondToAtom,
-                                                 'ReduceAtomToPro': ReduceAtomToPro}, compile=False)
-
-    model.compile()
-
+                                                 'ReduceAtomToPro': ReduceAtomToPro})
     return model
 
 def predict_shifts(model,test):
