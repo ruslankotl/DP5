@@ -34,74 +34,79 @@ logger = logging.getLogger(__name__)
 
 # Data structure for loading and keeping all of experimental NMR data in one place.
 
+
 class NMRData:
     def __init__(self, structure, nmr_file, solvent, output_folder):
 
         self.cwd = Path(os.getcwd())
         self.structures = structure
         self.InputPath = nmr_file  # Initial structure input file
-        self.Type = 'desc'          # desc or fid, depending on whether the description or raw data used
+        self.Type = (
+            "desc"  # desc or fid, depending on whether the description or raw data used
+        )
         self.OutputFolder = output_folder
-        self.Atoms = []             # Element labels
-        self.Cshifts = []           # Experimental C NMR shifts
-        self.Clabels = []           # Experimental C NMR labels, if any
-        self.Hshifts = []           # Experimental H NMR shifts
-        self.Hlabels = []           # Experimental H NMR labels, if any
-        self.Equivalents = []       # Atoms assumed to be NMR equivalent in computational data
+        self.Atoms = []  # Element labels
+        self.Cshifts = []  # Experimental C NMR shifts
+        self.Clabels = []  # Experimental C NMR labels, if any
+        self.Hshifts = []  # Experimental H NMR shifts
+        self.Hlabels = []  # Experimental H NMR labels, if any
+        self.Equivalents = (
+            []
+        )  # Atoms assumed to be NMR equivalent in computational data
         self.Omits = []
         self.protondata = {}
         self.carbondata = {}
 
-        logger.info(f'Reading NMR data from{self.InputPath}')
+        logger.info(f"Reading NMR data from{self.InputPath}")
 
         if len(self.InputPath) == 0:
-            logger.critical('No NMR Data Added, quitting...')
+            logger.critical("No NMR Data Added, quitting...")
             quit()
 
         else:
 
-            for ind1 , p in enumerate(self.InputPath):
+            for ind1, p in enumerate(self.InputPath):
 
                 if p.exists():
 
                     if p.is_dir():
 
-                        self.Type = 'fid'
+                        self.Type = "fid"
 
                         if p.parts[-1] == "Proton" or p.parts[-1] == "proton":
 
-                            self.ProcessProton(settings,ind1)
+                            self.ProcessProton(settings, ind1)
 
                         elif p.parts[-1] == "Carbon" or p.parts[-1] == "carbon":
 
-                            self.ProcessCarbon(settings,ind1)
+                            self.ProcessCarbon(settings, ind1)
 
                     elif p.parts[-1] == "Proton.dx" or p.parts[-1] == "proton.dx":
 
-                        self.Type = 'jcamp'
+                        self.Type = "jcamp"
 
-                        self.ProcessProton(settings,ind1)
+                        self.ProcessProton(settings, ind1)
 
                     elif p.parts[-1] == "Carbon.dx" or p.parts[-1] == "carbon.dx":
 
-                        self.Type = 'jcamp'
+                        self.Type = "jcamp"
 
-                        self.ProcessCarbon(settings,ind1)
+                        self.ProcessCarbon(settings, ind1)
                     else:
 
-                        self.Type = 'desc'
+                        self.Type = "desc"
                         self.ExpNMRFromDesc()
 
                 else:
-                    logger.critical('NMR data path does not exist, quitting...')
+                    logger.critical("NMR data path does not exist, quitting...")
                     quit()
 
     def ExpNMRFromDesc(self):
 
-        print('Loading NMR data from ' + str(self.InputPath))
+        print("Loading NMR data from " + str(self.InputPath))
 
         # Reads the experimental NMR data from the file
-        ExpNMR_file = open(self.InputPath[0], 'r')
+        ExpNMR_file = open(self.InputPath[0], "r")
         Cexp = ExpNMR_file.readline()
         ExpNMR_file.readline()
         Hexp = ExpNMR_file.readline()
@@ -115,34 +120,34 @@ class NMRData:
 
         ExpNMR_file.readline()
         for line in ExpNMR_file:
-            if not 'OMIT' in line and len(line) > 1:
-                equivalents.append(line[:-1].split(','))
-            elif 'OMIT' in line:
-                omits.extend(line[5:-1].split(','))
+            if not "OMIT" in line and len(line) > 1:
+                equivalents.append(line[:-1].split(","))
+            elif "OMIT" in line:
+                omits.extend(line[5:-1].split(","))
 
         ExpNMR_file.close()
 
-        self.Clabels, self.Cshifts = self.ParseExp(Cexp)
-        self.Hlabels, self.Hshifts = self.ParseExp(Hexp)
+        self.Clabels, self.C_exp = self.ParseExp(Cexp)
+        self.Hlabels, self.H_exp = self.ParseExp(Hexp)
         self.Equivalents = equivalents
         self.Omits = omits
 
     def ParseExp(self, exp):
 
         if len(exp) > 0:
-
             # Replace all 'or' and 'OR' with ',', remove all spaces and 'any'
-            texp = re.sub(r"or|OR", ',', exp, flags=re.DOTALL)
-            texp = re.sub(r" ", '', texp, flags=re.DOTALL)
+            texp = re.sub(r"or|OR", ",", exp, flags=re.DOTALL)
+            texp = re.sub(r" ", "", texp, flags=re.DOTALL)
 
             # Get all assignments, split mulitassignments
             expLabels = re.findall(r"(?<=\().*?(?=\)|;)", texp, flags=re.DOTALL)
-            expLabels = [x.replace('any', '') for x in expLabels]
-            expLabels = [x.split(',') for x in expLabels]
+            expLabels = [x.replace("any", "") for x in expLabels]
+            expLabels = [x.split(",") for x in expLabels]
 
             # Remove assignments and get shifts
-
-            ShiftData = (re.sub(r"\(.*?\)", "", exp.strip(), flags=re.DOTALL)).split(',')
+            ShiftData = (re.sub(r"\(.*?\)", "", exp.strip(), flags=re.DOTALL)).split(
+                ","
+            )
 
             print(ShiftData)
 
@@ -155,11 +160,11 @@ class NMRData:
 
         return expLabels, expShifts
 
-    def ProcessProton(self, settings,ind):
+    def ProcessProton(self, settings, ind):
 
         pdir = self.OutputFolder / "Pickles"
 
-        gdir = self.OutputFolder /  "Graphs"
+        gdir = self.OutputFolder / "Graphs"
 
         NMR_file = self.InputPath[ind]
 
@@ -187,35 +192,46 @@ class NMRData:
 
                 os.mkdir(pdir / self.structures[0])
 
-        if Path(pdir / self.structures[0] /  "protondata").exists():
+        if Path(pdir / self.structures[0] / "protondata").exists():
 
-            self.protondata = pickle.load(open(pdir / self.structures[0] / "protondata", "rb"))
+            self.protondata = pickle.load(
+                open(pdir / self.structures[0] / "protondata", "rb")
+            )
 
             self.Hshifts = self.protondata["exppeaks"]
-
 
         else:
 
             protondata = {}
 
-            protondata["exppeaks"], protondata["xdata"], protondata["ydata"], protondata["integrals"], protondata[
-                "peakregions"], protondata["centres"], \
-            protondata["cummulativevectors"], protondata["integralsum"], protondata["picked_peaks"], protondata[
-                "params"], protondata["sim_regions"] \
-                = process_proton(NMR_file, settings,self.Type)
+            (
+                protondata["exppeaks"],
+                protondata["xdata"],
+                protondata["ydata"],
+                protondata["integrals"],
+                protondata["peakregions"],
+                protondata["centres"],
+                protondata["cummulativevectors"],
+                protondata["integralsum"],
+                protondata["picked_peaks"],
+                protondata["params"],
+                protondata["sim_regions"],
+            ) = process_proton(NMR_file, settings, self.Type)
 
-            pickle.dump(protondata, Path(pdir / self.structures[0] / "protondata").open(mode =  "wb+"))
+            pickle.dump(
+                protondata,
+                Path(pdir / self.structures[0] / "protondata").open(mode="wb+"),
+            )
 
             self.Hshifts = protondata["exppeaks"]
 
             self.protondata = protondata
 
-    def ProcessCarbon(self, settings,ind):
+    def ProcessCarbon(self, settings, ind):
 
-        pdir = self.OutputFolder /  "Pickles"
+        pdir = self.OutputFolder / "Pickles"
 
         gdir = self.OutputFolder / "Graphs"
-
 
         NMR_file = self.InputPath[ind]
 
@@ -223,11 +239,11 @@ class NMRData:
 
             os.mkdir(gdir)
 
-            os.mkdir(gdir  / self.structures[0])
+            os.mkdir(gdir / self.structures[0])
 
         else:
 
-            if not Path(gdir  / self.structures[0]).exists():
+            if not Path(gdir / self.structures[0]).exists():
 
                 os.mkdir(gdir / self.structures[0])
 
@@ -245,7 +261,9 @@ class NMRData:
 
         if Path(pdir / self.structures[0] / "carbondata").exists():
 
-            self.carbondata = pickle.load(open(pdir / self.structures[0] / "carbondata", "rb"))
+            self.carbondata = pickle.load(
+                open(pdir / self.structures[0] / "carbondata", "rb")
+            )
 
             self.Cshifts = self.carbondata["exppeaks"]
 
@@ -253,24 +271,31 @@ class NMRData:
 
             carbondata = {}
 
-            carbondata["ydata"], carbondata["xdata"], carbondata["corrdistance"], carbondata["uc"], \
-            carbondata["exppeaks"], carbondata["simulated_ydata"], carbondata["removed"] = process_carbon(
-                NMR_file, settings,self.Type)
+            (
+                carbondata["ydata"],
+                carbondata["xdata"],
+                carbondata["corrdistance"],
+                carbondata["uc"],
+                carbondata["exppeaks"],
+                carbondata["simulated_ydata"],
+                carbondata["removed"],
+            ) = process_carbon(NMR_file, settings, self.Type)
 
-            pickle.dump(carbondata, Path(pdir / self.structures[0] / "carbondata").open(mode =  "wb+"))
+            pickle.dump(
+                carbondata,
+                Path(pdir / self.structures[0] / "carbondata").open(mode="wb+"),
+            )
 
-            #pickle.dump(a, Path("/Users/Maidenhair/Desktop/text.txt").open(mode="wb+"))
+            # pickle.dump(a, Path("/Users/Maidenhair/Desktop/text.txt").open(mode="wb+"))
 
             self.carbondata = carbondata
             self.Cshifts = carbondata["exppeaks"]
 
 
-
-
 def NMRDataValid(Isomers):
 
     for isomer in Isomers:
-        if (len(isomer.ConformerShieldings) == 0):
+        if len(isomer.ConformerShieldings) == 0:
             return False
 
     return True
@@ -278,7 +303,9 @@ def NMRDataValid(Isomers):
 
 def CalcNMRShifts(Isomers, settings):
 
-    print('WARNING: NMR shift calculation currently ignores the instruction to exclude atoms from analysis')
+    print(
+        "WARNING: NMR shift calculation currently ignores the instruction to exclude atoms from analysis"
+    )
     for i, iso in enumerate(Isomers):
 
         BShieldings = iso.BoltzmannShieldings
@@ -290,15 +317,19 @@ def CalcNMRShifts(Isomers, settings):
 
         for a, atom in enumerate(iso.Atoms):
 
-            if atom == 'C':
-                shift = (settings.TMS_SC_C13-BShieldings[a]) / (1-(settings.TMS_SC_C13/10**6))
+            if atom == "C":
+                shift = (settings.TMS_SC_C13 - BShieldings[a]) / (
+                    1 - (settings.TMS_SC_C13 / 10**6)
+                )
                 Cvalues.append(shift)
-                Clabels.append('C' + str(a + 1))
+                Clabels.append("C" + str(a + 1))
 
-            if atom == 'H':
-                shift = (settings.TMS_SC_H1-BShieldings[a]) / (1-(settings.TMS_SC_H1/10**6))
+            if atom == "H":
+                shift = (settings.TMS_SC_H1 - BShieldings[a]) / (
+                    1 - (settings.TMS_SC_H1 / 10**6)
+                )
                 Hvalues.append(shift)
-                Hlabels.append('H' + str(a + 1))
+                Hlabels.append("H" + str(a + 1))
 
         Isomers[i].Cshifts = Cvalues
         Isomers[i].Hshifts = Hvalues
@@ -306,11 +337,11 @@ def CalcNMRShifts(Isomers, settings):
         Isomers[i].Clabels = Clabels
         Isomers[i].Hlabels = Hlabels
 
-        print('C shifts for isomer ' + str(i) + ": ")
-        print(', '.join(['{0:.3f}'.format(x) for x in Isomers[i].Cshifts]))
+        print("C shifts for isomer " + str(i) + ": ")
+        print(", ".join(["{0:.3f}".format(x) for x in Isomers[i].Cshifts]))
 
-        print('H shifts for isomer ' + str(i) + ": ")
-        print(', '.join(['{0:.3f}'.format(x) for x in Isomers[i].Hshifts]))
+        print("H shifts for isomer " + str(i) + ": ")
+        print(", ".join(["{0:.3f}".format(x) for x in Isomers[i].Hshifts]))
 
         for conf in iso.ConformerShieldings:
 
@@ -319,13 +350,17 @@ def CalcNMRShifts(Isomers, settings):
 
             for a, atom in enumerate(iso.Atoms):
 
-                if atom == 'C':
+                if atom == "C":
 
-                    shift = (settings.TMS_SC_C13-conf[a]) / (1-(settings.TMS_SC_C13/10**6))
+                    shift = (settings.TMS_SC_C13 - conf[a]) / (
+                        1 - (settings.TMS_SC_C13 / 10**6)
+                    )
                     Cconfshifts.append(shift)
 
-                if atom == 'H':
-                    shift = (settings.TMS_SC_H1 - conf[a]) / (1 - (settings.TMS_SC_H1 / 10 ** 6))
+                if atom == "H":
+                    shift = (settings.TMS_SC_H1 - conf[a]) / (
+                        1 - (settings.TMS_SC_H1 / 10**6)
+                    )
                     Hconfshifts.append(shift)
 
             Isomers[i].ConformerCShifts.append(Cconfshifts)
@@ -348,20 +383,30 @@ def PrintConformationData(AllSigConfs):
         i += 1
     SigConfs = ConfsPops[:i]"""
     for Es, pops in zip(RelEs, populations):
-        print('\nConformer relative energies (kJ/mol): ' + \
-            ', '.join(["{:5.2f}".format(float(x)) for x in Es]))
+        print(
+            "\nConformer relative energies (kJ/mol): "
+            + ", ".join(["{:5.2f}".format(float(x)) for x in Es])
+        )
 
-        print('\nPopulations (%): ' + \
-            ', '.join(["{:4.1f}".format(float(x)*100) for x in pops]))
+        print(
+            "\nPopulations (%): "
+            + ", ".join(["{:4.1f}".format(float(x) * 100) for x in pops])
+        )
 
     for i, SigConfs in enumerate(AllSigConfs):
-        print("\nNumber of significant conformers for isomer "\
-            + str(i+1) + ": " + str(len(SigConfs)) + "\n(pop, filename)")
+        print(
+            "\nNumber of significant conformers for isomer "
+            + str(i + 1)
+            + ": "
+            + str(len(SigConfs))
+            + "\n(pop, filename)"
+        )
         for conf in SigConfs:
-            print("   " + format(conf[1]*100, "4.2f") + "%   " + conf[0])
-        print('----------------')
-        print("   " + format(100*sum([x[1] for x in SigConfs]), "4.2f") +\
-            "%   in total")
+            print("   " + format(conf[1] * 100, "4.2f") + "%   " + conf[0])
+        print("----------------")
+        print(
+            "   " + format(100 * sum([x[1] for x in SigConfs]), "4.2f") + "%   in total"
+        )
 
 
 def RemoveEquivalents(Noutp, equivs, OldCval, OldHval, OldClabels, OldHlabels):
@@ -372,60 +417,59 @@ def RemoveEquivalents(Noutp, equivs, OldCval, OldHval, OldClabels, OldHlabels):
     Hvalues = list(OldHval)
     Clabels = list(OldClabels)
     Hlabels = list(OldHlabels)
-    
+
     for eqAtoms in equivs:
 
-        eqSums = [0.0]*Noutp
-        eqAvgs = [0.0]*Noutp
+        eqSums = [0.0] * Noutp
+        eqAvgs = [0.0] * Noutp
 
-        if eqAtoms[0][0] == 'H':
-            #print eqAtoms, Hlabels
+        if eqAtoms[0][0] == "H":
+            # print eqAtoms, Hlabels
             for atom in eqAtoms:
                 eqIndex = Hlabels.index(atom)
                 for ds in range(0, Noutp):
                     eqSums[ds] = eqSums[ds] + Hvalues[ds][eqIndex]
             for ds in range(0, Noutp):
-                eqAvgs[ds] = eqSums[ds]/len(eqAtoms)
+                eqAvgs[ds] = eqSums[ds] / len(eqAtoms)
 
-            #Place the new average value in the first atom shifts place
+            # Place the new average value in the first atom shifts place
             target_index = Hlabels.index(eqAtoms[0])
             for ds in range(0, Noutp):
                 Hvalues[ds][target_index] = eqAvgs[ds]
 
-            #Delete the redundant atoms from the computed list
-            #start with second atom - e.g. don't delete the original one
+            # Delete the redundant atoms from the computed list
+            # start with second atom - e.g. don't delete the original one
             for atom in range(1, len(eqAtoms)):
                 del_index = Hlabels.index(eqAtoms[atom])
                 del Hlabels[del_index]
                 for ds in range(0, Noutp):
                     del Hvalues[ds][del_index]
 
-        if eqAtoms[0][0] == 'C':
+        if eqAtoms[0][0] == "C":
             for atom in eqAtoms:
                 eqIndex = Clabels.index(atom)
                 for ds in range(0, Noutp):
                     eqSums[ds] = eqSums[ds] + Cvalues[ds][eqIndex]
             for ds in range(0, Noutp):
-                eqAvgs[ds] = eqSums[ds]/len(eqAtoms)
+                eqAvgs[ds] = eqSums[ds] / len(eqAtoms)
 
-            #Place the new average value in the first atom shifts place
+            # Place the new average value in the first atom shifts place
             target_index = Clabels.index(eqAtoms[0])
             for ds in range(0, Noutp):
                 Cvalues[ds][target_index] = eqAvgs[ds]
 
-            #Delete the redundant atoms from the computed list
-            #start with second atom - e.g. don't delete the original one
+            # Delete the redundant atoms from the computed list
+            # start with second atom - e.g. don't delete the original one
             for atom in range(1, len(eqAtoms)):
                 del_index = Clabels.index(eqAtoms[atom])
                 del Clabels[del_index]
                 for ds in range(0, Noutp):
                     del Cvalues[ds][del_index]
-                    
+
     return Cvalues, Hvalues, Clabels, Hlabels
-    
 
 
-def PairwiseAssignment(Isomers,NMRData):
+def PairwiseAssignment(Isomers, NMRData):
 
     # for each isomer sort the experimental and calculated shifts
 
@@ -437,8 +481,8 @@ def PairwiseAssignment(Isomers,NMRData):
         sortedCExp = sorted(NMRData.Cshifts, reverse=True)
         sortedHExp = sorted(NMRData.Hshifts, reverse=True)
 
-        assignedCExp = [''] * len(sortedCCalc)
-        assignedHExp = [''] * len(sortedHCalc)
+        assignedCExp = [""] * len(sortedCCalc)
+        assignedHExp = [""] * len(sortedHCalc)
 
         tempCCalcs = list(iso.Cshifts)
         tempHCalcs = list(iso.Hshifts)
@@ -453,7 +497,7 @@ def PairwiseAssignment(Isomers,NMRData):
 
             assignedCExp[ind] = exp
 
-            tempCCalcs[ind] = ''
+            tempCCalcs[ind] = ""
 
         # Proton
 
@@ -463,7 +507,7 @@ def PairwiseAssignment(Isomers,NMRData):
 
             assignedHExp[ind] = exp
 
-            tempHCalcs[ind] = ''
+            tempHCalcs[ind] = ""
 
         # update isomers class
 
@@ -471,9 +515,3 @@ def PairwiseAssignment(Isomers,NMRData):
         iso.Hexp = assignedHExp
 
     return Isomers
-
-
-
-
-
-

@@ -1,73 +1,51 @@
 import logging
 
 import numpy as np
-import nmrglue as ng
 from lmfit import Minimizer, Parameters
 from scipy.interpolate import InterpolatedUnivariateSpline
 
-from dp5.nmr_processing.helper_functions import jcamp_guess_udic
+from dp5.nmr_processing.helper_functions import normalise_intensities
 
 
 logger = logging.getLogger(__name__)
 
-def spectral_processing(file, datatype):
-    logger.info('Processing Proton Spectrum')
 
-    if datatype == 'jcamp':
-
-        dic, total_spectral_ydata = ng.jcampdx.read(file)  # read file
-
-        total_spectral_ydata = total_spectral_ydata[0] + 1j * total_spectral_ydata[1]
-
-        total_spectral_ydata = ng.proc_base.ifft_positive(total_spectral_ydata)
-
-    else:
-
-        dic, total_spectral_ydata = ng.bruker.read(file)  # read file
-
-        total_spectral_ydata = ng.bruker.remove_digital_filter(dic, total_spectral_ydata)  # remove the digital filter
-
-    total_spectral_ydata = ng.proc_base.zf_double(total_spectral_ydata, 4)
-
-    total_spectral_ydata = ng.proc_base.fft_positive(total_spectral_ydata)  # Fourier transform
+def spectral_processing(total_spectral_ydata):
+    """Arguments:
+    - ydata: complex array with frequency-domain FID data
+    Returns:
+    - tydata (np.array): phased and baseline-corrected frequency data
+    – corr_distance (int): autocorrelation distance
+    – sigma (float): standard deviation of noise
+    – peak_regions(np.array[np.array]): regoins containing peak signals
+    """
+    logger.info("Processing Proton Spectrum")
 
     corr_distance = estimate_autocorrelation(total_spectral_ydata)
-
-    # normalise the data
-
-    m = max(np.max(abs(np.real(total_spectral_ydata))), np.max(abs(np.imag(total_spectral_ydata))))
-    total_spectral_ydata = np.real(total_spectral_ydata / m) + 1j * np.imag(total_spectral_ydata / m)
-
-    if datatype == 'jcamp':
-        udic = jcamp_guess_udic(dic, total_spectral_ydata)
-    else:
-        udic = ng.bruker.guess_udic(dic, total_spectral_ydata)  # sorting units
-
-    uc = ng.fileiobase.uc_from_udic(udic)  # unit conversion element
-    spectral_xdata_ppm = uc.ppm_scale()  # ppmscale creation
-
     # baseline and phasing
     tydata = ACMEWLRhybrid(total_spectral_ydata, corr_distance)
 
     # find final noise distribution
-    classification, sigma = baseline_find_signal(tydata, corr_distance, True, 1)
+    classification, sigma = baseline_find_signal(
+        tydata, corr_distance, True, 1)
 
     # fall back phasing if fit doesnt converge
     # calculate negative area
     # draw regions
 
-    peak_regions = []
     c1 = np.roll(classification, 1)
     diff = classification - c1
     s_start = np.where(diff == 1)[0]
     s_end = np.where(diff == -1)[0] - 1
 
-    for r in range(len(s_start)):
-        peak_regions.append(np.arange(s_start[r], s_end[r]))
+    # region start and end indices are known
+    # indices inbetween are filled in
+    peak_regions = np.empty(shape=s_start.shape[0], dtype=object)
+    peak_regions[:] = [np.arange(s, e) for s, e in zip(s_start, s_end)]
 
-    tydata = tydata / np.max(abs(tydata))
+    tydata = normalise_intensities(tydata)
 
-    return tydata, spectral_xdata_ppm, corr_distance, uc, sigma, peak_regions
+    return tydata, corr_distance, sigma, peak_regions
 
 
 def estimate_autocorrelation(total_spectral_ydata):
@@ -77,12 +55,12 @@ def estimate_autocorrelation(total_spectral_ydata):
 
     params = Parameters()
 
-    # define a basleine polnomial
+    # define a basleine polynomial
 
     order = 6
 
     for p in range(order + 1):
-        params.add('p' + str(p), value=0)
+        params.add("p" + str(p), value=0)
 
     def poly(params, order, y):
 
@@ -90,7 +68,7 @@ def estimate_autocorrelation(total_spectral_ydata):
         x = np.arange(len(y))
 
         for p in range(order + 1):
-            bl += params['p' + str(p)] * x ** (p)
+            bl += params["p" + str(p)] * x ** (p)
 
         return bl
 
@@ -102,8 +80,7 @@ def estimate_autocorrelation(total_spectral_ydata):
 
         return r
 
-    out = Minimizer(res, params,
-                    fcn_args=(order, y))
+    out = Minimizer(res, params, fcn_args=(order, y))
 
     results = out.minimize()
 
@@ -130,6 +107,7 @@ def estimate_autocorrelation(total_spectral_ydata):
 
 
 def ACMEWLRhybrid(y, corr_distance):
+    """Hybrid ACME-Weighted Linear Regression phase correction algorithm"""
 
     def residual_function(params, im, real):
 
@@ -200,16 +178,18 @@ def ACMEWLRhybrid(y, corr_distance):
     for region in peak_regions:
         params = Parameters()
 
-        params.add('p0', value=0, min=-np.pi, max=np.pi)
+        params.add("p0", value=0, min=-np.pi, max=np.pi)
 
-        out = Minimizer(residual_function, params,
-                        fcn_args=(np.imag(y[region]), np.real(y[region])))
+        out = Minimizer(
+            residual_function, params, fcn_args=(
+                np.imag(y[region]), np.real(y[region]))
+        )
 
-        results = out.minimize('brute')
+        results = out.minimize("brute")
 
         p = results.params
 
-        phase_angles.append(p['p0'] * 1)
+        phase_angles.append(p["p0"] * 1)
 
         # find weight
 
@@ -249,7 +229,9 @@ def ACMEWLRhybrid(y, corr_distance):
 
     while switch == 0:
 
-        intercept, gradient = np.polynomial.polynomial.polyfit(centres, phase_angles, deg=1, w=weights)
+        intercept, gradient = np.polynomial.polynomial.polyfit(
+            centres, phase_angles, deg=1, w=weights
+        )
 
         predicted_angles = gradient * centres + intercept
 
@@ -273,26 +255,29 @@ def ACMEWLRhybrid(y, corr_distance):
 
             phase_angles[max_res] += 2 * np.pi
 
-        intercept1, gradient1 = np.polynomial.polynomial.polyfit(centres, phase_angles, deg=1, w=weights)
+        intercept1, gradient1 = np.polynomial.polynomial.polyfit(
+            centres, phase_angles, deg=1, w=weights
+        )
 
         new_predicted_angles = gradient1 * centres + intercept1
 
-        new_weighted_res = np.abs(new_predicted_angles - phase_angles) * weights
+        new_weighted_res = np.abs(
+            new_predicted_angles - phase_angles) * weights
 
-        if np.sum(new_weighted_res)  > np.sum(weighted_res):
+        if np.sum(new_weighted_res) > np.sum(weighted_res):
 
             switch = 1
 
-            phase_angles[max_res] += -2*np.pi*s
+            phase_angles[max_res] += -2 * np.pi * s
 
-        ind1 +=1
+        ind1 += 1
 
     # phase the data
 
     p_final = Parameters()
 
-    p_final.add('p0', value=intercept)
-    p_final.add('p1', value=gradient)
+    p_final.add("p0", value=intercept)
+    p_final.add("p1", value=gradient)
 
     y = ps(p_final, np.imag(y), np.real(y), 1)
 
@@ -306,7 +291,9 @@ def ACMEWLRhybrid(y, corr_distance):
 def gen_baseline(y_data, sn_vector, corr_distance):
     points = np.arange(len(y_data))
 
-    spl = InterpolatedUnivariateSpline(points[sn_vector == 0], y_data[sn_vector == 0], k=1)
+    spl = InterpolatedUnivariateSpline(
+        points[sn_vector == 0], y_data[sn_vector == 0], k=1
+    )
 
     r = spl(points)
 
@@ -317,7 +304,7 @@ def gen_baseline(y_data, sn_vector, corr_distance):
     else:
         kernel = np.ones((corr_distance) * 10) / ((corr_distance) * 10)
 
-    r = np.convolve(r, kernel, mode='same')
+    r = np.convolve(r, kernel, mode="same")
 
     return r
 
@@ -328,7 +315,7 @@ def ps(param, im, real, phase_order):
     angle = np.zeros(len(x))
 
     for p in range(phase_order + 1):
-        angle += param['p' + str(p)] * x ** (p)
+        angle += param["p" + str(p)] * x ** (p)
 
     # phase the data
 
@@ -375,7 +362,7 @@ def baseline_find_signal(y_data, cdist, dev, t):
 
     for i in np.arange(len(sn_vector)):
         if snvectort[i] == 1:
-            sn_vector[np.maximum(0, i - w):np.minimum(i + w, len(sn_vector))] = 1
+            sn_vector[np.maximum(0, i - w): np.minimum(i + w, len(sn_vector))] = 1
 
     return sn_vector, sigma
 
@@ -391,9 +378,9 @@ def _get_sd(data, k):
 
 
 def _find_noise_sd(sd_set, ratio):
-    '''Calculate the median m1 from SDset. exclude the elements greater
+    """Calculate the median m1 from SDset. exclude the elements greater
     than 2m1from SDset and recalculate the median m2. Repeat until
-    m2/m1 converge(sd_set)'''
+    m2/m1 converge(sd_set)"""
     m1 = np.median(sd_set)
     S = sd_set <= 2.0 * m1
     tmp = S * sd_set
@@ -406,5 +393,3 @@ def _find_noise_sd(sd_set, ratio):
         sd_set = tmp[tmp != 0]
 
     return m2
-
-

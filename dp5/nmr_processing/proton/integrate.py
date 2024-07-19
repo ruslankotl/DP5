@@ -3,12 +3,30 @@ import logging
 import numpy as np
 from scipy.stats import norm, gmean
 
+from dp5.nmr_processing.helper_functions import proton_count, methyl_protons, labile_protons
+
 logger = logging.getLogger(__name__)
 
 
-def find_integrals(mol, peak_regions, grouped_peaks, sim_regions,
-                   picked_peaks, params, y_data, solvent_region_ind):
-    
+def find_integrals(
+    mol,
+    peak_regions,
+    grouped_peaks,
+    sim_regions,
+    picked_peaks,
+    params,
+    y_data,
+):
+    """
+    - mol: rdkit Mol object
+    - peak_regions: the regions where the peaks are found
+    - grouped_peaks: peak grouping for subsequent integration
+    - sim_regions: regions to simulate
+    - picked_peaks: identified peaks
+    - params: params
+    - y_data: normalised intensity
+    """
+
     # count number of protons in the file
     structure_protons = proton_count(mol)
 
@@ -19,18 +37,21 @@ def find_integrals(mol, peak_regions, grouped_peaks, sim_regions,
     # count the number of labile protons in the structure
     l_protons = labile_protons(mol)
 
-    logger.info(f'number of protons = {structure_protons}')
-    logger.info(f'number of labile protons = {l_protons}')
+    logger.info(f"number of protons = {structure_protons}")
+    logger.info(f"number of labile protons = {l_protons}")
 
     count = 0
 
     # allow guesses of number of protons in the spectrum between: structure_protons - l_protons, 2 * structure_protons
 
-    number_vector = np.arange(structure_protons - l_protons, 2 * structure_protons)
+    number_vector = np.arange(
+        structure_protons - l_protons, 2 * structure_protons)
 
     scores = np.zeros(len(number_vector))
 
-    integrals = integrate_sim_regions(sim_regions, grouped_peaks, peak_regions, y_data, params, solvent_region_ind)
+    integrals = integrate_sim_regions(
+        sim_regions, grouped_peaks, peak_regions, y_data, params
+    )
 
     for proton_guess in number_vector:
 
@@ -50,7 +71,9 @@ def find_integrals(mol, peak_regions, grouped_peaks, sim_regions,
 
         norm_integrals = norm_integrals[r > 0.5]
 
-        scores[count] = integral_score(norm_integrals, structure_protons, proton_guess, l_protons, impurities)
+        scores[count] = integral_score(
+            norm_integrals, structure_protons, proton_guess, l_protons, impurities
+        )
 
         number_of_methyl_groups_integral = np.sum((r - (r % 3)) // 3)
 
@@ -69,11 +92,17 @@ def find_integrals(mol, peak_regions, grouped_peaks, sim_regions,
 
     integrals = normalise_integration(integrals, best_fit)
 
-    grouped_peaks, integrals, peak_regions, picked_peaks_, impurities, sim_regions,rounded_integrals = remove_impurities(integrals,
-                                                                                                       peak_regions,
-                                                                                                       grouped_peaks,
-                                                                                                       picked_peaks,
-                                                                                                       sim_regions)
+    (
+        grouped_peaks,
+        integrals,
+        peak_regions,
+        picked_peaks_,
+        impurities,
+        sim_regions,
+        rounded_integrals,
+    ) = remove_impurities(
+        integrals, peak_regions, grouped_peaks, picked_peaks, sim_regions
+    )
 
     integral_sum, cummulative_vectors = integral_add(sim_regions, best_fit)
 
@@ -85,8 +114,17 @@ def find_integrals(mol, peak_regions, grouped_peaks, sim_regions,
         total += integrals[i]
         total_r += rounded_integrals[i]
 
-    return peak_regions, grouped_peaks, sim_regions, integral_sum, cummulative_vectors, rounded_integrals, structure_protons, \
-           best_fit, total_r
+    return (
+        peak_regions,
+        grouped_peaks,
+        sim_regions,
+        integral_sum,
+        cummulative_vectors,
+        rounded_integrals,
+        structure_protons,
+        best_fit,
+        total_r,
+    )
 
 
 def integral_score(integrals, structure_protons, proton_guess, l_protons, impurities):
@@ -112,11 +150,12 @@ def integral_score(integrals, structure_protons, proton_guess, l_protons, impuri
 
     probs = 4 * (1 - norm.cdf(differences, loc=0, scale=1 / 16))
 
-    mean = gmean(probs) * (1 - norm.cdf(diff, loc=0, scale=std)) * (1 / 2 ** impurities)
+    mean = gmean(probs) * (1 - norm.cdf(diff, loc=0, scale=std)) * \
+        (1 / 2**impurities)
 
     # only allow intergrals that are between the expected number and that number - the number of labile protons
 
-    if (sum_r < structure_protons - l_protons):
+    if sum_r < structure_protons - l_protons:
         mean = 0
 
     return mean
@@ -152,15 +191,15 @@ def integral_add(sim_regions, proton_guess):
 
 def normalise_integration(integrals, initial_proton_guess):
     i_sum = np.sum(integrals)
-
     integrals = integrals / i_sum
-
     norm_integrals = integrals * initial_proton_guess
 
     return norm_integrals
 
 
-def integrate_sim_regions(sim_regions, grouped_peaks, peak_regions, y_data, params, solvent_region_ind):
+def integrate_sim_regions(
+    sim_regions, grouped_peaks, peak_regions, y_data, params
+):
     sim_integrals = []
 
     for r, group in enumerate(grouped_peaks):
@@ -168,19 +207,20 @@ def integrate_sim_regions(sim_regions, grouped_peaks, peak_regions, y_data, para
         region_integral = 0
 
         for peak in group:
-            region_integral += params['A' + str(peak)] * 0.25 * np.pi * params['std' + str(peak)] * (
-                        (3 ** 0.5 - 2) * params['vregion' + str(r)] + 2)
+            region_integral += (
+                params["A" + str(peak)]
+                * 0.25
+                * np.pi
+                * params["std" + str(peak)]
+                * ((3**0.5 - 2) * params["vregion" + str(r)] + 2)
+            )
 
         sim_integrals.append(region_integral)
 
     sim_integrals = np.array(sim_integrals)
-
     y_integral = np.sum(y_data)
-
     sim_integral = np.sum(sim_integrals)
-
     k = sim_integral / y_integral
-
     integrals = []
 
     for region in peak_regions:
@@ -197,7 +237,18 @@ def integrate_sim_regions(sim_regions, grouped_peaks, peak_regions, y_data, para
 
     return integrals
 
-def remove_impurities(integrals, peak_regions, grouped_peaks, picked_peaks, sim_regions):
+
+def remove_impurities(
+    integrals, peak_regions, grouped_peaks, picked_peaks, sim_regions
+):
+    '''
+    - integrals
+    - peak_regions
+    - grouped_peaks
+    - picked_peaks
+    - sim_regions
+    currently suffers from ragged arrays and numpy not nadling them: must be fixed upstream
+    '''
     # find rounded values
 
     r = sum_round(integrals)
@@ -209,11 +260,10 @@ def remove_impurities(integrals, peak_regions, grouped_peaks, picked_peaks, sim_
     number_of_impurities = len(to_remove)
 
     peaks_to_remove = []
-
     for group in to_remove:
-        peaks_to_remove.append(grouped_peaks[group])
+        peaks_to_remove.extend(grouped_peaks[group])
 
-    whdel = np.where(picked_peaks == peaks_to_remove)
+    whdel = np.isin(picked_peaks, peaks_to_remove)
 
     picked_peaks = np.delete(picked_peaks, whdel)
 
@@ -227,56 +277,16 @@ def remove_impurities(integrals, peak_regions, grouped_peaks, picked_peaks, sim_
 
     rounded_integrals = r[r > 0.5]
 
-    return grouped_peaks, integrals, peak_regions, picked_peaks, number_of_impurities, sim_regions,rounded_integrals
+    return (
+        grouped_peaks,
+        integrals,
+        peak_regions,
+        picked_peaks,
+        number_of_impurities,
+        sim_regions,
+        rounded_integrals,
+    )
 
-
-def methyl_protons(mol):
-
-    protons = []
-
-    for atom in mol.GetAtoms():
-        if atom.GetSymbol() == 'C':
-            nbrprotons = []
-            for nbr in atom.GetNeighbors():
-                if nbr.GetSymbol() == 'H':
-                    nbrprotons.append(f'H{nbr.GetIdx()+1}')
-            if len(nbrprotons) == 3:
-                protons.append(nbrprotons)
-
-
-    return protons
-
-def labile_protons(mol):
-    """
-    Counts protons in OH functional groups.
-
-    Assumes those to be exchangeable
-
-    arguments:
-        - mol: rdkit Mol object
-    returns:
-        - count number of labile protons
-    """
-
-    count = 0
-    for atom in mol.GetAtoms():
-        if atom.GetSymbol() == 'O':
-            for neighbor in atom.GetNeighbors():
-                if neighbor.GetSymbol() == 'H':
-                    count +=1
-
-    return count
-
-def proton_count(mol) -> int:
-    """
-    Counts number of hydrogen atoms in a moecule
-
-    arguments:
-        - mol: RDKit Mol object
-    returns:
-        - number of protons (integer)
-    """
-    return sum([1 for at in mol.GetAtoms() if at.GetSymbol == 'H'])
 
 def sum_round(a):
     """
@@ -307,7 +317,9 @@ def sum_round(a):
     # Sort the list of tuples containing the difference between elements in 'a' and 'rounded',
     # along with the index of the element, in descending order.
     # Select the top 'abs(n)' elements from the sorted list.
-    for _, i in sorted(((a[i] - rounded[i], i) for i in range(len(a))), reverse=n > 0)[:abs(n)]:
+    for _, i in sorted(((a[i] - rounded[i], i) for i in range(len(a))), reverse=n > 0)[
+        : abs(n)
+    ]:
         # Adjust the corresponding element in the 'new' list by adding 'n / abs(n)'
         new[i] += n / abs(n)
 

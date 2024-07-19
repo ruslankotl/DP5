@@ -6,8 +6,9 @@ from lmfit import Parameters
 from dp5.nmr_processing.proton.pearson7 import p7sim, p7plot
 from dp5.nmr_processing.helper_functions import lorentzian
 
+
 def simulate_regions(params, peak_regions, grouped_peaks, y_data, xppm):
-    sim_regions = []
+    sim_regions = np.empty(len(peak_regions), dtype=object)
     sim_y = np.zeros(len(y_data))
 
     for ind, region in enumerate(peak_regions):
@@ -15,9 +16,10 @@ def simulate_regions(params, peak_regions, grouped_peaks, y_data, xppm):
 
         y = p7sim(params, region, grouped_peaks[ind], ind)
 
-        sim_regions.append(y)
+        sim_regions[ind] = y
 
     return sim_regions, sim_y
+
 
 def new_first_order_peak(start_ppm, J_vals, x_data, corr_distance, uc, spin):
     # new first order peak generator using the method presented in Hoye paper
@@ -66,9 +68,9 @@ def new_first_order_peak(start_ppm, J_vals, x_data, corr_distance, uc, spin):
     split_params = Parameters()
 
     for index, peak in enumerate(peak_vector):
-        split_params.add('amp' + str(peak), value=amp_vector[index])
-        split_params.add('pos' + str(peak), value=peak)
-        split_params.add('width' + str(peak), value=2 * corr_distance)
+        split_params.add("amp" + str(peak), value=amp_vector[index])
+        split_params.add("pos" + str(peak), value=peak)
+        split_params.add("width" + str(peak), value=2 * corr_distance)
 
     y = lorenz_curves(split_params, x_data, peak_vector)
     y = y / np.max(y)
@@ -82,5 +84,10 @@ def new_first_order_peak(start_ppm, J_vals, x_data, corr_distance, uc, spin):
 def lorenz_curves(params, x, picked_points):
     y = np.zeros(len(x))
     for peak in picked_points:
-        y += lorentzian(x, params['width' + str(peak)], params['pos' + str(peak)], params['amp' + str(peak)])
+        y += lorentzian(
+            x,
+            params["width" + str(peak)],
+            params["pos" + str(peak)],
+            params["amp" + str(peak)],
+        )
     return y

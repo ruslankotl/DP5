@@ -25,18 +25,19 @@ def get_nn_shifts(mols):
 
     C_shifts, C_labels = predict_cascade_shifts(mols)
 
-    H_shifts, H_labels = [[[]]], [[]]
+    H_shifts, H_labels = [[[]]]*len(mols), [[]]*len(mols)
 
     # will add H_shifts and H_labels later!
 
     return C_shifts, C_labels, H_shifts, H_labels
 
 
-def predict_cascade_shifts(mols, filepath = "NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5", atomic_symbol = 'C'):
+def predict_cascade_shifts(mols, filepath="NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5", atomic_symbol='C'):
     """Predicts shifts
 
     Arguments:
     - list of lists of rdkit Mol objects
+    - filepath: path to the prediction model
 
     Returns:
     - all_shifts: list of lists of shifts
@@ -52,13 +53,14 @@ def predict_cascade_shifts(mols, filepath = "NMRdb-CASCADEset_Exp_mean_model_ato
         iso_df = []
         shifts = []
 
-        inds = [at.GetIdx() for at in mol[0].GetAtoms() if at.GetSymbol() == atomic_symbol]
+        inds = [at.GetIdx() for at in mol[0].GetAtoms()
+                if at.GetSymbol() == atomic_symbol]
         mol_labels = [f'{atomic_symbol}{i+1}' for i in inds]
         all_labels.append(mol_labels)
 
         for i, conf in enumerate(mol):
             iso_df.append((i, conf, np.array(inds)))
-        
+
         iso_df = pd.DataFrame(iso_df, columns=['conf_id', 'Mol', 'atom_index'])
         shifts = predict_shifts(model, iso_df)
         all_shifts.append([i.tolist() for i in shifts])

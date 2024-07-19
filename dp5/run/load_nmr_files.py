@@ -1,5 +1,7 @@
-"""expands NMRFile for input"""
+"""expands NMRFile for input. Functionality is moved into NMRData"""
+
 from pathlib import Path
+
 
 def find_nmr_files(nmr_path: str) -> list[Path]:
     """
@@ -9,19 +11,19 @@ def find_nmr_files(nmr_path: str) -> list[Path]:
     - nmr_path: relative path to NMRFile
 
     returns:
-    list of paths to files 
+    list of paths to files
     """
 
     _path = (Path(nmr_path)).resolve()
     nmr_paths = []
 
     if _path.is_dir():
-        c_path = ''
-        h_path = ''
+        c_path = ""
+        h_path = ""
         for file in _path.iterdir():
-            if file.name.lower() == 'carbon' or file.name.lower()=='carbon.dx':
+            if file.name.lower() == "carbon" or file.name.lower() == "carbon.dx":
                 c_path = file
-            elif file.name.lower() == 'proton' or file.name.lower() == 'proton.dx':
+            elif file.name.lower() == "proton" or file.name.lower() == "proton.dx":
                 h_path = file
             if c_path and h_path:
                 break

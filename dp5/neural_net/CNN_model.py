@@ -1,22 +1,27 @@
-
+"""Implements the graph convolutional neural network for shift simulation and DP5 probaility estimation"""
+from nfp.layers import (Squeeze, ReduceBondToAtom,
+                        GatherAtomToBond, ReduceAtomToPro)
+from nfp.models import GraphModel
+from nfp.preprocessing import GraphSequence
+from pathlib import Path
 import numpy as np
 from numpy.random import seed
 import sys
 
-#seed(1)
+# seed(1)
 
-#from tensorflow.random import set_seed
+# from tensorflow.random import set_seed
 
-#set_seed(2)
+# set_seed(2)
 
 import pickle
 
 # Define Keras model
 
 from tensorflow.keras.layers import (Input, Embedding, Dense,
-                                 Concatenate, Multiply, Add)
+                                     Concatenate, Multiply, Add)
 
-from tensorflow.keras.models import  load_model
+from tensorflow.keras.models import load_model
 
 
 from dp5.neural_net import nfp
@@ -25,21 +30,16 @@ from dp5.neural_net import nfp
 sys.modules['nfp'] = nfp
 
 
-from dp5.neural_net.nfp.preprocessing import  GraphSequence
-
-from dp5.neural_net.nfp.layers import ( Squeeze,ReduceBondToAtom,GatherAtomToBond, ReduceAtomToPro)
-
-from dp5.neural_net.nfp.models import GraphModel
-
-from pathlib import Path
-
 def rbf_expansion(distances, mu=0, delta=0.1, kmax=256):
     k = np.arange(0, kmax)
     logits = -(np.atleast_2d(distances).T - (-mu + delta * k)) ** 2 / delta
     return np.exp(logits)
 
-def atomic_number_tokenizer(atom):
+
+def _atomic_number_tokenizer(atom):
+    """suspicious code, likely redundant"""
     return atom.GetNumRadicalElectrons()
+
 
 def _compute_stacked_offsets(sizes, repeats):
     return np.repeat(np.cumsum(np.hstack([0, sizes[:-1]])), repeats)
@@ -64,18 +64,21 @@ class RBFSequence(GraphSequence):
 
 def Mol_iter(dfr):
 
-    for index,r in dfr.iterrows():
+    for index, r in dfr.iterrows():
 
-        yield( r['Shift'],index)
+        yield (r['Shift'], index)
+
 
 def Mol_iter2(df):
-    for index,r in df.iterrows():
-        yield(r['Mol'], r['atom_index'])
+    for index, r in df.iterrows():
+        yield (r['Mol'], r['atom_index'])
+
 
 def atomic_number_tokenizer(atom):
     return atom.GetAtomicNum()
-    
-def message_block(atom_features,atom_state, bond_state, connectivity):
+
+
+def message_block(atom_features, atom_state, bond_state, connectivity):
     atom_state = Dense(atom_features, use_bias=False)(atom_state)
 
     source_atom_gather = GatherAtomToBond(1)
@@ -86,11 +89,14 @@ def message_block(atom_features,atom_state, bond_state, connectivity):
 
     # Edge update network
     bond_state_message = Concatenate()([source_atom, target_atom, bond_state])
-    bond_state_message = Dense(2 * atom_features, activation='softplus')(bond_state_message)
+    bond_state_message = Dense(
+        2 * atom_features, activation='softplus')(bond_state_message)
     bond_state_message = Dense(atom_features)(bond_state_message)
 
-    bond_state_message = Dense(atom_features, activation='softplus')(bond_state_message)
-    bond_state_message = Dense(atom_features, activation='softplus')(bond_state_message)
+    bond_state_message = Dense(
+        atom_features, activation='softplus')(bond_state_message)
+    bond_state_message = Dense(
+        atom_features, activation='softplus')(bond_state_message)
     bond_state = Add()([bond_state_message, bond_state])
 
     # message function
@@ -105,11 +111,12 @@ def message_block(atom_features,atom_state, bond_state, connectivity):
     return atom_state, bond_state
 
 
-def build_model(Settings,model_type):
+def build_model(Settings, model_type):
 
     # Construct input sequences
 
-    preprocessor = pickle.load(open(Path(Settings.ScriptDir)/"mean_model_preprocessor.p","rb"))
+    preprocessor = pickle.load(
+        open(Path(Settings.ScriptDir)/"mean_model_preprocessor.p", "rb"))
 
     # Raw (integer) graph inputs
     atom_index = Input(shape=(1,), name='atom_index', dtype='int32')
@@ -134,26 +141,29 @@ def build_model(Settings,model_type):
     bond_state = distance_rbf
 
     for _ in range(3):
-        atom_state, bond_state = message_block(atom_features,atom_state, bond_state, connectivity)
+        atom_state, bond_state = message_block(
+            atom_features, atom_state, bond_state, connectivity)
 
-    atom_state = ReduceAtomToPro(reducer='unsorted_mean')([atom_state, satom_index, sn_pro])
+    atom_state = ReduceAtomToPro(reducer='unsorted_mean')(
+        [atom_state, satom_index, sn_pro])
 
-    trans_model_name = "NMRdb-CASCADEset_"+ model_type +"_mean_model_atom_features256.hdf5"
+    trans_model_name = "NMRdb-CASCADEset_" + \
+        model_type + "_mean_model_atom_features256.hdf5"
 
-    trans_model = load_model( str(Path(Settings.ScriptDir) /  trans_model_name), custom_objects={'GraphModel': GraphModel,
-                                                 'Squeeze': Squeeze,
-                                                 'GatherAtomToBond': GatherAtomToBond,
-                                                 'ReduceBondToAtom': ReduceBondToAtom,
-                                                 'ReduceAtomToPro': ReduceAtomToPro})
+    trans_model = load_model(str(Path(Settings.ScriptDir) / trans_model_name), custom_objects={'GraphModel': GraphModel,
+                                                                                               'Squeeze': Squeeze,
+                                                                                               'GatherAtomToBond': GatherAtomToBond,
+                                                                                               'ReduceBondToAtom': ReduceBondToAtom,
+                                                                                               'ReduceAtomToPro': ReduceAtomToPro})
 
     model = GraphModel([
         atom_index, atom_types, distance_rbf, connectivity, n_pro], [atom_state])
 
     model.compile()
 
-    ####### transfer weights from dft model by name:
+    # transfer weights from dft model by name:
 
-    model_layers = [ n.name for n in model.layers]
+    model_layers = [n.name for n in model.layers]
 
     for i, l in enumerate(model.layers):
 
@@ -169,21 +179,24 @@ def build_model(Settings,model_type):
 
     return model
 
-def extract_Error_reps(model,test,Settings):
+
+def extract_Error_reps(model, test, Settings):
 
     batch_size = 1
 
-    preprocessor = pickle.load(open( Path(Settings.ScriptDir) /  "mean_model_preprocessor.p","rb"))
+    preprocessor = pickle.load(
+        open(Path(Settings.ScriptDir) / "mean_model_preprocessor.p", "rb"))
 
     inputs_test = preprocessor.predict(Mol_iter2(test))
 
     test_sequence = RBFSequence(inputs_test, test.atom_index, batch_size)
 
-    pca = pickle.load(open(Path(Settings.ScriptDir) / "pca_10_ERRORrep_Error_decomp.p", "rb"))
+    pca = pickle.load(open(Path(Settings.ScriptDir) /
+                      "pca_10_ERRORrep_Error_decomp.p", "rb"))
 
     reps = []
 
-    for i,row in test.iterrows():
+    for i, row in test.iterrows():
 
         yhat = model(test_sequence[i][0])
 
@@ -193,25 +206,28 @@ def extract_Error_reps(model,test,Settings):
 
         reps.append(X)
 
-        i+=1
+        i += 1
 
     return reps
 
-def extract_Exp_reps(model,test,Settings):
+
+def extract_Exp_reps(model, test, Settings):
 
     batch_size = 1
 
-    preprocessor = pickle.load(open( Path(Settings.ScriptDir) /  "mean_model_preprocessor.p","rb"))
+    preprocessor = pickle.load(
+        open(Path(Settings.ScriptDir) / "mean_model_preprocessor.p", "rb"))
 
     inputs_test = preprocessor.predict(Mol_iter2(test))
 
     test_sequence = RBFSequence(inputs_test, test.atom_index, batch_size)
 
-    pca = pickle.load(open(Path(Settings.ScriptDir) / "pca_10_EXP_decomp.p", "rb"))
+    pca = pickle.load(open(Path(Settings.ScriptDir) /
+                      "pca_10_EXP_decomp.p", "rb"))
 
     reps = []
 
-    for i,row in test.iterrows():
+    for i, row in test.iterrows():
 
         yhat = model(test_sequence[i][0])
 
@@ -221,29 +237,32 @@ def extract_Exp_reps(model,test,Settings):
 
         reps.append(X)
 
-        i+=1
+        i += 1
 
-    #do pca on the reps
+    # do pca on the reps
 
     return reps
 
-def load_NMR_prediction_model(filepath = "NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5"):
+
+def load_NMR_prediction_model(filepath="NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5"):
     """
     Loads NMR predicting model. Make sure your model is in neural_net folder!
     """
 
-    model = load_model( str(Path(__file__).parent / filepath) , custom_objects={'GraphModel': GraphModel,
-                                                 'Squeeze': Squeeze,
-                                                 'GatherAtomToBond': GatherAtomToBond,
-                                                 'ReduceBondToAtom': ReduceBondToAtom,
-                                                 'ReduceAtomToPro': ReduceAtomToPro})
+    model = load_model(str(Path(__file__).parent / filepath), custom_objects={'GraphModel': GraphModel,
+                                                                              'Squeeze': Squeeze,
+                                                                              'GatherAtomToBond': GatherAtomToBond,
+                                                                              'ReduceBondToAtom': ReduceBondToAtom,
+                                                                              'ReduceAtomToPro': ReduceAtomToPro})
     return model
 
-def predict_shifts(model,test):
+
+def predict_shifts(model, test):
 
     batch_size = 1
 
-    preprocessor = pickle.load(open( Path(__file__).parent /  "mean_model_preprocessor.p","rb"))
+    preprocessor = pickle.load(
+        open(Path(__file__).parent / "mean_model_preprocessor.p", "rb"))
 
     inputs_test = preprocessor.predict(Mol_iter2(test))
 
@@ -260,4 +279,3 @@ def predict_shifts(model,test):
         iso_shifts.append(shifts)
 
     return iso_shifts
-

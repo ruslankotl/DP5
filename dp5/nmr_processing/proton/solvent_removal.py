@@ -17,7 +17,7 @@ def solvent_removal(solvent, y_data, x_data, picked_peaks, peak_regions, grouped
 
     with open(solvent_file) as f:
         solvent_dict = json.load(f)
-    
+
     if solvent in solvent_dict:
         solvent_data = solvent_dict[solvent]
     else:
@@ -34,7 +34,8 @@ def solvent_removal(solvent, y_data, x_data, picked_peaks, peak_regions, grouped
         speak_ppm = peak["exp_ppm"]
         # if only a singlet is expected for this peak find solvent peak based on amplitude and position
         if not peak["Jv"]:
-            probs = norm.pdf(abs(picked_peaks_ppm - speak_ppm), loc=0, scale=0.1) * y_data[picked_peaks]
+            probs = norm.pdf(abs(picked_peaks_ppm - speak_ppm),
+                             loc=0, scale=0.1) * y_data[picked_peaks]
 
             # find the maximum probability
             w = np.argmax(probs)
@@ -51,7 +52,8 @@ def solvent_removal(solvent, y_data, x_data, picked_peaks, peak_regions, grouped
 
             # limit the search to peaks +- 1 ppm either side
 
-            srange = (picked_peaks_ppm > speak_ppm - 1) * (picked_peaks_ppm < speak_ppm + 1)
+            srange = (picked_peaks_ppm > speak_ppm - 1) * \
+                (picked_peaks_ppm < speak_ppm + 1)
 
             for peak in picked_peaks_ppm[srange]:
                 fit_s_peaks, amp_vector, fit_s_y = new_first_order_peak(peak, peak["Jv"], np.arange(len(x_data)), 0.1, uc,
@@ -78,9 +80,11 @@ def solvent_removal(solvent, y_data, x_data, picked_peaks, peak_regions, grouped
                 closest_amps = [i / max(closest_amps) for i in closest_amps]
 
                 # append to the vector
-                amp_res.append(sum([abs(amp_vector[i] - closest_amps[i]) for i in range(len(amp_vector))]))
+                amp_res.append(
+                    sum([abs(amp_vector[i] - closest_amps[i]) for i in range(len(amp_vector))]))
                 dist_res.append(np.sum(np.abs(closest_peaks - fit_s_peaks)))
-                pos_res.append(norm.pdf(abs(peak - speak_ppm), loc=0, scale=0.5))
+                pos_res.append(
+                    norm.pdf(abs(peak - speak_ppm), loc=0, scale=0.5))
 
             # use the gsd data to find amplitudes of these peaks
             pos_res = [1 - i / max(pos_res) for i in pos_res]
@@ -88,7 +92,8 @@ def solvent_removal(solvent, y_data, x_data, picked_peaks, peak_regions, grouped
             amp_res = [i / max(amp_res) for i in amp_res]
 
             # calculate geometric mean of metrics for each peak
-            g_mean = [(dist_res[i] + amp_res[i] + pos_res[i]) / 3 for i in range(0, len(amp_res))]
+            g_mean = [(dist_res[i] + amp_res[i] + pos_res[i]) /
+                      3 for i in range(0, len(amp_res))]
 
             # compare the residuals and find the minimum
             minres = np.argmin(g_mean)
@@ -127,7 +132,7 @@ def solvent_removal(solvent, y_data, x_data, picked_peaks, peak_regions, grouped
 
     for ind4, peak in enumerate(peaks_to_remove):
         grouped_peaks[solvent_regions[ind4]] = np.delete(grouped_peaks[solvent_regions[ind4]],
-                                                         np.where(grouped_peaks[solvent_regions[ind4]] == peak))
+                                                         np.where(grouped_peaks[solvent_regions[ind4]] == peak)).tolist()
 
     # resimulate the solvent regions
     solvent_region_ind = sorted(list(set(solvent_regions)))
@@ -140,5 +145,3 @@ def solvent_removal(solvent, y_data, x_data, picked_peaks, peak_regions, grouped
     x_data = x_data + s_differences
 
     return peak_regions, picked_peaks, grouped_peaks, x_data, solvent_region_ind
-
-

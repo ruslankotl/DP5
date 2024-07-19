@@ -4,3 +4,4 @@ from dp5.nmr_processing.proton.fid_corrections import spectral_processing
 from dp5.nmr_processing.proton.solvent_removal import solvent_removal
 from dp5.nmr_processing.proton.bic_minimisation import multiproc_BIC_minimisation
 from dp5.nmr_processing.proton.simulate import simulate_regions
+from dp5.nmr_processing.proton.assign import iterative_assignment

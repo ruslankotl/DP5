@@ -1,7 +1,7 @@
 
 structure = [] # path to structure file or files
 input_type = "sdf" # accepts sdf, smarts, smiles, inchi
-nmr_file = "" # path to nmr data or a folder
+nmr_file = [] # path to nmr data or a folder
 stereocentres = [] # stereocentres to alter
 
 solvent = ""
@@ -97,13 +97,9 @@ start_time = "" # set automatically
 
 max_concurrent_jobs = 75 # 75 on Ziggy, 320 on Darwin
 
-[nmr]
+[dp4]
 
-# B3LYP/6-31G** reference shielding
-c13_tms = 191.69255 
-h1_tms = 31.7518583
-
-model = "g"
+stats_model = "g"
 param_file = "none"
 
 

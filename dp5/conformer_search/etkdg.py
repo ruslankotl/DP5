@@ -1,3 +1,7 @@
+"""
+algorithm borrowed from CASCADE paper and is used to run a quick estimate of conformation space
+"""
+
 import logging
 from pathlib import Path
 
@@ -5,43 +9,43 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 
 from dp5.conformer_search.base_cs_method import BaseConfSearch, ConfData
-'''
-algorithm borrowed from CASCADE paper and is used to run a quick estimate of conformation space
-'''
+
+
 logger = logging.getLogger(__name__)
+
 
 class ConfSearchMethod(BaseConfSearch):
 
     def __init__(self, inputs, settings):
-        super().__init__(inputs,settings)
-
+        super().__init__(inputs, settings)
 
     def prepare_input(self):
         # no conversion required
         return self.inputs
-    
+
     def __repr__(self) -> str:
         return "ETKDG"
 
-
     def _run(self):
-        efilter = self.settings['energy_cutoff'] / 4.184
-        conf_limit = self.settings['conf_limit']
+        efilter = self.settings["energy_cutoff"] / 4.184
+        conf_limit = self.settings["conf_limit"]
 
         outputs = []
         for input in self.inputs:
-            output_exists = Path(f'{input}.confs').exists()
+            output_exists = Path(f"{input}.confs").exists()
             if not output_exists:
-                mol = Chem.MolFromMolFile(f'{input}.sdf', removeHs=False)
-                confs, ids, nr = self._genConf(mol, nc=conf_limit, rms=0.125,efilter=efilter, rmspost=0.5)
-                save = Chem.SDWriter(f'{input}.confs')
+                mol = Chem.MolFromMolFile(f"{input}.sdf", removeHs=False)
+                confs, ids, nr = self._genConf(
+                    mol, nc=conf_limit, rms=0.125, efilter=efilter, rmspost=0.5
+                )
+                save = Chem.SDWriter(f"{input}.confs")
                 for energy, id in ids:
                     conf = Chem.Mol(mol, confId=id)
-                    conf.SetProp('E', f'{energy * 4.184:.2f}')
-                    conf.SetProp('_Name', '{}_{}'.format(input, id))
+                    conf.SetProp("E", f"{energy * 4.184:.2f}")
+                    conf.SetProp("_Name", "{}_{}".format(input, id))
                     save.write(conf)
                 save.flush()
-            outputs.append(f'{input}.confs')
+            outputs.append(f"{input}.confs")
         return outputs
 
     def _parse_output(self, file):
@@ -56,14 +60,14 @@ class ConfSearchMethod(BaseConfSearch):
                 atoms = []
                 for atom in conf.GetAtoms():
                     atoms.append(atom.GetSymbol())
-                    charge+=(atom.GetFormalCharge())
+                    charge += atom.GetFormalCharge()
             conf3d = conf.GetConformer()
             coords = conf3d.GetPositions().tolist()
             conformers.append(coords)
-            energies.append(float(conf.GetProp('E')))
-            conf_data = ConfData(atoms,conformers,charge, energies)
-        return conf_data 
-                
+            energies.append(float(conf.GetProp("E")))
+            conf_data = ConfData(atoms, conformers, charge, energies)
+        return conf_data
+
     # algorithm to generate nc conformations
     def _genConf(self, m, nc, rms, efilter, rmspost):
         """
@@ -79,17 +83,20 @@ class ConfSearchMethod(BaseConfSearch):
 
         nr = int(AllChem.CalcNumRotatableBonds(m))
         Chem.AssignAtomChiralTagsFromStructure(m, replaceExistingTags=True)
-        if not nc: nc = min(1000, 3**nr)
+        if not nc:
+            nc = min(1000, 3**nr)
 
         logger.info("ETKDG conformational search")
         logger.info(f"Energy window: {efilter:.2f} kcal/mol")
         logger.debug(f"Will generate up to {nc} conformers")
 
-        if not rms: rms = -1
-        ids=AllChem.EmbedMultipleConfs(m, numConfs=nc, randomSeed=0xf00d, useRandomCoords=True, pruneRmsThresh=rms)
+        if not rms:
+            rms = -1
+        ids = AllChem.EmbedMultipleConfs(
+            m, numConfs=nc, randomSeed=0xF00D, useRandomCoords=True, pruneRmsThresh=rms
+        )
 
-
-        if len(ids)== 0:
+        if len(ids) == 0:
             ids = m.AddConformer(m.GetConformer, assignID=True)
 
         logger.info(f"Generated {len(ids)} conformers")
@@ -132,7 +139,7 @@ class ConfSearchMethod(BaseConfSearch):
         nid.append(int(diz[0][1]))
         ener.append(float(diz[0][0]))
         del diz[0]
-        for x,y in diz:
+        for x, y in diz:
             if x <= sup:
                 n.AddConformer(m.GetConformer(int(y)))
                 nid.append(int(y))
@@ -152,14 +159,14 @@ class ConfSearchMethod(BaseConfSearch):
         enval = [diz2[0][0]]
         nh = Chem.RemoveHs(n)
         del diz2[0]
-        for z,w in diz2:
+        for z, w in diz2:
             confid = int(w)
-            p=0
+            p = 0
             for conf2id in confidlist:
-                #print(confid, conf2id)
+                # print(confid, conf2id)
                 rmsd = AllChem.GetBestRMS(nh, nh, prbId=confid, refId=conf2id)
                 if rmsd < rmspost:
-                    p=p+1
+                    p = p + 1
                     break
             if p == 0:
                 confidlist.append(int(confid))
@@ -167,4 +174,3 @@ class ConfSearchMethod(BaseConfSearch):
         diz3 = list(zip(enval, confidlist))
         logger.info("Retained %s conformers", len(enval))
         return o, diz3
-    
