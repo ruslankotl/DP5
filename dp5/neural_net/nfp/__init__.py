@@ -1,5 +1,5 @@
-from .layers import *
-from .models import *
+from dp5.neural_net.nfp.layers import *
+from dp5.neural_net.nfp.models import *
 
 custom_layers = {
     'MessageLayer': MessageLayer,

@@ -1,32 +1,25 @@
 """Implements the graph convolutional neural network for shift simulation and DP5 probaility estimation"""
-from nfp.layers import (Squeeze, ReduceBondToAtom,
-                        GatherAtomToBond, ReduceAtomToPro)
-from nfp.models import GraphModel
-from nfp.preprocessing import GraphSequence
+from dp5.neural_net.nfp.preprocessing import GraphSequence
+from dp5.neural_net.nfp.models import GraphModel
+from dp5.neural_net.nfp.layers import (Squeeze, ReduceBondToAtom,
+                                       GatherAtomToBond, ReduceAtomToPro)
 from pathlib import Path
+import pickle
+
 import numpy as np
 from numpy.random import seed
 import sys
-
 # seed(1)
-
 # from tensorflow.random import set_seed
-
 # set_seed(2)
 
-import pickle
-
 # Define Keras model
-
 from tensorflow.keras.layers import (Input, Embedding, Dense,
                                      Concatenate, Multiply, Add)
-
 from tensorflow.keras.models import load_model
 
-
 from dp5.neural_net import nfp
-
-# essential for nfp to work!!!
+# essential for models to work!!!
 sys.modules['nfp'] = nfp
 
 
@@ -180,6 +173,32 @@ def build_model(Settings, model_type):
     return model
 
 
+def extract_and_transform_representation(model, test, pca_path, batch_size):
+    with open(Path(__file__).parent / "mean_model_preprocessor.p", "rb") as f, open(pca_path) as pca_p:
+        preprocessor = pickle.load(f)
+        pca = pickle.load(pca_p)
+    inputs_test = preprocessor.predict(Mol_iter2(test))
+    test_sequence = RBFSequence(inputs_test, test.atom_index, batch_size)
+    reps = []
+    for i, row in test.iterrows():
+        yhat = model(test_sequence[i][0])
+        r = [m for m in yhat.numpy()]
+        X = pca.transform(r)
+        reps.append(X)
+        i += 1
+
+    return reps
+    # finish later
+
+
+def extract_error_reps(model, test, pca_path=Path(__file__).parent / 'pca_10_ERRORrep_Error_decomp.p', batch_size=1):
+    return extract_and_transform_representation(model, test, pca_path=pca_path, batch_size=batch_size)
+
+
+def extract_exp_reps(model, test, pca_path=Path(__file__).parent / 'pca_10_EXP_decomp.p', batch_size=1):
+    return extract_and_transform_representation(model, test, pca_path=pca_path, batch_size=batch_size)
+
+
 def extract_Error_reps(model, test, Settings):
 
     batch_size = 1
@@ -257,10 +276,10 @@ def load_NMR_prediction_model(filepath="NMRdb-CASCADEset_Exp_mean_model_atom_fea
     return model
 
 
-def predict_shifts(model, test):
-
-    batch_size = 1
-
+def predict_shifts(model, test, batch_size=16):
+    """Predicts the shifts for all conformers of one molecule
+    Assumes same number of atoms to model in each conformer
+    """
     preprocessor = pickle.load(
         open(Path(__file__).parent / "mean_model_preprocessor.p", "rb"))
 
@@ -271,11 +290,13 @@ def predict_shifts(model, test):
     iso_shifts = []
 
     for i in test_sequence:
-
+        # returns (n, 1) shape array of n shifts
         yhat = model(i[0])
-
-        shifts = np.array([m[0] for m in yhat.numpy()])
-
-        iso_shifts.append(shifts)
+        indices = i[0]['n_pro'].cumsum()[:-1]
+        # must flatten it for shifts
+        shifts = yhat.numpy().flatten()
+        shifts = np.split(shifts, indices)
+        # now supports batches!
+        iso_shifts.extend(shifts)
 
     return iso_shifts
