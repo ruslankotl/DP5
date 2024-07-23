@@ -5,10 +5,12 @@ from dp5.neural_net.nfp.layers import (Squeeze, ReduceBondToAtom,
                                        GatherAtomToBond, ReduceAtomToPro)
 from pathlib import Path
 import pickle
+import logging
 
 import numpy as np
 from numpy.random import seed
 import sys
+import pandas as pd
 # seed(1)
 # from tensorflow.random import set_seed
 # set_seed(2)
@@ -21,6 +23,8 @@ from tensorflow.keras.models import load_model
 from dp5.neural_net import nfp
 # essential for models to work!!!
 sys.modules['nfp'] = nfp
+
+logger = logging.getLogger(__name__)
 
 
 def rbf_expansion(distances, mu=0, delta=0.1, kmax=256):
@@ -276,9 +280,45 @@ def load_NMR_prediction_model(filepath="NMRdb-CASCADEset_Exp_mean_model_atom_fea
     return model
 
 
+def get_shifts_and_labels(mols, atomic_symbol, model_path, batch_size=16):
+    model = load_NMR_prediction_model(model_path)
+    logger.info('Loaded NMR prediction model')
+    all_shifts = []
+
+    all_df, all_labels = mols_to_df(mols, atomic_symbol)
+
+    logger.info(f'Ready to predict shifts for {atomic_symbol}')
+    all_shifts = predict_shifts(model, all_df, batch_size=batch_size)
+
+    return all_shifts, all_labels
+
+
+def mols_to_df(mols, atomic_symbol):
+    all_labels = []
+    all_df = []
+
+    for mol_id, mol in enumerate(mols):
+        inds = [at.GetIdx() for at in mol[0].GetAtoms()
+                if at.GetSymbol() == atomic_symbol]
+        mol_labels = [f'{atomic_symbol}{i+1}' for i in inds]
+        all_labels.append(mol_labels)
+
+        for conf_id, conf in enumerate(mol):
+            all_df.append((mol_id, conf_id, conf, np.array(inds)))
+
+    all_df = pd.DataFrame(
+        all_df, columns=['mol_id', 'conf_id', 'Mol', 'atom_index'])
+
+    return all_df, all_labels
+
+
 def predict_shifts(model, test, batch_size=16):
-    """Predicts the shifts for all conformers of one molecule
-    Assumes same number of atoms to model in each conformer
+    """Predicts the shifts for all conformers of all molecules. 
+    - model: prediction_model
+    - test: dataframe containing mol_id, conf_id, Mol object and atom indices column
+    - batch_size: batch_size
+    Returns:
+    - list(molecules) of lists(geometries) of lists(shifts)
     """
     preprocessor = pickle.load(
         open(Path(__file__).parent / "mean_model_preprocessor.p", "rb"))
@@ -295,8 +335,12 @@ def predict_shifts(model, test, batch_size=16):
         indices = i[0]['n_pro'].cumsum()[:-1]
         # must flatten it for shifts
         shifts = yhat.numpy().flatten()
-        shifts = np.split(shifts, indices)
+        shifts = [list(s) for s in np.split(shifts, indices)]
         # now supports batches!
         iso_shifts.extend(shifts)
 
-    return iso_shifts
+    test['shift_arrays'] = iso_shifts
+    all_shifts = [shifts.tolist()
+                  for i, shifts in test.groupby('mol_id')['shift_arrays']]
+
+    return all_shifts

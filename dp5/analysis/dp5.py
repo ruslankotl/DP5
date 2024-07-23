@@ -14,6 +14,15 @@ class DP5:
         self.output_folder = output_folder
         self.dft_shifts = use_dft_shifts
 
+        if use_dft_shifts:
+            # must load model for error prediction
+            self.model = load_NMR_prediction_model(
+                filepath='NMRdb-CASCADEset_Error_mean_model_atom_features256.hdf5')
+        else:
+            # must load model for shift preiction
+            self.model = load_NMR_prediction_model(
+                filepath='NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5')
+
         if not self.output_folder.exists():
             self.output_folder.mkdir()
 
@@ -27,4 +36,6 @@ class DP5:
             pass
 
     def __call__(self, mols):
+        c_df = mols_to_df(mols, atomic_symbol='C')
+        c_reps = extract_error_reps(self.model, c_df)
         pass

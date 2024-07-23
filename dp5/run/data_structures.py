@@ -124,7 +124,7 @@ class Molecules:
 
     def get_nn_nmr_shifts(self):
         """Should get C and H shifts"""
-        mols = [mol.create_rdkit_mols() for mol in self.mols]
+        mols = [mol.rdkit_mols for mol in self.mols]
         cascade_shifts_labels = get_nn_shifts(mols)
         for mol, *m_shift_label in zip(self.mols, *cascade_shifts_labels):
             mol.add_nn_shifts(m_shift_label)
@@ -142,5 +142,5 @@ class Molecules:
     def dp4_analysis(self):
         dp4 = DP4(self.config['output_folder'], self.config['dp4'])
         dp4_output = dp4(self.mols)
-        for mol, dp4_data in self.mols, dp4_output:
+        for mol, dp4_data in zip(self.mols, dp4_output):
             mol.add_dp4_data(dp4_data)

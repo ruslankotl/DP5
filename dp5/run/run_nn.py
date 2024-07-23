@@ -1,17 +1,12 @@
 import logging
 
-
-import numpy as np
-import pandas as pd
-
-
-from dp5.neural_net import predict_shifts, load_NMR_prediction_model
+from dp5.neural_net import get_shifts_and_labels
 
 
 logger = logging.getLogger(__name__)
 
 
-def get_nn_shifts(mols):
+def get_nn_shifts(mols, batch_size=16):
     """
     Predicts shifts from rdkit Mol objects.
     Arguments:
@@ -23,47 +18,19 @@ def get_nn_shifts(mols):
     - list of lists of H atomic labels      
     """
 
-    C_shifts, C_labels = predict_cascade_shifts(mols)
+    C_shifts, C_labels = predict_C_shifts(mols, batch_size)
 
-    H_shifts, H_labels = [[[]]]*len(mols), [[]]*len(mols)
+    H_shifts, H_labels = predict_H_shifts(mols, batch_size)
 
     # will add H_shifts and H_labels later!
 
     return C_shifts, C_labels, H_shifts, H_labels
 
 
-def predict_cascade_shifts(mols, filepath="NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5", atomic_symbol='C'):
-    """Predicts shifts
+def predict_C_shifts(mols, batch_size):
+    return get_shifts_and_labels(mols, atomic_symbol='C',
+                                 model_path="NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5", batch_size=batch_size)
 
-    Arguments:
-    - list of lists of rdkit Mol objects
-    - filepath: path to the prediction model
 
-    Returns:
-    - all_shifts: list of lists of shifts
-    - all_labels: list of lists of labels
-    """
-    model = load_NMR_prediction_model(filepath)
-    logger.info('Loaded NMR prediction model')
-
-    all_shifts = []
-    all_labels = []
-
-    for mol in mols:
-        iso_df = []
-        shifts = []
-
-        inds = [at.GetIdx() for at in mol[0].GetAtoms()
-                if at.GetSymbol() == atomic_symbol]
-        mol_labels = [f'{atomic_symbol}{i+1}' for i in inds]
-        all_labels.append(mol_labels)
-
-        for i, conf in enumerate(mol):
-            iso_df.append((i, conf, np.array(inds)))
-
-        iso_df = pd.DataFrame(iso_df, columns=['conf_id', 'Mol', 'atom_index'])
-        shifts = predict_shifts(model, iso_df)
-        all_shifts.append([i.tolist() for i in shifts])
-
-    logger.info("Successfully predicted NMR shifts")
-    return all_shifts, all_labels
+def predict_H_shifts(mols, batch_size):
+    return [[[]]]*len(mols), [[]]*len(mols)
