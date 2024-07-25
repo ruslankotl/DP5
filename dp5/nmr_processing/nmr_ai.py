@@ -7,13 +7,8 @@ Should have an assignment method
 from .helper_functions import *
 from .proton.process import proton_processing, proton_assignment
 from .description_files import process_description, pairwise_assignment
-import re
-import os
-import math
-import copy
+
 import pickle
-import shutil
-import sys
 import logging
 from pathlib import Path
 
@@ -127,9 +122,9 @@ class NMRData:
 
         _mol = mol.rdkit_mols[0]
 
-        C_shifts = mol.predicted_c_shifts()
+        C_shifts = mol.C_shifts
         C_labels = mol.C_labels
-        H_shifts = mol.predicted_h_shifts()
+        H_shifts = mol.H_shifts
         H_labels = mol.H_labels
 
         if self.protondata:

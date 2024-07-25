@@ -2,6 +2,7 @@ import numpy as np
 from rdkit import Chem
 from rdkit.Geometry import Point3D
 from rdkit.Chem import rdForceFieldHelpers
+from scipy.stats import linregress
 
 from dp5.run.run_cs import conf_search
 from dp5.run.run_dft import dft_calculations
@@ -16,48 +17,139 @@ class Molecule:
         self.base_name = input_file.rsplit(".", maxsplit=1)[0]
         mol = Chem.MolFromMolFile(input_file, removeHs=False)
 
-        self.atoms = [at.GetSymbol() for at in mol.GetAtoms()]
-        self.conformers = [mol.GetConformer(0).GetPositions().tolist()]
-        self.charge = sum([at.GetFormalCharge() for at in mol.GetAtoms()])
+        self._atoms = [at.GetSymbol() for at in mol.GetAtoms()]
+        self._conformers = [mol.GetConformer(0).GetPositions()]
+        self._charge = sum([at.GetFormalCharge() for at in mol.GetAtoms()])
 
         # estimates force field energy
-        prop = rdForceFieldHelpers.MMFFGetMoleculeProperties(
-            mol, mmffVariant="MMFF94s")
+        prop = rdForceFieldHelpers.MMFFGetMoleculeProperties(mol, mmffVariant="MMFF94s")
         ff = rdForceFieldHelpers.MMFFGetMoleculeForceField(mol, prop)
-        self.energies = [float(ff.CalcEnergy()) * 4.184]
+        self._energies = np.array([float(ff.CalcEnergy()) * 4.184])
         # creates mol object for further manipulation
-        self.rdkit_mols = [mol]
+        self._rdkit_mols = None
+        self._mol = mol
 
     def __repr__(self) -> str:
         return self.base_name
 
-    def create_rdkit_mols(self):
-        mols = []
-        for conformer in self.conformers:
-            molecule = Chem.MolFromMolFile(self.input_file, removeHs=False)
-            conf = molecule.GetConformer(0)
-            for atom, atom_coord in enumerate(conformer):
-                x, y, z = atom_coord
-                conf.SetAtomPosition(atom, Point3D(x, y, z))
-            mol = Chem.Mol(molecule, confId=0)
-            mols.append(mol)
-        self.rdkit_mols = mols
-        return mols
+    @property
+    def atoms(self):
+        return self._atoms
+
+    @atoms.setter
+    def atoms(self, new_atoms):
+        self._atoms = np.array(new_atoms)
+
+    @property
+    def conformers(self):
+        return self._conformers
+
+    @conformers.setter
+    def conformers(self, values):
+        if not isinstance(values, np.ndarray):
+            values = np.array(values)
+        if values.shape[2] == 3:
+            self._conformers = values
+        else:
+            raise ValueError("Cannot set coordinates!")
+        self._rdkit_mols = None
+
+    @property
+    def energies(self):
+        return self._energies
+
+    @energies.setter
+    def energies(self, values):
+        if not isinstance(values, np.ndarray):
+            values = np.array(values)
+        self._energies = values
+        self._populations = None
+
+    @property
+    def charge(self):
+        return self._charge
+
+    @charge.setter
+    def charge(self, value):
+        self._charge = int(value)
+
+    @property
+    def rdkit_mols(self):
+        if self._rdkit_mols is None:
+            mols = []
+            for conformer in self.conformers:
+                molecule = Chem.Mol(self._mol)
+                conf = molecule.GetConformer(0)
+                for atom, atom_coord in enumerate(conformer):
+                    x, y, z = atom_coord
+                    conf.SetAtomPosition(atom, Point3D(x, y, z))
+                mol = Chem.Mol(molecule, confId=0)
+                mols.append(mol)
+            self._rdkit_mols = mols
+        return self._rdkit_mols
+
+    @property
+    def conformer_C_pred(self):
+        return self._conformer_C_pred
+
+    @conformer_C_pred.setter
+    def conformer_C_pred(self, values):
+        if not isinstance(values, np.ndarray):
+            values = np.array(values)
+        self._conformer_C_pred = values
+
+    @property
+    def C_labels(self):
+        return self._C_labels
+
+    @C_labels.setter
+    def C_labels(self, labels):
+        self._C_labels = np.array(labels)
+
+    @property
+    def H_labels(self):
+        return self._H_labels
+
+    @H_labels.setter
+    def H_labels(self, labels):
+        self._H_labels = np.array(labels)
+
+    @property
+    def shielding_labels(self):
+        return self._shielding_labels
+
+    @shielding_labels.setter
+    def shielding_labels(self, labels):
+        self._shielding_labels = np.array(labels)
 
     def add_conformer_data(self, data):
         self.atoms = data.atoms
         self.conformers = data.conformers
         self.charge = data.charge
         self.energies = data.energies
-        # update RDKit Mol objects!
-        _ = self.create_rdkit_mols()
+        self._rdkit_mols = None
 
-    def update_mol_data(self, data):
-        self.__dict__.update(data.__dict__)
-        _ = self.create_rdkit_mols()
+    def add_dft_data(self, data):
+        attrs = (
+            "atoms",
+            "conformers",
+            "charge",
+            "energies",
+            "conformer_C_pred",
+            "C_labels",
+            "conformer_H_pred",
+            "H_labels",
+            "shielding_labels",
+        )
+        for attr in attrs:
+            if hasattr(data, attr):
+                setattr(self, attr, getattr(data, attr))
+        self._rdkit_mols = None
 
     def add_nn_shifts(self, shifts_labels):
-        self.C_pred, self.C_labels, self.H_pred, self.H_labels = shifts_labels
+        self.conformer_C_pred, self.C_labels, self.conformer_H_pred, self.H_labels = (
+            shifts_labels
+        )
 
     def copy(self):
         """Prevents accidental attribute override."""
@@ -66,29 +158,33 @@ class Molecule:
 
         return new_mol
 
-    def calculate_populations(self):
-        '''Assumeds kJ/mol as energy unit'''
-        scaling = 1000 / 8.3415 / 298.15
-        energies = np.array(self.energies)
-        energies = energies - np.min(energies)
-        exp_energies = np.exp(-energies * scaling)
-        self.populations = exp_energies / exp_energies.sum()
+    @property
+    def populations(self):
+        """Assumeds kJ/mol as energy unit"""
+        if self._populations is None:
+            energies = self.energies
+            scaling = 1000 / 8.3415 / 298.15
+            energies = energies - np.min(energies)
+            exp_energies = np.exp(-energies * scaling)
+            self._populations = exp_energies / exp_energies.sum()
+        return self._populations
 
     def boltzmann_weighting(self, attr: str):
         # recomputes populations just in case
-        self.calculate_populations()
         data = getattr(self, attr)
         data = np.array(data, dtype=np.float32)
         return (self.populations[:, np.newaxis] * data).sum(axis=0)
 
-    def predicted_c_shifts(self):
-        return self.boltzmann_weighting("C_pred")
+    @property
+    def H_shifts(self):
+        return self.boltzmann_weighting("conformer_H_pred")
 
-    def predicted_h_shifts(self):
-        return self.boltzmann_weighting("H_pred")
+    @property
+    def C_shifts(self):
+        return self.boltzmann_weighting("conformer_C_pred")
 
     def assign_nmr(self, C_exp, H_exp):
-        self.C_exp, self.H_exp = C_exp, H_exp
+        self.C_exp, self.H_exp = np.array(C_exp), np.array(H_exp)
 
     def add_dp4_data(self, dp4_data):
         self.dp4_data = dp4_data
@@ -102,7 +198,7 @@ class Molecules:
         self.mols = [Molecule(mol) for mol in self.config["structure"]]
 
     def __iter__(self):
-        return (mol for mol in self.mols)
+        return (mol.copy() for mol in self.mols)
 
     def __getitem__(self, idx):
         return self.mols[idx]
@@ -115,12 +211,12 @@ class Molecules:
 
     def get_dft_data(self):
         """Runs DFT calculations"""
-        dft_mols = [mol.copy() for mol in self.mols]
+        dft_mols = [mol for mol in self.mols]
         dft_data = dft_calculations(
             dft_mols, self.config["workflow"], self.config["dft"]
         )
         for mol, data in zip(self.mols, dft_data, strict=True):
-            mol.update_mol_data(data)
+            mol.add_dft_data(data)
 
     def get_nn_nmr_shifts(self):
         """Should get C and H shifts"""
@@ -135,12 +231,11 @@ class Molecules:
             mol.assign_nmr(C_exp, H_exp)
 
     def dp5_analysis(self):
-        dp5 = DP5(self.config['output_folder'],
-                  self.config['workflow']['dft_nmr'])
+        dp5 = DP5(self.config["output_folder"], self.config["workflow"]["dft_nmr"])
         dp5_data = dp5(self.mols)
 
     def dp4_analysis(self):
-        dp4 = DP4(self.config['output_folder'], self.config['dp4'])
+        dp4 = DP4(self.config["output_folder"], self.config["dp4"])
         dp4_output = dp4(self.mols)
         for mol, dp4_data in zip(self.mols, dp4_output):
             mol.add_dp4_data(dp4_data)

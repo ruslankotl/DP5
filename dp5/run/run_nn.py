@@ -15,7 +15,7 @@ def get_nn_shifts(mols, batch_size=16):
     - list of lists of 13C chemical shifts for each atom in a molecule
     - list of lists of C atomic labels
     - list of lists of 1H chemical shifts for each atom in a molecule
-    - list of lists of H atomic labels      
+    - list of lists of H atomic labels
     """
 
     C_shifts, C_labels = predict_C_shifts(mols, batch_size)
@@ -28,9 +28,13 @@ def get_nn_shifts(mols, batch_size=16):
 
 
 def predict_C_shifts(mols, batch_size):
-    return get_shifts_and_labels(mols, atomic_symbol='C',
-                                 model_path="NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5", batch_size=batch_size)
+    return get_shifts_and_labels(
+        mols,
+        atomic_symbol="C",
+        model_path="NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5",
+        batch_size=batch_size,
+    )
 
 
 def predict_H_shifts(mols, batch_size):
-    return [[[]]]*len(mols), [[]]*len(mols)
+    return [[[]]] * len(mols), [[]] * len(mols)

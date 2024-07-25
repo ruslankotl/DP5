@@ -3,9 +3,9 @@ import warnings
 
 import numpy as np
 import nmrglue as ng
-from scipy.stats import linregress
 
-__all__ = ['read_bruker', 'read_jcamp', 'scale_nmr']
+
+__all__ = ['read_bruker', 'read_jcamp']
 
 
 def _read_fid(path, reading_func, udic_function):
@@ -253,22 +253,3 @@ def proton_count(mol) -> int:
         - number of protons (integer)
     """
     return sum([1 for at in mol.GetAtoms() if at.GetAtomicNum() == 1])
-
-
-def scale_nmr(calc_shifts, exp_shifts):
-    """
-    Linear correction to calculated shifts
-    Arguments:
-    - calc_shifts(list): calculated shifts
-    - exp_shifts(list): experimental shifts as assigned
-    Returns:
-    - scaled calculated shifts for error analysis
-    """
-    slope, intercept, r_value, p_value, std_err = linregress(exp_shifts,
-                                                             calc_shifts)
-    if len(calc_shifts) > 1:
-        scaled = [(x - intercept) / slope for x in calc_shifts]
-    else:
-        scaled = calc_shifts
-
-    return scaled
