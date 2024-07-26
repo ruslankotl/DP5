@@ -11,6 +11,7 @@ from dp5.neural_net.nfp.layers import (
 from pathlib import Path
 import pickle
 import logging
+import warnings
 
 import numpy as np
 from numpy.random import seed
@@ -193,13 +194,15 @@ def extract_representations(model, test, batch_size):
     inputs_test = preprocessor.predict(Mol_iter2(test))
     test_sequence = RBFSequence(inputs_test, test.atom_index, batch_size)
     reps_list = []
-    for i in test_sequence:
-        yhat = model(i[0])
-        indices = i[0]["n_pro"].cumsum()[:-1]
-        reps = yhat.numpy()
-        reps = np.split(reps, indices)
-        # now supports batches!
-        reps_list.extend(reps)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        for i in test_sequence:
+            yhat = model(i[0])
+            indices = i[0]["n_pro"].cumsum()[:-1]
+            reps = yhat.numpy()
+            reps = np.split(reps, indices)
+            # now supports batches!
+            reps_list.extend(reps)
 
     return reps_list
     # finish later
@@ -340,16 +343,17 @@ def predict_shifts(model, test, batch_size=16):
     test_sequence = RBFSequence(inputs_test, test.atom_index, batch_size)
 
     iso_shifts = []
-
-    for i in test_sequence:
-        # returns (n, 1) shape array of n shifts
-        yhat = model(i[0])
-        indices = i[0]["n_pro"].cumsum()[:-1]
-        # must flatten it for shifts
-        shifts = yhat.numpy().flatten()
-        shifts = np.split(shifts, indices)
-        # now supports batches!
-        iso_shifts.extend(shifts)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        for i in test_sequence:
+            # returns (n, 1) shape array of n shifts
+            yhat = model(i[0])
+            indices = i[0]["n_pro"].cumsum()[:-1]
+            # must flatten it for shifts
+            shifts = yhat.numpy().flatten()
+            shifts = np.split(shifts, indices)
+            # now supports batches!
+            iso_shifts.extend(shifts)
 
     test["shift_arrays"] = iso_shifts
     all_shifts = [
