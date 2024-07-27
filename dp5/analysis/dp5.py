@@ -1,6 +1,7 @@
 from pathlib import Path
 import logging
-import warnings
+import pickle
+from abc import abstractmethod
 
 from tqdm import tqdm
 import pathos.multiprocessing as mp
@@ -25,6 +26,8 @@ class DP5:
                 batch_size=16,
                 transform_file="pca_10_ERRORrep_Error_decomp.p",
                 kde_file="pca_10_kde_ERRORrep_Error_kernel.p",
+                dp5_correct_scaling="Error_correct_kde.p",
+                dp5_incorrect_scaling="Error_incorrect_kde.p",
             )
         else:
             # must load model for shift preiction
@@ -34,6 +37,8 @@ class DP5:
                 batch_size=16,
                 transform_file="pca_10_EXP_decomp.p",
                 kde_file="pca_10_kde_EXP_kernel.p",
+                dp5_correct_scaling=None,
+                dp5_incorrect_scaling=None,
             )
 
         if not self.output_folder.exists():
@@ -50,8 +55,22 @@ class DP5:
 
     def __call__(self, mols):
         # have to generate representations for accepted things
+        # must also check is analysis has been done beore!
         dp5_labels = []
-        c_dp5 = self.C_DP5(mols)
+        data_dic_path = self.output_folder / "dp5" / "data_dic.p"
+        if data_dic_path.exists():
+            with open(data_dic_path, "rb") as f:
+                dp5_data = pickle.load(f)
+        else:
+            dp5_data = {}
+            c_labels, c_conf_probs, c_atom_probs, c_mol_probs = self.C_DP5(mols)
+            (
+                dp5_data["C_labels"],
+                dp5_data["C_conf_atom_probs"],
+                dp5_data["C_DP5_atom_probs"],
+                dp5_data["C_DP5_mol_probs"],
+            ) = (c_labels, c_conf_probs, c_atom_probs, c_mol_probs)
+        return
 
 
 class DP5ProbabilityCalculator:
@@ -62,6 +81,8 @@ class DP5ProbabilityCalculator:
         batch_size,
         transform_file,
         kde_file,
+        dp5_correct_scaling=None,
+        dp5_incorrect_scaling=None,
     ):
         self.atom_type = atom_type
         self.model = build_model(model_file=model_file)
@@ -70,9 +91,32 @@ class DP5ProbabilityCalculator:
             self.transform = pickle.load(tf)
         with open(Path(__file__).parent / kde_file, "rb") as kf:
             self.kde = pickle.load(kf)
+        if dp5_correct_scaling is not None:
+            with open(Path(__file__).parent / dp5_correct_scaling, "rb") as ckf:
+                self.dp5_correct_kde = pickle.load(ckf)
+        if dp5_incorrect_scaling is not None:
+            with open(Path(__file__).parent / dp5_incorrect_scaling, "rb") as ikf:
+                self.dp5_incorrect_kde = pickle.load(ikf)
 
-    def kde_iterator(self, df):
-        yield df[["representations", "conf_population", "conf_shifts", "exp_shifts"]]
+    @abstractmethod
+    def rescale_probabilities(self, mol_probs, errors, error_threshold=2):
+        """
+        Scales and aggregated atomic probabilities.
+
+        Computes geometric means of atomic probabilities to generate final molecular probabilities.
+        """
+        total_probs = np.array([np.exp(np.log(arr).mean()) for arr in mol_probs])
+        return mol_probs, total_probs
+
+    @abstractmethod
+    def kde_probfunction(self, df):
+        return NotImplementedError("KDE sampling function not implemented")
+
+    @staticmethod
+    def boltzmann_weight(df, col):
+        return df.groupby("mol_id")[["conf_population", col]].apply(
+            lambda x: (x[col] * x["conf_population"]).sum()
+        )
 
     def __call__(self, mols):
         # must generate representations
@@ -87,6 +131,10 @@ class DP5ProbabilityCalculator:
             new_labs = labels[has_exp]
             new_inds = indices[has_exp]
 
+            # generate scaled errors
+            scaled = scale_nmr(new_calcs, new_exps)
+            corrected_errors = scaled - new_exps[np.newaxis, :]
+
             all_labels.append(new_labs)
 
             rep_df.append(
@@ -98,6 +146,7 @@ class DP5ProbabilityCalculator:
                     mol.populations,
                     new_calcs,
                     new_exps,
+                    corrected_errors,
                 )
             )
 
@@ -111,10 +160,13 @@ class DP5ProbabilityCalculator:
                 "conf_population",
                 "conf_shifts",
                 "exp_shifts",
+                "errors",
             ],
         )
+        # each row of dataframe represents a geometry
         rep_df = rep_df.explode(
-            ["conf_id", "Mol", "conf_shifts", "conf_population"], ignore_index=True
+            ["conf_id", "Mol", "conf_shifts", "conf_population", "errors"],
+            ignore_index=True,
         )
         logger.info("Extracting atomic representations")
         # now return condensed representations! These are now grouped by conformer
@@ -126,17 +178,21 @@ class DP5ProbabilityCalculator:
             self.transform.transform
         )
         logger.info("Estimating atomic probabilities")
-        # to generate the objects for kde, must explode the rep_df, concatenate with ??, run_kde
         rep_df["atom_probs"] = self.kde_probfunction(rep_df)
+        atom_probs = [np.stack(df) for i, df in rep_df.groupby("mol_id")["atom_probs"]]
 
-        rep_df["weighted_atom_probs"] = rep_df["atom_probs"] * rep_df["conf_population"]
-        weighted_probs = rep_df.groupby("mol_id")["weighted_atom_probs"].sum()
+        weighted_probs = self.boltzmann_weight(rep_df, "atom_probs")
         weighted_probs = 1 - weighted_probs
-        total_probs = np.array([np.exp(np.log(arr).mean()) for arr in weighted_probs])
-        # rescale if necessary
+        cmae = self.boltzmann_weight(rep_df, "errors").apply(
+            lambda x: np.mean(np.abs(x))
+        )
+
+        # rescale and aggregate probabilities
+        weighted_probs, total_probs = self.rescale_probabilities(weighted_probs, cmae)
+
         # eventually return atomic probs, weighted atomic probs, DP5 scores
         logger.info("Atomic probabilities estimated")
-        return rep_df["atom_probs"], weighted_probs, total_probs
+        return all_labels, atom_probs, weighted_probs, total_probs
 
     def get_shifts_and_labels(self, mol):
         """
@@ -158,18 +214,13 @@ class DP5ProbabilityCalculator:
 
 
 class ErrorDP5ProbabilityCalculator(DP5ProbabilityCalculator):
-    def __init__(self, atom_type, model_file, batch_size, transform_file, kde_file):
-        super().__init__(atom_type, model_file, batch_size, transform_file, kde_file)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def kde_probfunction(self, df):
         # loop through atoms in the test molecule - generate kde for all of them.
         # implement joblib parallel search
         # check if this has been calculated
-
-        df["scaled_shifts"] = df[["conf_shifts", "exp_shifts"]].apply(
-            lambda row: scale_nmr(*row), axis=1
-        )
-        df["errors"] = df["scaled_shifts"] - df["exp_shifts"]
 
         min_value = -20
         max_value = 20
@@ -183,7 +234,7 @@ class ErrorDP5ProbabilityCalculator(DP5ProbabilityCalculator):
                 df[["representations", "errors"]].iterrows(),
                 total=len(df),
                 desc="Computing error KDEs",
-                leave=False,
+                leave=True,
             ):
                 num_atoms, num_components = rep.shape
                 rep_b = np.broadcast_to(
@@ -217,23 +268,32 @@ class ErrorDP5ProbabilityCalculator(DP5ProbabilityCalculator):
 
         return probs
 
+    def rescale_probabilities(self, mol_probs, errors, error_threshold=2):
+        _, total_probs = super().rescale_probabilities(mol_probs, errors)
+        scaled_probs = []
+        scaled_total = []
+        for prob, error, total in zip(mol_probs, errors, total_probs):
+            if error < error_threshold:
+                vector = np.concatenate((prob, np.atleast_1d(total)))
+                correct = self.dp5_correct_kde(vector)
+                incorrect = self.dp5_incorrect_kde(vector)
+                scaled = correct / (correct + incorrect)
+                scaled_probs.append(scaled[:-1])
+                scaled_total.append(scaled[-1])
+            else:
+                scaled_probs.append(prob)
+                scaled_total.append(total)
+        return scaled_probs, scaled_total
+
 
 class ExpDP5ProbabilityCalculator(DP5ProbabilityCalculator):
-    def __init__(self, atom_type, model_file, batch_size, transform_file, kde_file):
-        super().__init__(atom_type, model_file, batch_size, transform_file, kde_file)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def kde_probfunction(self, df):
-        """Deadass assumes no conformer search whatsoever, unsuitable for anything worthwhile"""
+        """Since the result is compared to the experimental shifts, weights the representations and runs KDE on those."""
         # loop through atoms in the test molecule - generate kde for all of them.
-
-        # check if this has been calculated
-        conf_shifts = df["conf_shifts"]
-        conf_reps = df["representations"]
-        exp_data = df["exp_shifts"]
-
-        df["weighted_reps"] = df["representations"] * df["conf_population"]
-
-        total_reps = df.groupby("mol_id")["weighted_reps"].sum()
+        total_reps = self.boltzmann_weight(df, "representations")
         exp_data = df.groupby("mol_id")["exp_shifts"].first()
         mol_df = pd.DataFrame({"representations": total_reps, "exp_shifts": exp_data})
 
@@ -249,7 +309,7 @@ class ExpDP5ProbabilityCalculator(DP5ProbabilityCalculator):
                 mol_df[["representations", "exp_shifts"]].iterrows(),
                 total=len(mol_df),
                 desc="Computing experimental KDEs",
-                leave=False,
+                leave=True,
             ):
                 num_atoms, num_components = rep.shape
                 rep_b = np.broadcast_to(
@@ -283,3 +343,6 @@ class ExpDP5ProbabilityCalculator(DP5ProbabilityCalculator):
         consistency_hack = {i: probs for i, probs in enumerate(mol_probs)}
         consistent_probs = df["mol_id"].map(consistency_hack)
         return consistent_probs
+
+    def rescale_probabilities(self, *args, **kwargs):
+        return super().rescale_probabilities(*args, **kwargs)

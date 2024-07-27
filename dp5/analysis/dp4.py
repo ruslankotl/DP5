@@ -234,6 +234,7 @@ class DP4ProbabilityCalculator:
             raise TypeError("Types of mean and standard deviation do not match!")
 
     def __call__(self, error):
+        # numpy is weird about arrays out of single floats
         dp4_score = np.apply_along_axis(
             self.probability, 0, np.array(error, dtype=np.float32)
         )
