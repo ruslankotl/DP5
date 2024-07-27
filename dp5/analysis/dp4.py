@@ -198,21 +198,6 @@ class DP4:
             json.dump(transposed_dict, j, allow_nan=True, indent=4)
 
 
-def single_gaussian(error, mean, stdev):
-    z = abs((error - mean) / stdev)
-    cdp4 = 2 * stats.norm.cdf(-z)
-
-    return cdp4
-
-
-def multiple_gaussian(error, means, stdevs):
-    res = 0
-    for mean, stdev in zip(means, stdevs):
-        res += stats.norm(mean, stdev).pdf(error)
-
-    return res / len(means)
-
-
 class DP4ProbabilityCalculator:
     def __init__(self, mean, stdev):
         if isinstance(mean, list) and isinstance(stdev, list):
@@ -223,13 +208,15 @@ class DP4ProbabilityCalculator:
                     "Dimensions of mean and standard deviation do not match"
                 )
             if len(mean) > 1:
-                self.probability = lambda error: multiple_gaussian(error, mean, stdev)
+                self.probability = lambda error: self.multiple_gaussian(
+                    error, mean, stdev
+                )
             else:
-                self.probability = lambda error: single_gaussian(
+                self.probability = lambda error: self.single_gaussian(
                     error, mean[0], stdev[0]
                 )
         elif isinstance(mean, float) and isinstance(stdev, float):
-            self.probability = lambda error: single_gaussian(error, mean, stdev)
+            self.probability = lambda error: self.single_gaussian(error, mean, stdev)
         else:
             raise TypeError("Types of mean and standard deviation do not match!")
 
@@ -239,3 +226,18 @@ class DP4ProbabilityCalculator:
             self.probability, 0, np.array(error, dtype=np.float32)
         )
         return dp4_score
+
+    @staticmethod
+    def single_gaussian(error, mean, stdev):
+        z = abs((error - mean) / stdev)
+        cdp4 = 2 * stats.norm.cdf(-z)
+
+        return cdp4
+
+    @staticmethod
+    def multiple_gaussian(error, means, stdevs):
+        res = 0
+        for mean, stdev in zip(means, stdevs):
+            res += stats.norm(mean, stdev).pdf(error)
+
+        return res / len(means)
