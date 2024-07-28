@@ -184,7 +184,9 @@ class Molecule:
         return self.boltzmann_weighting("conformer_C_pred")
 
     def assign_nmr(self, C_exp, H_exp):
-        self.C_exp, self.H_exp = np.array(C_exp), np.array(H_exp)
+        self.C_exp, self.H_exp = np.array(C_exp, dtype=np.float32), np.array(
+            H_exp, dtype=np.float32
+        )
 
     def add_dp4_data(self, dp4_data):
         self.dp4_data = dp4_data
