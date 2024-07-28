@@ -1,3 +1,6 @@
+import pickle
+from pathlib import Path
+
 import numpy as np
 from scipy.stats import linregress
 
@@ -45,3 +48,50 @@ def scale_nmr(calc_shifts, exp_shifts):
         scaled_shifts = _scale_nmr(calc_shifts, exp_shifts)
 
     return scaled_shifts
+
+
+class AnalysisData:
+    """Container class for DP4 or DP5 analysis. Will"""
+
+    def __init__(self, path):
+        self.path = path
+
+    @property
+    def exists(self):
+        return Path(self.path).exists()
+
+    @property
+    def values_dict(self):
+        keys_to_exclude = ("path", "exists")
+        return {k: v for k, v in self.__dict__.items() if k not in keys_to_exclude}
+
+    def load(self):
+        with open(self.path, "rb") as f:
+            data = pickle.load(f)
+            for key, value in data.items():
+                setattr(self, key, value)
+
+    def save(self):
+        with open(self.path, "wb") as f:
+            pickle.dump(self.values_dict, f)
+
+    @property
+    def by_mol(self):
+
+        return [
+            dict(zip(self.values_dict.keys(), values))
+            for values in zip(*self.values_dict.values())
+        ]
+
+    def from_mol_dicts(self, dicts):
+        """Reads molecular dictionaries containing properties, appends them as class attributes"""
+        transposed_dict = dict()
+        for dp4d in dicts:
+            for key, value in dp4d.items():
+                if isinstance(value, np.ndarray):
+                    value = value.tolist()
+                if key in transposed_dict.keys():
+                    transposed_dict[key].append(value)
+                else:
+                    transposed_dict[key] = [value]
+        self.__dict__.update(transposed_dict)
