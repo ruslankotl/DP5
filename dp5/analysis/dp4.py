@@ -7,7 +7,7 @@ import json
 import numpy as np
 from scipy import stats
 
-from .utils import scale_nmr
+from .utils import scale_nmr, AnalysisData
 
 logger = logging.getLogger(__name__)
 
