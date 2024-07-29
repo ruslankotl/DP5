@@ -52,10 +52,9 @@ class DP5:
         # must also check is analysis has been done beore!
         data_dic_path = self.output_folder / "dp5" / "data_dic.p"
         dp5_data = AnalysisData(data_dic_path)
-        if dp5_data.exists():
+        if dp5_data.exists:
             dp5_data.load()
         else:
-            dp5_data = {}
             (
                 dp5_data.C_labels,
                 dp5_data.C_conf_atom_probs,
