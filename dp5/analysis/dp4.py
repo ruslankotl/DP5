@@ -86,7 +86,14 @@ class DP4:
         dp4_dicts = AnalysisData(self.save_dir / "data_dic.p")
         C_data = []
         H_data = []
-        keys = ["{0}shifts", "{0}exp", "{0}labels", "{0}errors", "{0}probs"]
+        keys = [
+            "{0}labels",
+            "{0}shifts",
+            "{0}scaled",
+            "{0}exp",
+            "{0}errors",
+            "{0}probs",
+        ]
         H_keys = [i.format("H") for i in keys]
         C_keys = [i.format("C") for i in keys]
         for mol in mols:
@@ -110,7 +117,7 @@ class DP4:
 
         dp4_dicts.CDP4probs = C_data / C_data.sum()
         dp4_dicts.HDP4probs = H_data / H_data.sum()
-        dp4_dicts.DP4Probs = total_data / total_data.sum()
+        dp4_dicts.DP4probs = total_data / total_data.sum()
 
         logger.info("Saving raw DP4 data")
         dp4_dicts.save()
@@ -164,18 +171,18 @@ class DP4:
         - DP4 scores
         """
         # remove calculated peaks that do not match the signal
-        has_exp = experimental != None
+        has_exp = np.isfinite(experimental)
 
         new_calcs = calculated[has_exp]
         new_exps = experimental[has_exp]
         new_labs = labels[has_exp]
 
-        new_calcs = scale_nmr(new_calcs, new_exps)
-        errors = new_calcs - new_exps
+        new_scaled = scale_nmr(new_calcs, new_exps)
+        errors = new_scaled - new_exps
         probs = probability(errors)
         # take the product of probabilities
         dp4_score = prod(probs, start=1)
-        return new_calcs, new_exps, new_labs, errors, probs, dp4_score
+        return new_labs, new_calcs, new_scaled, new_exps, errors, probs, dp4_score
 
 
 class DP4ProbabilityCalculator:

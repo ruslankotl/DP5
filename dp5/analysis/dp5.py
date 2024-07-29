@@ -53,8 +53,10 @@ class DP5:
         data_dic_path = self.output_folder / "dp5" / "data_dic.p"
         dp5_data = AnalysisData(data_dic_path)
         if dp5_data.exists:
+            logger.info("Found existing DP5 probability file")
             dp5_data.load()
         else:
+            logger.info("Calculating DP5 probabilites...")
             (
                 dp5_data.C_labels,
                 dp5_data.C_conf_atom_probs,
@@ -117,7 +119,7 @@ class DP5ProbabilityCalculator:
         for mol_id, mol in enumerate(mols):
             calculated, experimental, labels, indices = self.get_shifts_and_labels(mol)
             # drop unassigned !
-            has_exp = experimental != None
+            has_exp = np.isfinite(experimental)
             new_calcs = calculated[:, has_exp]
             new_exps = experimental[has_exp]
             new_labs = labels[has_exp]
