@@ -7,7 +7,7 @@ from tqdm import tqdm
 import pathos.multiprocessing as mp
 
 from dp5.neural_net.CNN_model import *
-from dp5.analysis.utils import scale_nmr
+from dp5.analysis.utils import scale_nmr, AnalysisData
 
 logger = logging.getLogger(__name__)
 
@@ -47,30 +47,23 @@ class DP5:
         if not (self.output_folder / "dp5").exists():
             (self.output_folder / "dp5").mkdir()
 
-        # if exists
-
-    def save(self, file):
-        for attr in self.__dict__:
-            pass
-
     def __call__(self, mols):
         # have to generate representations for accepted things
         # must also check is analysis has been done beore!
-        dp5_labels = []
         data_dic_path = self.output_folder / "dp5" / "data_dic.p"
-        if data_dic_path.exists():
-            with open(data_dic_path, "rb") as f:
-                dp5_data = pickle.load(f)
+        dp5_data = AnalysisData(data_dic_path)
+        if dp5_data.exists():
+            dp5_data.load()
         else:
             dp5_data = {}
-            c_labels, c_conf_probs, c_atom_probs, c_mol_probs = self.C_DP5(mols)
             (
-                dp5_data["C_labels"],
-                dp5_data["C_conf_atom_probs"],
-                dp5_data["C_DP5_atom_probs"],
-                dp5_data["C_DP5_mol_probs"],
-            ) = (c_labels, c_conf_probs, c_atom_probs, c_mol_probs)
-        return
+                dp5_data.C_labels,
+                dp5_data.C_conf_atom_probs,
+                dp5_data.C_DP5_atom_probs,
+                dp5_data.C_DP5_mol_probs,
+            ) = self.C_DP5(mols)
+            dp5_data.save()
+        return dp5_data.by_mol
 
 
 class DP5ProbabilityCalculator:

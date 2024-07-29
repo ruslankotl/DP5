@@ -83,7 +83,7 @@ class DP4:
         if len(mols) < 2:
             logger.warn("DP4 score requires multiple candidate structures.")
         logger.info("Starting DP4 analysis")
-        dp4_dicts = []
+        dp4_dicts = AnalysisData(self.save_dir / "data_dic.p")
         C_data = []
         H_data = []
         keys = ["{0}shifts", "{0}exp", "{0}labels", "{0}errors", "{0}probs"]
@@ -108,17 +108,13 @@ class DP4:
         H_data = np.array(H_data)
         total_data = C_data * H_data
 
-        C_data = C_data / C_data.sum()
-        H_data = H_data / H_data.sum()
-        total_data = total_data / total_data.sum()
-        for c, h, t, d in zip(C_data, H_data, total_data, dp4_dicts):
-            d["CDP4probs"] = c
-            d["HDP4probs"] = h
-            d["DP4probs"] = t
+        dp4_dicts.CDP4probs = C_data / C_data.sum()
+        dp4_dicts.HDP4probs = H_data / H_data.sum()
+        dp4_dicts.DP4Probs = total_data / total_data.sum()
 
         logger.info("Saving raw DP4 data")
-        self.save_dp4_data(dp4_dicts)
-        return dp4_dicts
+        dp4_dicts.save()
+        return dp4_dicts.by_mol
 
     def dp4_proton(self, calculated, experimental, labels):
         """Generates unscaled DP4 score for protons in the molecule.
@@ -180,22 +176,6 @@ class DP4:
         # take the product of probabilities
         dp4_score = prod(probs, start=1)
         return new_calcs, new_exps, new_labs, errors, probs, dp4_score
-
-    def save_dp4_data(self, dp4_dicts):
-        transposed_dict = dict()
-        for dp4d in dp4_dicts:
-            for key, value in dp4d.items():
-                if isinstance(value, np.ndarray):
-                    value = value.tolist()
-                if key in transposed_dict.keys():
-                    transposed_dict[key].append(value)
-                else:
-                    transposed_dict[key] = [value]
-        pickle_path = self.save_dir / "data_dic.p"
-        json_path = self.save_dir / "dp4_data.json"
-        with open(pickle_path, "wb") as p, open(json_path, "w") as j:
-            pickle.dump(transposed_dict, p)
-            json.dump(transposed_dict, j, allow_nan=True, indent=4)
 
 
 class DP4ProbabilityCalculator:

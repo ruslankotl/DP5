@@ -51,8 +51,9 @@ def scale_nmr(calc_shifts, exp_shifts):
 
 
 class AnalysisData:
-    """Container class for DP4 or DP5 analysis. Will"""
+    """Container class for DP4 or DP5 analysis."""
 
+    # TODO: incorporate json
     def __init__(self, path):
         self.path = path
 
@@ -83,13 +84,21 @@ class AnalysisData:
             for values in zip(*self.values_dict.values())
         ]
 
+    def append(self, mol_dict):
+        """Adds data from a molecule.
+
+        Searches for relevant attributes, appends the data to the class"""
+        for key, value in mol_dict.items():
+            if key not in self.__dict__.keys():
+                self.__dict__[key] = [value]
+            else:
+                self.__dict__[key].append(value)
+
     def from_mol_dicts(self, dicts):
         """Reads molecular dictionaries containing properties, appends them as class attributes"""
         transposed_dict = dict()
         for dp4d in dicts:
             for key, value in dp4d.items():
-                if isinstance(value, np.ndarray):
-                    value = value.tolist()
                 if key in transposed_dict.keys():
                     transposed_dict[key].append(value)
                 else:
