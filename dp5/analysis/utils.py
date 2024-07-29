@@ -25,6 +25,8 @@ def _scale_nmr(calc_shifts, exp_shifts):
         ):
             calc_shifts = np.array(calc_shifts)
             exp_shifts = np.array(exp_shifts)
+        intercept = np.nan_to_num(intercept, nan=0)
+        slope = np.nan_to_num(slope, nan=1)
         scaled_shifts = (calc_shifts - intercept) / slope
     else:
         scaled_shifts = calc_shifts
