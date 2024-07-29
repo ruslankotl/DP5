@@ -1,6 +1,0 @@
-S11
-dp5
-e
-nmr
-opt
-orca
