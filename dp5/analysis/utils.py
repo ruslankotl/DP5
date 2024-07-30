@@ -56,7 +56,8 @@ class AnalysisData:
     """Container class for DP4 or DP5 analysis."""
 
     # TODO: incorporate json
-    def __init__(self, path):
+    def __init__(self, mols, path):
+        self.mols = [mol.input_file for mol in mols]
         self.path = path
 
     @property
@@ -73,6 +74,12 @@ class AnalysisData:
             data = pickle.load(f)
             for key, value in data.items():
                 setattr(self, key, value)
+
+    def __iter__(self):
+        return (
+            dict(zip(self.values_dict.keys(), values))
+            for values in zip(*self.values_dict.values())
+        )
 
     def save(self):
         with open(self.path, "wb") as f:

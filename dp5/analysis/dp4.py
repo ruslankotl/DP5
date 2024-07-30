@@ -83,7 +83,7 @@ class DP4:
         if len(mols) < 2:
             logger.warn("DP4 score requires multiple candidate structures.")
         logger.info("Starting DP4 analysis")
-        dp4_dicts = AnalysisData(self.save_dir / "data_dic.p")
+        dp4_dicts = DP4Data(mols, self.save_dir / "data_dic.p")
         C_data = []
         H_data = []
         keys = [
@@ -121,7 +121,7 @@ class DP4:
 
         logger.info("Saving raw DP4 data")
         dp4_dicts.save()
-        return dp4_dicts.by_mol
+        return dp4_dicts.output
 
     def dp4_proton(self, calculated, experimental, labels):
         """Generates unscaled DP4 score for protons in the molecule.
@@ -228,3 +228,63 @@ class DP4ProbabilityCalculator:
             res += stats.norm(mean, stdev).pdf(error)
 
         return res / len(means)
+
+
+class DP4Data(AnalysisData):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @property
+    def output(self):
+        output_dict = dict()
+        output_dict["C_output"] = []
+        output_dict["H_output"] = []
+        output_dict["CDP4_output"] = []
+        output_dict["HDP4_output"] = []
+        output_dict["DP4_output"] = []
+
+        for mol, clab, cshift, cscal, cexp, cerr in zip(
+            self.mols, self.Clabels, self.Cshifts, self.Cscaled, self.Cexp, self.Cerrors
+        ):
+            output = f"\nAssigned C NMR shift for {mol}:"
+            output += self.print_assignment(clab, cshift, cscal, cexp, cerr)
+            output_dict["C_output"].append(output)
+
+        for mol, hlab, hshift, hscal, hexp, herr in zip(
+            self.mols, self.Hlabels, self.Hshifts, self.Hscaled, self.Hexp, self.Herrors
+        ):
+            output = f"\nAssigned H NMR shift for {mol}:"
+            output += self.print_assignment(hlab, hshift, hscal, hexp, herr)
+            output_dict["H_output"].append(output)
+        for mol, hdp4, cdp4, dp4 in zip(
+            self.mols, self.HDP4probs, self.CDP4probs, self.DP4probs
+        ):
+            output_dict["HDP4_output"].append(
+                f"Proton DP4 probability for {mol}: {hdp4}"
+            )
+            output_dict["CDP4_output"].append(
+                f"Carbon DP4 probability for {mol}: {cdp4}"
+            )
+            output_dict["DP4_output"].append(f"DP4 probability for {mol}: {dp4}")
+
+        return [
+            dict(zip(output_dict.keys(), values))
+            for values in zip(*output_dict.values())
+        ]
+
+    @staticmethod
+    def print_assignment(labels, calculated, scaled, exp, error):
+        """Prints table for molecule"""
+
+        s = np.argsort(calculated)
+        svalues = calculated[s]
+        slabels = labels[s]
+        sscaled = scaled[s]
+        sexp = exp[s]
+        serror = error[s]
+
+        output = f"\nlabel, calc, corrected, exp, error"
+
+        for lab, calc, scal, ex, er in zip(slabels, svalues, sscaled, sexp, serror):
+            output += f"\n{lab:6s} {calc:6.2f} {scal:6.2f} {ex:6.2f} {er:6.2f}"
+        return output

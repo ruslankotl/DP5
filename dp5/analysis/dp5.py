@@ -51,20 +51,23 @@ class DP5:
         # have to generate representations for accepted things
         # must also check is analysis has been done beore!
         data_dic_path = self.output_folder / "dp5" / "data_dic.p"
-        dp5_data = AnalysisData(data_dic_path)
+        dp5_data = DP5Data(mols, data_dic_path)
         if dp5_data.exists:
             logger.info("Found existing DP5 probability file")
             dp5_data.load()
         else:
             logger.info("Calculating DP5 probabilites...")
             (
-                dp5_data.C_labels,
-                dp5_data.C_conf_atom_probs,
-                dp5_data.C_DP5_atom_probs,
-                dp5_data.C_DP5_mol_probs,
+                dp5_data.Clabels,
+                dp5_data.Cshifts,
+                dp5_data.Cexp,
+                dp5_data.Cerrors,
+                dp5_data.Cconf_atom_probs,
+                dp5_data.CDP5_atom_probs,
+                dp5_data.CDP5_mol_probs,
             ) = self.C_DP5(mols)
             dp5_data.save()
-        return dp5_data.by_mol
+        return dp5_data.output
 
 
 class DP5ProbabilityCalculator:
@@ -177,16 +180,27 @@ class DP5ProbabilityCalculator:
 
         weighted_probs = self.boltzmann_weight(rep_df, "atom_probs")
         weighted_probs = 1 - weighted_probs
-        cmae = self.boltzmann_weight(rep_df, "errors").apply(
-            lambda x: np.mean(np.abs(x))
-        )
+
+        weighted_errors = self.boltzmann_weight(rep_df, "errors")
+        cmae = weighted_errors.apply(lambda x: np.mean(np.abs(x)))
 
         # rescale and aggregate probabilities
         weighted_probs, total_probs = self.rescale_probabilities(weighted_probs, cmae)
 
+        calc_shifts_analysed = self.boltzmann_weight(rep_df, "conf_shifts")
+        exp_shifts_analysed = rep_df.groupby("mol_id")["exp_shifts"].first()
+
         # eventually return atomic probs, weighted atomic probs, DP5 scores
         logger.info("Atomic probabilities estimated")
-        return all_labels, atom_probs, weighted_probs, total_probs
+        return (
+            all_labels,
+            calc_shifts_analysed,
+            exp_shifts_analysed,
+            weighted_errors,
+            atom_probs,
+            weighted_probs,
+            total_probs,
+        )
 
     def get_shifts_and_labels(self, mol):
         """
@@ -340,3 +354,62 @@ class ExpDP5ProbabilityCalculator(DP5ProbabilityCalculator):
 
     def rescale_probabilities(self, *args, **kwargs):
         return super().rescale_probabilities(*args, **kwargs)
+
+
+class DP5Data(AnalysisData):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @property
+    def output(self):
+        """Uncomment when H-DP5 is implemented"""
+        output_dict = dict()
+        output_dict["C_output"] = []
+        # output_dict["H_output"] = []
+        output_dict["CDP5_output"] = []
+        # output_dict["HDP5_output"] = []
+        # output_dict["DP5_output"] = []
+        for mol, clab, cshift, cexp, cerr, cpr in zip(
+            self.mols,
+            self.Clabels,
+            self.Cshifts,
+            self.Cexp,
+            self.Cerrors,
+            self.CDP5_atom_probs,
+        ):
+            output = f"\nAssigned C NMR shift for {mol}:"
+            output += self.print_assignment(clab, cshift, cexp, cerr, cpr)
+            output_dict["C_output"].append(output)
+
+        # for mol, hlab, hshift, hscal, hexp, herr in zip(
+        #    self.mols, self.Hlabels, self.Hshifts, self.Hscaled, self.Hexp, self.Herrors
+        # ):
+        #    output = f"\nAssigned H NMR shift for {mol}:"
+        #    output += self.print_assignment(hlab, hshift, hscal, hexp, herr)
+        #    output_dict["H_output"].append(output)
+
+        for mol, cdp5 in zip(self.mols, self.CDP5_mol_probs):
+            output_dict["CDP5_output"].append(
+                f"Carbon DP5 probability for {mol}: {cdp5}"
+            )
+        return [
+            dict(zip(output_dict.keys(), values))
+            for values in zip(*output_dict.values())
+        ]
+
+    @staticmethod
+    def print_assignment(labels, calculated, exp, error, probs):
+        """Prints table for molecule"""
+
+        s = np.argsort(calculated)
+        svalues = calculated[s]
+        slabels = labels[s]
+        sexp = exp[s]
+        serror = error[s]
+        sprob = probs[s]
+
+        output = f"\nlabel, calc, exp, error, prob"
+
+        for lab, calc, ex, er, p in zip(slabels, svalues, sexp, serror, sprob):
+            output += f"\n{lab:6s} {calc:6.2f} {ex:6.2f} {er:6.2f} {p:6.2f}"
+        return output
