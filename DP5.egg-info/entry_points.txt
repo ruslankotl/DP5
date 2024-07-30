@@ -1,2 +1,0 @@
-[console_scripts]
-pydp4 = dp5.run.load_config:main
