@@ -16,7 +16,7 @@ import logging
 import tomli
 import json
 
-from dp5.run import runner, setup_logger
+from dp5.run import runner, setup_logger, prepare_inputs
 
 LOGLEVEL_CHOICES = tuple(level.lower() for level in logging._nameToLevel.keys())
 
@@ -100,8 +100,12 @@ def main():
 
     # load custom configuration
     config_path = (Path.cwd() / args.config).resolve()
-    with open(config_path, "rb") as f:
-        config = tomli.load(f)
+    if config_path.suffix == ".toml":
+        with open(config_path, "rb") as f:
+            config = tomli.load(f)
+    elif config_path.suffix == ".json":
+        with open(config_path, "rb") as f:
+            config = json.load(f)
 
     # commandline overrides all config files
     if args.log_level is not None:
@@ -206,6 +210,17 @@ def main():
     config["output_folder"] = (Path.cwd() / config["output_folder"]).resolve()
 
     config["dft"]["solvent"] = config["solvent"]
+
+    config["structure"] = prepare_inputs(
+        config["structure"],
+        config["input_type"],
+        config["stereocentres"],
+        config["workflow"],
+    )
+
+    logger.info(f"Final structure input files:{config['structure']}")
+
+    logger.info(f"NMR input paths:{config['nmr_file']}")
 
     with open(config["output_folder"] / "config.json", "w") as f:
         cfg = config.copy()

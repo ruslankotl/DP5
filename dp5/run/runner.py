@@ -7,7 +7,6 @@ Molecules is the container class to contain all the data. MM and DFT methods no 
 import logging
 
 from .data_structures import Molecules
-from .mol_file_preparation import prepare_inputs
 from dp5.nmr_processing import NMRData
 
 
@@ -16,17 +15,6 @@ logger = logging.getLogger(__name__)
 
 def runner(config):
     logger.info("Starting DP4 workflow")
-
-    config["structure"] = prepare_inputs(
-        config["structure"],
-        config["input_type"],
-        config["stereocentres"],
-        config["workflow"],
-    )
-
-    logger.info(f"Final structure input files:{config['structure']}")
-
-    logger.info(f"NMR input paths:{config['nmr_file']}")
 
     data = Molecules(config)
 
@@ -70,3 +58,5 @@ def runner(config):
         data.dp5_analysis()
     if config["workflow"]["dp4"]:
         data.dp4_analysis()
+
+    data.print_results()
