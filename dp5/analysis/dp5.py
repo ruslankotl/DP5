@@ -392,10 +392,14 @@ class DP5Data(AnalysisData):
             output_dict["CDP5_output"].append(
                 f"Carbon DP5 probability for {mol}: {cdp5}"
             )
-        return [
+        t_dic = [
             dict(zip(output_dict.keys(), values))
             for values in zip(*output_dict.values())
         ]
+        dp5_output = "\n\n".join([mol["C_output"] for mol in t_dic])
+        dp5_output += "\n\n"
+        dp5_output += "\n".join([mol["CDP5_output"] for mol in t_dic])
+        return dp5_output
 
     @staticmethod
     def print_assignment(labels, calculated, exp, error, probs):

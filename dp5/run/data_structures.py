@@ -236,15 +236,11 @@ class Molecules:
 
     def dp5_analysis(self):
         dp5 = DP5(self.config["output_folder"], self.config["workflow"]["dft_nmr"])
-        dp5_output = dp5(self.mols)
-        for mol, dp5_data in zip(self.mols, dp5_output):
-            mol.add_dp5_data(dp5_data)
+        self.dp5_output = dp5(self.mols)
 
     def dp4_analysis(self):
         dp4 = DP4(self.config["output_folder"], self.config["dp4"])
-        dp4_output = dp4(self.mols)
-        for mol, dp4_data in zip(self.mols, dp4_output):
-            mol.add_dp4_data(dp4_data)
+        self.dp4_output = dp4(self.mols)
 
     def print_results(self):
         output = "Workflow summary\n\n"
@@ -277,30 +273,11 @@ class Molecules:
             )
 
         if self.config["workflow"]["dp4"]:
-            dp4_output = output + self.generate_dp4_output()
+            dp4_output = output + self.dp4_output
             with open((self.config["output_folder"]) / "output.dp4", "w") as f:
                 f.write(dp4_output)
 
         if self.config["workflow"]["dp5"]:
-            dp5_output = output + self.generate_dp5_output()
+            dp5_output = output + self.dp5_output
             with open((self.config["output_folder"]) / "output.dp5", "w") as f:
                 f.write(dp5_output)
-
-    def generate_dp4_output(self):
-        dp4_output = "\n\n".join(
-            [mol.dp4_data["C_output"] + mol.dp4_data["H_output"] for mol in self.mols]
-        )
-        dp4_output += "\n\n"
-        dp4_output += "\n".join([mol.dp4_data["HDP4_output"] for mol in self.mols])
-        dp4_output += "\n\n"
-        dp4_output += "\n".join([mol.dp4_data["CDP4_output"] for mol in self.mols])
-        dp4_output += "\n\n"
-        dp4_output += "\n".join([mol.dp4_data["DP4_output"] for mol in self.mols])
-
-        return dp4_output
-
-    def generate_dp5_output(self):
-        dp5_output = "\n\n".join([mol.dp5_data["C_output"] for mol in self.mols])
-        dp5_output += "\n\n"
-        dp5_output += "\n".join([mol.dp5_data["CDP5_output"] for mol in self.mols])
-        return dp5_output

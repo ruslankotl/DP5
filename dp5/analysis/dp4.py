@@ -267,10 +267,19 @@ class DP4Data(AnalysisData):
             )
             output_dict["DP4_output"].append(f"DP4 probability for {mol}: {dp4}")
 
-        return [
+        t_dic = [
             dict(zip(output_dict.keys(), values))
             for values in zip(*output_dict.values())
         ]
+        dp4_output = "\n\n".join([mol["C_output"] + mol["H_output"] for mol in t_dic])
+        dp4_output += "\n\n"
+        dp4_output += "\n".join([mol["HDP4_output"] for mol in t_dic])
+        dp4_output += "\n\n"
+        dp4_output += "\n".join([mol["CDP4_output"] for mol in t_dic])
+        dp4_output += "\n\n"
+        dp4_output += "\n".join([mol["DP4_output"] for mol in t_dic])
+
+        return dp4_output
 
     @staticmethod
     def print_assignment(labels, calculated, scaled, exp, error):
