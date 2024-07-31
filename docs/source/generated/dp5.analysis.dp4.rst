@@ -1,4 +1,4 @@
-﻿dp5.analysis.dp4
+dp5.analysis.dp4
 ================
 
 .. automodule:: dp5.analysis.dp4
