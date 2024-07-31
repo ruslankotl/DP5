@@ -42,6 +42,8 @@ autodoc_mock_imports = [
     "lmfit",
     "openbabel",
     "statsmodels",
+    "rdkit",
+    "tqdm",
 ]
 
 
