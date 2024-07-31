@@ -1,7 +1,7 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath("../../dp5"))
+sys.path.insert(0, os.path.abspath(os.path.join("..", "..")))
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -24,6 +24,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.githubpages",
+    "sphinx.ext.napoleon",
 ]
 
 templates_path = ["_templates"]

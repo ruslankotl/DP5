@@ -9,5 +9,6 @@
    .. autosummary::
    
       DP4
+      DP4Data
       DP4ProbabilityCalculator
    
