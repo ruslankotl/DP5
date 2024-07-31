@@ -1,3 +1,5 @@
+"""Carries out DP4 analysis of structural proposals."""
+
 import logging
 from math import prod
 from pathlib import Path
