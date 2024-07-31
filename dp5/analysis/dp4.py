@@ -15,18 +15,20 @@ logger = logging.getLogger(__name__)
 
 
 class DP4:
+    "Handles DP4 analysis"
+
     def __init__(self, output_folder, dp4_config):
         """Initialise DP4 Analysis object.
 
         Specify the save path, load relevant statistical models, set up DP4 calculators for each nucleus
 
         Arguments:
-        - output_folder(Path): path to the output folder
-        - dp4_config(dict): must contain keys `stats_model` and `param_file`
+         output_folder(Path): path to the output folder
+         dp4_config(dict): must contain keys ``stats_model`` and ``param_file``
         Explanation:
-        - `dp4_config['stats_model']` specifies the model to use
-        - `dp4_config['param_file']` specifies the Gaussian parameters
-        will save data to a file
+         ``dp4_config['stats_model']`` specifies the model to use.
+         ``dp4_config['param_file']`` specifies the Gaussian parameters.
+         Data will be saved in the output folder.
         """
 
         save_dir = Path(output_folder) / "dp4"
@@ -131,49 +133,49 @@ class DP4:
     def dp4_proton(self, calculated, experimental, labels):
         """Generates unscaled DP4 score for protons in the molecule.
         Arguments:
-        - calculated: scaled calculated NMR shifts
-        - experimental: experimental NMR shifts
-        - labels: atom labels, match the SD File numbering
+         calculated: scaled calculated NMR shifts
+         experimental: experimental NMR shifts
+         labels: atom labels, match the SD File numbering
         returns:
-        - scaled calculated NMR shifts used in the analysis
-        - experimental NMR shifts used in the analysis
-        - atom labels used in the analysis
-        - atomic errors
-        - probabilities
-        - DP4 scores
+         scaled calculated NMR shifts used in the analysis
+         experimental NMR shifts used in the analysis
+         atom labels used in the analysis
+         atomic errors
+         probabilities
+         DP4 scores
         """
         return self._dp4(calculated, experimental, labels, self.H_probability)
 
     def dp4_carbon(self, calculated, experimental, labels):
         """Generates unscaled DP4 score for carbons in the molecule.
         Arguments:
-        - calculated: scaled calculated NMR shifts
-        - experimental: experimental NMR shifts
-        - labels: atom labels, match the SD File numbering
+         calculated: scaled calculated NMR shifts
+         experimental: experimental NMR shifts
+         labels: atom labels, match the SD File numbering
         returns:
-        - scaled calculated NMR shifts used in the analysis
-        - experimental NMR shifts used in the analysis
-        - atom labels used in the analysis
-        - atomic errors
-        - probabilities
-        - DP4 scores
+         scaled calculated NMR shifts used in the analysis
+         experimental NMR shifts used in the analysis
+         atom labels used in the analysis
+         atomic errors
+         probabilities
+         DP4 scores
         """
         return self._dp4(calculated, experimental, labels, self.C_probability)
 
     def _dp4(self, calculated: list, experimental: list, labels: list, probability):
         """Generates unscaled DP4 score for nuclei in the molecule.
         Arguments:
-        - calculated: scaled calculated NMR shifts
-        - experimental: experimental NMR shifts
-        - labels: atom labels, match the SD File numbering
-        - probability(function): returns the number
+         calculated: scaled calculated NMR shifts
+         experimental: experimental NMR shifts
+         labels: atom labels, match the SD File numbering
+         probability(function): returns the number
         returns:
-        - scaled calculated NMR shifts used in the analysis
-        - experimental NMR shifts used in the analysis
-        - atom labels used in the analysis
-        - atomic errors
-        - probabilities
-        - DP4 scores
+         scaled calculated NMR shifts used in the analysis
+         experimental NMR shifts used in the analysis
+         atom labels used in the analysis
+         atomic errors
+         probabilities
+         DP4 scores
         """
         # remove calculated peaks that do not match the signal
         has_exp = np.isfinite(experimental)
@@ -191,6 +193,8 @@ class DP4:
 
 
 class DP4ProbabilityCalculator:
+    """Estimates DP4 probability for a given nucleus."""
+
     def __init__(self, mean, stdev):
         if isinstance(mean, list) and isinstance(stdev, list):
             # the check is redundant
@@ -236,6 +240,8 @@ class DP4ProbabilityCalculator:
 
 
 class DP4Data(AnalysisData):
+    """Collates DP4 Analysis Data. Saves it as a pickle file and returns text summary for printing."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

@@ -15,7 +15,16 @@ logger = logging.getLogger(__name__)
 
 
 class DP5:
+    """Performs DP5 analysis"""
+
     def __init__(self, output_folder: Path, use_dft_shifts: bool):
+        """Initialise the settings.
+
+        Arguments:
+          output_folder(Path): path for saved DP5 data
+          use_dft_shifts(bool): if set, analyses errors of DFT calculations, compares shifts againt their environments otherwise.
+
+        """
         logger.info("Setting up DP5 method")
         self.output_folder = output_folder
         self.dft_shifts = use_dft_shifts
@@ -50,8 +59,11 @@ class DP5:
             (self.output_folder / "dp5").mkdir()
 
     def __call__(self, mols):
-        # have to generate representations for accepted things
-        # must also check is analysis has been done beore!
+        """Runs DP5 calculations.
+
+        Arguments:
+          mols: Molecule objects
+        """
         data_dic_path = self.output_folder / "dp5" / "data_dic.p"
         dp5_data = DP5Data(mols, data_dic_path)
         if dp5_data.exists:
@@ -83,6 +95,18 @@ class DP5ProbabilityCalculator:
         dp5_correct_scaling=None,
         dp5_incorrect_scaling=None,
     ):
+        """Initialises DP5 Probability calculator for one atom.
+
+        Arguments:
+          atom_type (str): atom symbol. Can be 'C' or 'H'
+          model_file (str): path for representation generating model to load.
+          batch_size (int): batch size for the model.
+          transform_file (str): Path to the Scikit-learn PCA file relative to ``dp5/analysis`` folder. Reduces dimensionality of the representation.
+          kde_file (str): Path to ``scipy.stats.gaussian_kde`` object. Estimates DP5 probabilities
+          dp5_correct_scaling (str). Path to ``scipy.stats.gaussian_kde`` object. Estimates P(correct|structure) for rescaling. Default is None (no scaling)
+          dp5_incorrect_scaling (str). Path to ``scipy.stats.gaussian_kde`` object. Estimates P(incorrect|structure) for rescaling. Default is None (no scaling)
+
+        """
         self.atom_type = atom_type
         self.model = build_model(model_file=model_file)
         self.batch_size = batch_size
@@ -118,7 +142,17 @@ class DP5ProbabilityCalculator:
         )
 
     def __call__(self, mols):
-        # must generate representations
+        """Carries out DP5 analysis.
+
+        Arguments:
+          mols(list of ``dp5.run.data_structures.Molecule``): Molecule objects used in the calculation. Must contain shifts and labels for the provided atom.
+
+        Returns:
+          A tuple containing lists of labels of atoms used in the analysis,
+          their calculated shifts, their experimental shifts,
+          scaled errors, DP5 probabilities for each atom in each conformer,
+          Boltzmann-weighted atom DP5 probabilites, and total molecular DP5 probabilities.
+        """
         all_labels = []
         rep_df = []
         for mol_id, mol in enumerate(mols):
@@ -206,13 +240,14 @@ class DP5ProbabilityCalculator:
 
     def get_shifts_and_labels(self, mol):
         """
+        Returns calculated and experimental shifts for nuclei in the molecule
         Arguments:
-        - self.atom_type
-        - mol: Molecule object
+         self.atom_type: nuclei being analysed
+         mol: Molecule object containing the shifts
         Returns:
-        - calculated conformer shifts
-        - assigned experimental shifts
-        - 0-based indices of relevat atoms
+         calculated conformer shifts
+         assigned experimental shifts
+         0-based indices of relevant atoms
         """
         at = self.atom_type
         conformer_shifts = getattr(mol, "conformer_%s_pred" % at)

@@ -18,4 +18,5 @@ documentation for details.
    usage
    api
    analysis
+   dp5_analysis
 
