@@ -41,6 +41,7 @@ autodoc_mock_imports = [
     "tomli",
     "lmfit",
     "openbabel",
+    "statsmodels",
 ]
 
 
