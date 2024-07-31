@@ -28,7 +28,7 @@ extensions = [
 
 templates_path = ["_templates"]
 exclude_patterns = []
-autodock_mock_imports = ["numpy, sklearn, pandas, tensorflow"]
+autodock_mock_imports = ["numpy", "sklearn", "pandas", "tensorflow", "pathos", "scipy"]
 
 
 # -- Options for HTML output -------------------------------------------------
