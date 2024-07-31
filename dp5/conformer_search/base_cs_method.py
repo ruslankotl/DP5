@@ -6,6 +6,7 @@ Should return a list of atoms, conformer geometries, charges, and energies.
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
 import logging
+from typing import List
 
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ class BaseConfSearch(ABC):
     def __call__(self) -> list:
         """
         Handles input preparation, execution, and processing. The only method called externally.
-        
+
         """
         logger.info(f"Using {self} as conformer search method")
         self.inputs = self.prepare_input()
@@ -32,7 +33,7 @@ class BaseConfSearch(ABC):
         logger.debug(f"Conformer search output: {self.outputs}")
 
         return self.parse_output()
-    
+
     @abstractmethod
     def _run(self):
         """
@@ -43,7 +44,7 @@ class BaseConfSearch(ABC):
         - paths to output files
         """
         raise NotImplementedError("run method is not implemented")
-    
+
     @abstractmethod
     def prepare_input(self):
         raise NotImplementedError("prepare method is not implemented")
@@ -56,14 +57,17 @@ class BaseConfSearch(ABC):
         final_list = []
         for file in self.inputs:
             conf_data = self._parse_output(file)
-            assert isinstance(conf_data, ConfData), "Please pack your conformer search data into ConfData"
+            assert isinstance(
+                conf_data, ConfData
+            ), "Please pack your conformer search data into ConfData"
             final_list.append(conf_data)
 
         return final_list
-    
-@dataclass(frozen=True)    
+
+
+@dataclass(frozen=True)
 class ConfData:
-    atoms: list[str]
-    conformers: list[list[list[float]]]
+    atoms: List[str]
+    conformers: List[List[List[float]]]
     charge: int
-    energies: list[float]
+    energies: List[float]
