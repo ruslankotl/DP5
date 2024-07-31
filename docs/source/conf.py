@@ -1,6 +1,7 @@
 import sys
+import os
 
-sys.path.insert(0, "../../dp5")
+sys.path.insert(0, os.path.abspath("../../dp5"))
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -27,6 +28,7 @@ extensions = [
 
 templates_path = ["_templates"]
 exclude_patterns = []
+autodock_mock_imports = ["numpy, sklearn, pandas, tensorflow"]
 
 
 # -- Options for HTML output -------------------------------------------------
