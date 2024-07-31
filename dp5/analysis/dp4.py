@@ -16,7 +16,10 @@ logger = logging.getLogger(__name__)
 
 class DP4:
     def __init__(self, output_folder, dp4_config):
-        """Load statistical model first
+        """Initialise DP4 Analysis object.
+
+        Specify the save path, load relevant statistical models, set up DP4 calculators for each nucleus
+
         Arguments:
         - output_folder(Path): path to the output folder
         - dp4_config(dict): must contain keys `stats_model` and `param_file`

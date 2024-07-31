@@ -1,4 +1,4 @@
-"""Collectoon of helper file for DP5 Analysis"""
+"""Collection of helper file for DP4 and DP5 analysis"""
 
 import pickle
 from pathlib import Path
@@ -37,6 +37,18 @@ def _scale_nmr(calc_shifts, exp_shifts):
 
 
 def scale_nmr(calc_shifts, exp_shifts):
+    """
+    Linear correction to calculated shifts for a conformer.
+
+    For each geometry, applies a linear correction to the shifts, returns sclaed shifts. Can later be used for caclucating corrected errors.
+
+    Arguments:
+    - calc_shifts(list): calculated shifts
+    - exp_shifts(list): experimental shifts as assigned
+
+    Returns:
+    - scaled calculated shifts for error analysis
+    """
     if not isinstance(calc_shifts, np.ndarray) or not isinstance(
         exp_shifts, np.ndarray
     ):
@@ -59,11 +71,17 @@ class AnalysisData:
 
     # TODO: incorporate json
     def __init__(self, mols, path):
+        """
+        Args:
+            mols: takes Molecule objects used in the analysis
+            path: path to load/save the analysis data
+        """
         self.mols = [mol.input_file for mol in mols]
         self.path = path
 
     @property
     def exists(self):
+        """Checks if a file exists at the provided path"""
         return Path(self.path).exists()
 
     @property
@@ -89,6 +107,7 @@ class AnalysisData:
 
     @property
     def by_mol(self):
+        """Returns rearranged dictionary of lists (grouped by a property) into list of dictionaries (grouped by a molecule)"""
 
         return [
             dict(zip(self.values_dict.keys(), values))
