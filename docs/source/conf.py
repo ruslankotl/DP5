@@ -20,11 +20,11 @@ release = "0.1"
 
 extensions = [
     "sphinx.ext.duration",
+    "sphinx.ext.napoleon",
     "sphinx.ext.doctest",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.githubpages",
-    "sphinx.ext.napoleon",
 ]
 
 templates_path = ["_templates"]
@@ -45,7 +45,7 @@ autodoc_mock_imports = [
     "rdkit",
     "tqdm",
 ]
-
+autodoc_type_hints = "description"
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
