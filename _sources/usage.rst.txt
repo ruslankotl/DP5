@@ -12,4 +12,12 @@ To use DP5, clone this repository:
 
     git clone whatever
 
+
+Then install the repository using
+
+.. code-block:: console
+
+    pip install -e .
+
+    
 Will fix things soon!
