@@ -1,3 +1,5 @@
+"""Runs DP5 analysis for organic molecules."""
+
 from pathlib import Path
 import logging
 import pickle
