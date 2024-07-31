@@ -1,6 +1,6 @@
 import logging
 
-from dp5.neural_net import get_shifts_and_labels
+from .CNN_model import get_shifts_and_labels
 
 
 logger = logging.getLogger(__name__)
