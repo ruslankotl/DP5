@@ -2,7 +2,6 @@ API
 ===
 
 .. autosummary::
-    :recursive:
     :toctree: generated
 
     dp5.conformer_search
