@@ -8,6 +8,8 @@ Installation
 
 To use DP5, clone this repository:
 
-..code-block:: console
+.. code-block:: console
 
     git clone whatever
+
+Will fix things soon!
