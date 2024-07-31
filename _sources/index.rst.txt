@@ -17,4 +17,5 @@ documentation for details.
 
    usage
    api
+   analysis
 
