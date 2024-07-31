@@ -37,6 +37,10 @@ autodoc_mock_imports = [
     "pathos",
     "scipy",
     "nmrglue",
+    "matplotlib",
+    "tomli",
+    "lmfit",
+    "openbabel",
 ]
 
 
