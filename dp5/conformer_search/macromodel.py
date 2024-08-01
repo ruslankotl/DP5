@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 class ConfSearchMethod(BaseConfSearch):
 
-    def __init__(self, inputs, settings):
-        super().__init__(inputs, settings)
+    def __init__(self, settings):
+        super().__init__(settings)
         self.energy_cutoff = self.settings["energy_cutoff"]
 
         if settings["force_field"].lower() == "mmff":
@@ -54,13 +54,13 @@ class ConfSearchMethod(BaseConfSearch):
     def __repr__(self):
         return "MacroModel"
 
-    def prepare_input(self):
+    def prepare_input(self, inputs):
         if os.name == "nt":
             convinp = '"' + self.executable + '/utilities/sdconvert" -isd '
         else:
             convinp = self.executable + "/utilities/sdconvert -isd "
 
-        for input in self.inputs:
+        for input in inputs:
             if not os.path.exists(f"{input}.mae"):
                 if self.executable:
                     outp = subprocess.check_output(
@@ -79,7 +79,7 @@ class ConfSearchMethod(BaseConfSearch):
 
         logger.info("Macromodel input prepared successfully")
 
-        return self.inputs
+        return inputs
 
     def _run(self):
 
@@ -278,21 +278,21 @@ class ConfSearchMethod(BaseConfSearch):
             return False
 
     command = """{0}.mae
-    {0}-out.mae
-    MMOD       0      1      0      0     0.0000     0.0000     0.0000     0.0000
-    FFLD  {1:>6}      1      0      0     1.0000     0.0000     0.0000     0.0000
-    BDCO       0      0      0      0    41.5692 99999.0000     0.0000     0.0000
-    READ       0      0      0      0     0.0000     0.0000     0.0000     0.0000
-    CRMS       0      0      0      0     0.0000     0.2500     0.0000     0.0000
-    LMCS  {2:>6}      0      0      0     0.0000     0.0000     3.0000     6.0000
-    NANT       0      0      0      0     0.0000     0.0000     0.0000     0.0000
-    MCNV       0      0      0      0     0.0000     0.0000     0.0000     0.0000
-    MCSS       2      0      0      0    21.0000     0.0000     0.0000     0.0000
-    MCOP       1      0      0      0     0.5000     0.0000     0.0000     0.0000
-    DEMX       0 333333      0      0    21.0000    42.0000     0.0000     0.0000
-    MSYM       0      0      0      0     0.0000     0.0000     0.0000     0.0000
-    AUOP       0      0      0      0  2500.0000     0.0000     0.0000     0.0000
-    AUTO       0      2      1      1     0.0000    -1.0000     0.0000     2.0000
-    CONV       2      0      0      0     0.0010     0.0000     0.0000     0.0000
-    MINI       1      0 999999      0     0.0000     0.0000     0.0000     0.0000
-    """
+{0}-out.mae
+ MMOD       0      1      0      0     0.0000     0.0000     0.0000     0.0000
+ FFLD  {1:>6}      1      0      0     1.0000     0.0000     0.0000     0.0000
+ BDCO       0      0      0      0    41.5692 99999.0000     0.0000     0.0000
+ READ       0      0      0      0     0.0000     0.0000     0.0000     0.0000
+ CRMS       0      0      0      0     0.0000     0.2500     0.0000     0.0000
+ LMCS  {2:>6}      0      0      0     0.0000     0.0000     3.0000     6.0000
+ NANT       0      0      0      0     0.0000     0.0000     0.0000     0.0000
+ MCNV       0      0      0      0     0.0000     0.0000     0.0000     0.0000
+ MCSS       2      0      0      0    21.0000     0.0000     0.0000     0.0000
+ MCOP       1      0      0      0     0.5000     0.0000     0.0000     0.0000
+ DEMX       0 333333      0      0    21.0000    42.0000     0.0000     0.0000
+ MSYM       0      0      0      0     0.0000     0.0000     0.0000     0.0000
+ AUOP       0      0      0      0  2500.0000     0.0000     0.0000     0.0000
+ AUTO       0      2      1      1     0.0000    -1.0000     0.0000     2.0000
+ CONV       2      0      0      0     0.0010     0.0000     0.0000     0.0000
+ MINI       1      0 999999      0     0.0000     0.0000     0.0000     0.0000
+"""

@@ -16,12 +16,12 @@ logger = logging.getLogger(__name__)
 
 class ConfSearchMethod(BaseConfSearch):
 
-    def __init__(self, inputs, settings):
-        super().__init__(inputs, settings)
+    def __init__(self, settings):
+        super().__init__(settings)
 
-    def prepare_input(self):
+    def prepare_input(self, inputs):
         # no conversion required
-        return self.inputs
+        return inputs
 
     def __repr__(self) -> str:
         return "ETKDG"
