@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anatomy of a config file &mdash; DP5 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=2709fde1"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API" href="api.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            DP5
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Anatomy of a config file</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#structure">structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#input-type">input_type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nmr-file">nmr_file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stereocentres">stereocentres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#solvent">solvent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#log-level">log_level</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output-folder">output_folder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gui-running">gui_running</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#workflow">workflow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cleanup">cleanup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#generate">generate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conf-search">conf_search</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dp5_analysis.html">DP5 Analysis</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DP5</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Anatomy of a config file</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/config_anatomy.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="anatomy-of-a-config-file">
+<h1>Anatomy of a config file<a class="headerlink" href="#anatomy-of-a-config-file" title="Link to this heading"></a></h1>
+<p>New config file is available in <cite>.toml</cite> and <cite>.json</cite> formats.
+This page outlines the configurable parameters.</p>
+<section id="structure">
+<h2>structure<a class="headerlink" href="#structure" title="Link to this heading"></a></h2>
+<p>List of paths to the structure files used in the workflow.
+If structure cleanup or diastereomer genereation is requested, the new molecules are saved to the config file instead.</p>
+</section>
+<section id="input-type">
+<h2>input_type<a class="headerlink" href="#input-type" title="Link to this heading"></a></h2>
+<p>Input type of the structure file as text. Default value is <code class="docutils literal notranslate"><span class="pre">sdf</span></code>.Handled by <code class="xref py py-func docutils literal notranslate"><span class="pre">mol_file_preparation()</span></code>.</p>
+</section>
+<section id="nmr-file">
+<h2>nmr_file<a class="headerlink" href="#nmr-file" title="Link to this heading"></a></h2>
+<p>List of paths to NMR data. Can be a folder containing FID data in (Bruker or JCAMP-DX format) or NMR description file.</p>
+</section>
+<section id="stereocentres">
+<span id="cfgstereocentres"></span><h2>stereocentres<a class="headerlink" href="#stereocentres" title="Link to this heading"></a></h2>
+<p>List of atom indices where stereochemistry is changed. Empty by default. Useful when <a class="reference internal" href="#cfggenerate"><span class="std std-ref">generating stereoisomers</span></a>.</p>
+</section>
+<section id="solvent">
+<h2>solvent<a class="headerlink" href="#solvent" title="Link to this heading"></a></h2>
+<p>Name of the solvent (as in Gaussian) used in subsequent calculations.</p>
+</section>
+<section id="log-level">
+<h2>log_level<a class="headerlink" href="#log-level" title="Link to this heading"></a></h2>
+<p>Logging level in the run. Can be set to <code class="docutils literal notranslate"><span class="pre">info</span></code>, <code class="docutils literal notranslate"><span class="pre">debug</span></code>, and other options specified in <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging-levels">Python documentation</a></p>
+</section>
+<section id="output-folder">
+<h2>output_folder<a class="headerlink" href="#output-folder" title="Link to this heading"></a></h2>
+<p>Path to the output folder.</p>
+</section>
+<section id="gui-running">
+<h2>gui_running<a class="headerlink" href="#gui-running" title="Link to this heading"></a></h2>
+<p>Boolean flag (<code class="docutils literal notranslate"><span class="pre">true</span></code> or <code class="docutils literal notranslate"><span class="pre">false</span></code>). <em>Currently not in use.</em></p>
+</section>
+<section id="workflow">
+<h2>workflow<a class="headerlink" href="#workflow" title="Link to this heading"></a></h2>
+<p>Set of the boolean workflow flags.</p>
+<section id="cleanup">
+<h3>cleanup<a class="headerlink" href="#cleanup" title="Link to this heading"></a></h3>
+<p>Performs MMFF optimisation of the structure candidates.
+Triggers automatically if both <code class="docutils literal notranslate"><span class="pre">dft_opt</span></code> and <code class="docutils literal notranslate"><span class="pre">conf_search</span></code> are set to <cite>false</cite>.</p>
+</section>
+<section id="generate">
+<span id="cfggenerate"></span><h3>generate<a class="headerlink" href="#generate" title="Link to this heading"></a></h3>
+<p>Generates diastereomers of the input molecule. Works on all stereocentres by default,
+but can be limited to selected atoms by <a class="reference internal" href="#cfgstereocentres"><span class="std std-ref">stereocentres</span></a> option.</p>
+</section>
+<section id="conf-search">
+<h3>conf_search<a class="headerlink" href="#conf-search" title="Link to this heading"></a></h3>
+<p>Runs conformational search using method provided. Default is <code class="docutils literal notranslate"><span class="pre">macromodel</span></code>.
+Currently supports <code class="docutils literal notranslate"><span class="pre">macromodel</span></code>, <code class="docutils literal notranslate"><span class="pre">etkdg</span></code>. <code class="docutils literal notranslate"><span class="pre">tinker</span></code> is not tested on the current version.
+It is possible to add support for the new methods (will be shown in the appropriate section).</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api.html" class="btn btn-neutral float-right" title="API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Kristaps Ermanis, Alexander Howarth, Ruslan Kotlyarov, Benji Rowlands, Jonathan Goodman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -21,7 +21,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API" href="api.html" />
+    <link rel="next" title="Anatomy of a config file" href="config_anatomy.html" />
     <link rel="prev" title="DP5 documentation" href="index.html" /> 
 </head>
 
@@ -55,6 +55,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="config_anatomy.html">Anatomy of a config file</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analysis.html">Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dp5_analysis.html">DP5 Analysis</a></li>
@@ -99,8 +100,8 @@
 </section>
 <section id="configuration">
 <span id="id2"></span><h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h2>
-<p>This version adds human-editable configuration files. They can be supplied in .json and .toml formats.
-For backwards compatibility, the basic elements of former command-line interface are retained:</p>
+<p>This version adds human-editable configuration files. They can be supplied in <cite>.json</cite> and <cite>.toml</cite> formats.
+The basic elements of former command-line interface are retained for experienced user convenience.</p>
 <section id="command-line-arguments">
 <h3>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading"></a></h3>
 <div class="admonition attention">
@@ -129,7 +130,7 @@ For backwards compatibility, the basic elements of former command-line interface
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span></code>, <code class="docutils literal notranslate"><span class="pre">--input_type</span></code></p></td>
 <td><p>Input file type. Can be <code class="docutils literal notranslate"><span class="pre">sdf</span></code>, <code class="docutils literal notranslate"><span class="pre">smiles</span></code>, <code class="docutils literal notranslate"><span class="pre">smarts</span></code>, or <code class="docutils literal notranslate"><span class="pre">inchi</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">sdf</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code>, <code class="docutils literal notranslate"><span class="pre">--workflow</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code>, <code class="docutils literal notranslate"><span class="pre">--workflow</span> <span class="pre">&lt;flags&gt;</span></code></p></td>
 <td><p>Workflow type. Must be followed by <a class="reference internal" href="#workflowflags"><span class="std std-ref">workflow flags</span></a> without spaces.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--stereocentres</span></code></p></td>
@@ -198,7 +199,7 @@ by re-weighting the conformers.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="index.html" class="btn btn-neutral float-left" title="DP5 documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="api.html" class="btn btn-neutral float-right" title="API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="config_anatomy.html" class="btn btn-neutral float-right" title="Anatomy of a config file" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
