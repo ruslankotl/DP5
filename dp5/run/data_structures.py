@@ -3,8 +3,8 @@ from rdkit import Chem
 from rdkit.Geometry import Point3D
 from rdkit.Chem import rdForceFieldHelpers
 
-from dp5.run.run_cs import conf_search
-from dp5.run.run_dft import dft_calculations
+from dp5.conformer_search.run_cs import conf_search
+from dp5.dft.run_dft import dft_calculations
 from dp5.neural_net.nn_utils import get_nn_shifts
 from dp5.analysis.dp5 import DP5
 from dp5.analysis.dp4 import DP4

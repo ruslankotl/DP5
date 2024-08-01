@@ -10,10 +10,10 @@ To use DP5, clone this repository:
 
 .. code-block:: console
 
-    git clone whatever
+    git clone https://github.com/ruslankotl/DP5.git
 
 
-Then install the repository using
+Then change to the top-level directory of the repository and install the repository using
 
 .. code-block:: console
 
