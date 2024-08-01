@@ -5,7 +5,7 @@ from importlib import import_module
 from pathlib import Path
 import dataclasses
 
-from dp5.conformer_search import five_conf, conf_prune
+from dp5.conformer_search import conf_prune
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +40,8 @@ def conf_search(mols, config) -> List:
 
     flipped_inputs = []
     if config["manual_five_membered_rings"]:
+        import five_conf
+
         for file in input_names:
             if not Path(f"{file}rot.sdf").exists():
                 # returns empty string if unnecessary
