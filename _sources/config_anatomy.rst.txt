@@ -1,8 +1,8 @@
 Anatomy of a config file
 ========================
 
-New config file is available in `.toml` and `.json` formats. 
-This page outlines the configurable parameters.
+New config file is available in `.toml` and `.json` formats. Keywords are now grouped together for the ease of handling.
+This page outlines the configurable parameters. :download:`Click to download an example <../../dp5/config/default_config.toml>`
 
 
 structure
