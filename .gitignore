@@ -9,3 +9,6 @@ nmr
 my*
 *.cpython
 docs/build
+.vscode/*
+.gitignore
+*.egg-info*
