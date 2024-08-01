@@ -92,7 +92,7 @@ class DFTMethod(BaseDFTMethod):
             "end\n"
             "%geom\n"
             f"  MaxIter {self.settings['max_opt_cycles']}\n"
-            f"  MaxStep {0.01*self.settings['max_opt_cycles']}\n"
+            f"  MaxStep {self.settings['opt_step_size']}\n"
             f"  calc_hess {self.settings['calc_force_constants']}\n"
             "end\n"
         )
