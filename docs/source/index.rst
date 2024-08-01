@@ -16,6 +16,7 @@ documentation for details.
    :caption: Contents:
 
    usage
+   config_anatomy
    api
    analysis
    dp5_analysis

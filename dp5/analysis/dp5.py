@@ -102,9 +102,9 @@ class DP5ProbabilityCalculator:
           model_file (str): path for representation generating model to load.
           batch_size (int): batch size for the model.
           transform_file (str): Path to the Scikit-learn PCA file relative to ``dp5/analysis`` folder. Reduces dimensionality of the representation.
-          kde_file (str): Path to ``scipy.stats.gaussian_kde`` object. Estimates DP5 probabilities
-          dp5_correct_scaling (str). Path to ``scipy.stats.gaussian_kde`` object. Estimates P(correct|structure) for rescaling. Default is None (no scaling)
-          dp5_incorrect_scaling (str). Path to ``scipy.stats.gaussian_kde`` object. Estimates P(incorrect|structure) for rescaling. Default is None (no scaling)
+          kde_file (str): Path to :py:obj:`scipy.stats.gaussian_kde` object. Estimates DP5 probabilities
+          dp5_correct_scaling (str). Path to :py:obj:`scipy.stats.gaussian_kde` object. Estimates :math:`P(correct|structure)` for rescaling. Default is None (no scaling)
+          dp5_incorrect_scaling (str). Path to :py:obj:`scipy.stats.gaussian_kde` object. Estimates :math:`P(incorrect|structure)` for rescaling. Default is None (no scaling)
 
         """
         self.atom_type = atom_type
@@ -145,7 +145,7 @@ class DP5ProbabilityCalculator:
         """Carries out DP5 analysis.
 
         Arguments:
-          mols(list of ``dp5.run.data_structures.Molecule``): Molecule objects used in the calculation. Must contain shifts and labels for the provided atom.
+          mols(list of :py:class:`~dp5.run.data_structures.Molecule`): :py:class:`dp5.run.data_structures.Molecule` objects used in the calculation. Must contain shifts and labels for the provided atom.
 
         Returns:
           A tuple containing lists of labels of atoms used in the analysis,
@@ -240,14 +240,16 @@ class DP5ProbabilityCalculator:
 
     def get_shifts_and_labels(self, mol):
         """
-        Returns calculated and experimental shifts for nuclei in the molecule
+        Returns calculated and experimental shifts for nuclei in the molecule.
+
         Arguments:
-         self.atom_type: nuclei being analysed
-         mol: Molecule object containing the shifts
+          self.atom_type(str): nuclei being analysed
+          mols(:py:class:`~dp5.run.data_structures.Molecule`): :py:class:`dp5.run.data_structures.Molecule`. Must contain shifts and labels for the provided atom.
+
         Returns:
-         calculated conformer shifts
-         assigned experimental shifts
-         0-based indices of relevant atoms
+          calculated conformer shifts
+          assigned experimental shifts
+          0-based indices of relevant atoms
         """
         at = self.atom_type
         conformer_shifts = getattr(mol, "conformer_%s_pred" % at)
