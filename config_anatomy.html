@@ -60,6 +60,68 @@
 <li class="toctree-l3"><a class="reference internal" href="#cleanup">cleanup</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#generate">generate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#conf-search">conf_search</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dft-energies">dft_energies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dft-opt">dft_opt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dft-nmr">dft_nmr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dp4">dp4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dp5">dp5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#assign-only">assign_only</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#calculations-complete">calculations_complete</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#optimisation-converged">optimisation_converged</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#restart-dft">restart_dft</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mm-complete">mm_complete</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dft-complete">dft_complete</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#conformer-search">conformer_search</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#method">method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#force-field">force_field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-count">step_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#steps-per-rotatable-bond">steps_per_rotatable_bond</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#manual-five-membered-rings">manual_five_membered_rings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#five-membered-ring-atoms">five_membered_ring_atoms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conf-prune">conf_prune</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conf-limit">conf_limit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rmsd-cutoff">rmsd_cutoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#energy-cutoff">energy_cutoff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#executable">executable</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#schrodinger">schrodinger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tinker">tinker</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#dft">dft</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id8">method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#charge">charge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">solvent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#n-basis-set">n_basis_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#n-functional">n_functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#o-basis-set">o_basis_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#o-functional">o_functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#e-basis-set">e_basis_set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#e-functional">e_functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">optimisation_converged</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">dft_complete</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#max-opt-cycles">max_opt_cycles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#calc-force-constants">calc_force_constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#opt-step-size">opt_step_size</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#num-processors">num_processors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#memory">memory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#c13-tms">c13_tms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#h1-tms">h1_tms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id12">executable</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#gaussian">gaussian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nwchem">nwchem</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#orca">orca</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#cluster">cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id13">dp4</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#stats-model">stats_model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#param-file">param_file</a></li>
 </ul>
 </li>
 </ul>
@@ -111,11 +173,11 @@ If structure cleanup or diastereomer genereation is requested, the new molecules
 <p>List of paths to NMR data. Can be a folder containing FID data in (Bruker or JCAMP-DX format) or NMR description file.</p>
 </section>
 <section id="stereocentres">
-<span id="cfgstereocentres"></span><h2>stereocentres<a class="headerlink" href="#stereocentres" title="Link to this heading"></a></h2>
-<p>List of atom indices where stereochemistry is changed. Empty by default. Useful when <a class="reference internal" href="#cfggenerate"><span class="std std-ref">generating stereoisomers</span></a>.</p>
+<span id="id1"></span><h2>stereocentres<a class="headerlink" href="#stereocentres" title="Link to this heading"></a></h2>
+<p>List of atom indices where stereochemistry is changed. Empty by default. Useful when <a class="reference internal" href="#generate"><span class="std std-ref">generating stereoisomers</span></a>.</p>
 </section>
 <section id="solvent">
-<h2>solvent<a class="headerlink" href="#solvent" title="Link to this heading"></a></h2>
+<span id="id2"></span><h2>solvent<a class="headerlink" href="#solvent" title="Link to this heading"></a></h2>
 <p>Name of the solvent (as in Gaussian) used in subsequent calculations.</p>
 </section>
 <section id="log-level">
@@ -131,23 +193,305 @@ If structure cleanup or diastereomer genereation is requested, the new molecules
 <p>Boolean flag (<code class="docutils literal notranslate"><span class="pre">true</span></code> or <code class="docutils literal notranslate"><span class="pre">false</span></code>). <em>Currently not in use.</em></p>
 </section>
 <section id="workflow">
-<h2>workflow<a class="headerlink" href="#workflow" title="Link to this heading"></a></h2>
+<span id="cfg-workflowflags"></span><h2>workflow<a class="headerlink" href="#workflow" title="Link to this heading"></a></h2>
 <p>Set of the boolean workflow flags.</p>
 <section id="cleanup">
-<h3>cleanup<a class="headerlink" href="#cleanup" title="Link to this heading"></a></h3>
-<p>Performs MMFF optimisation of the structure candidates.
-Triggers automatically if both <code class="docutils literal notranslate"><span class="pre">dft_opt</span></code> and <code class="docutils literal notranslate"><span class="pre">conf_search</span></code> are set to <cite>false</cite>.</p>
+<span id="id3"></span><h3>cleanup<a class="headerlink" href="#cleanup" title="Link to this heading"></a></h3>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">c</span></code> in the workflow flags (e.g., <code class="docutils literal notranslate"><span class="pre">pydp4</span> <span class="pre">...</span> <span class="pre">-w</span> <span class="pre">c&lt;other</span> <span class="pre">flags&gt;</span></code>) will override the configuration file value.</p>
+</div>
+<p>Performs MMFF optimisation of the structure candidates. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>
+If both <code class="docutils literal notranslate"><span class="pre">dft_opt</span></code> and <code class="docutils literal notranslate"><span class="pre">conf_search</span></code> are set to <code class="docutils literal notranslate"><span class="pre">false</span></code>, automatically set to <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
 </section>
 <section id="generate">
-<span id="cfggenerate"></span><h3>generate<a class="headerlink" href="#generate" title="Link to this heading"></a></h3>
-<p>Generates diastereomers of the input molecule. Works on all stereocentres by default,
-but can be limited to selected atoms by <a class="reference internal" href="#cfgstereocentres"><span class="std std-ref">stereocentres</span></a> option.</p>
+<span id="id4"></span><h3>generate<a class="headerlink" href="#generate" title="Link to this heading"></a></h3>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">g</span></code> in the workflow flags (e.g., <code class="docutils literal notranslate"><span class="pre">pydp4</span> <span class="pre">...</span> <span class="pre">-w</span> <span class="pre">g&lt;other</span> <span class="pre">flags&gt;</span></code>) will override the configuration file value.</p>
+</div>
+<p>Generates diastereomers of the input molecule. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>. Works on all stereocentres by default,
+but can be limited to selected atoms by <a class="reference internal" href="#stereocentres"><span class="std std-ref">stereocentres</span></a> option.</p>
 </section>
 <section id="conf-search">
-<h3>conf_search<a class="headerlink" href="#conf-search" title="Link to this heading"></a></h3>
-<p>Runs conformational search using method provided. Default is <code class="docutils literal notranslate"><span class="pre">macromodel</span></code>.
-Currently supports <code class="docutils literal notranslate"><span class="pre">macromodel</span></code>, <code class="docutils literal notranslate"><span class="pre">etkdg</span></code>. <code class="docutils literal notranslate"><span class="pre">tinker</span></code> is not tested on the current version.
+<span id="id5"></span><h3>conf_search<a class="headerlink" href="#conf-search" title="Link to this heading"></a></h3>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">m</span></code> in the workflow flags (e.g., <code class="docutils literal notranslate"><span class="pre">pydp4</span> <span class="pre">...</span> <span class="pre">-w</span> <span class="pre">m&lt;other</span> <span class="pre">flags&gt;</span></code>) will override the configuration file value.</p>
+</div>
+<p>Runs conformational search using method provided. Default is <code class="docutils literal notranslate"><span class="pre">true</span></code>.
+Recommended for accurate estimation of spectra, especially for flexible molecules.</p>
+</section>
+<section id="dft-energies">
+<span id="id6"></span><h3>dft_energies<a class="headerlink" href="#dft-energies" title="Link to this heading"></a></h3>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">e</span></code> in the workflow flags (e.g., <code class="docutils literal notranslate"><span class="pre">pydp4</span> <span class="pre">...</span> <span class="pre">-w</span> <span class="pre">e&lt;other</span> <span class="pre">flags&gt;</span></code>) will override the configuration file value.</p>
+</div>
+<p>Runs single-point energy DFT calculations. Default value is <code class="docutils literal notranslate"><span class="pre">false</span></code>, but we recommend setting it to <code class="docutils literal notranslate"><span class="pre">true</span></code> for more accurate results.
+The re-ranked ensemble of conformers should lead to more precise NMR spectrum estimation.</p>
+</section>
+<section id="dft-opt">
+<h3>dft_opt<a class="headerlink" href="#dft-opt" title="Link to this heading"></a></h3>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">o</span></code> in the workflow flags (e.g., <code class="docutils literal notranslate"><span class="pre">pydp4</span> <span class="pre">...</span> <span class="pre">-w</span> <span class="pre">o&lt;other</span> <span class="pre">flags&gt;</span></code>) will override the configuration file value.</p>
+</div>
+<p>Runs geometry optimisation using DFT. Default value is <code class="docutils literal notranslate"><span class="pre">false</span></code>, but we recommend setting it to <code class="docutils literal notranslate"><span class="pre">true</span></code>.
+DFT-optimised geometries tend to produce better match to experimental NMR spectra at the increased computational cost.</p>
+</section>
+<section id="dft-nmr">
+<h3>dft_nmr<a class="headerlink" href="#dft-nmr" title="Link to this heading"></a></h3>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">n</span></code> in the workflow flags (e.g., <code class="docutils literal notranslate"><span class="pre">pydp4</span> <span class="pre">...</span> <span class="pre">-w</span> <span class="pre">n&lt;other</span> <span class="pre">flags&gt;</span></code>) will override the configuration file value.</p>
+</div>
+<p>Default value is <code class="docutils literal notranslate"><span class="pre">false</span></code>. If set to <code class="docutils literal notranslate"><span class="pre">true</span></code>, calculates NMR shifts by DFT-GIAO method. Otherwise, if set to <code class="docutils literal notranslate"><span class="pre">false</span></code>, uses a neural net to predict the shifts.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Neural network is implemented for carbon NMR only</p>
+</div>
+</section>
+<section id="dp4">
+<h3>dp4<a class="headerlink" href="#dp4" title="Link to this heading"></a></h3>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">s</span></code> in the workflow flags (e.g., <code class="docutils literal notranslate"><span class="pre">pydp4</span> <span class="pre">...</span> <span class="pre">-w</span> <span class="pre">s&lt;other</span> <span class="pre">flags&gt;</span></code>) will override the configuration file value.</p>
+</div>
+<p>Performs DP4 analysis of structure candidates. Default is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</section>
+<section id="dp5">
+<h3>dp5<a class="headerlink" href="#dp5" title="Link to this heading"></a></h3>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">w</span></code> in the workflow flags (e.g., <code class="docutils literal notranslate"><span class="pre">pydp4</span> <span class="pre">...</span> <span class="pre">-w</span> <span class="pre">w&lt;other</span> <span class="pre">flags&gt;</span></code>) will override the configuration file value.</p>
+</div>
+<p>Performs DP5 analysis of structure candidates. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>DP5 analysis is implemented for carbon NMR only</p>
+</div>
+</section>
+<section id="assign-only">
+<h3>assign_only<a class="headerlink" href="#assign-only" title="Link to this heading"></a></h3>
+<div class="admonition error">
+<p class="admonition-title">Error</p>
+<p>The method is not implemented.</p>
+</div>
+<p>Assigns the structures to the provided spectra and nothing else. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</section>
+<section id="calculations-complete">
+<h3>calculations_complete<a class="headerlink" href="#calculations-complete" title="Link to this heading"></a></h3>
+<p>Assumes the calculations are complete. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</section>
+<section id="optimisation-converged">
+<h3>optimisation_converged<a class="headerlink" href="#optimisation-converged" title="Link to this heading"></a></h3>
+<p>Assumes all optimisations have converged. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</section>
+<section id="restart-dft">
+<h3>restart_dft<a class="headerlink" href="#restart-dft" title="Link to this heading"></a></h3>
+<p>Use when conformational search has completed, but the DFT calculations must be restarted. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</section>
+<section id="mm-complete">
+<h3>mm_complete<a class="headerlink" href="#mm-complete" title="Link to this heading"></a></h3>
+<p>Does nothing. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</section>
+<section id="dft-complete">
+<h3>dft_complete<a class="headerlink" href="#dft-complete" title="Link to this heading"></a></h3>
+<p>Does nothing. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</section>
+</section>
+<section id="conformer-search">
+<span id="id7"></span><h2>conformer_search<a class="headerlink" href="#conformer-search" title="Link to this heading"></a></h2>
+<p>Configuration of conformational search.</p>
+<section id="method">
+<h3>method<a class="headerlink" href="#method" title="Link to this heading"></a></h3>
+<p>Currently supports <code class="docutils literal notranslate"><span class="pre">macromodel</span></code>, <code class="docutils literal notranslate"><span class="pre">etkdg</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">macromodel</span></code>. <code class="docutils literal notranslate"><span class="pre">tinker</span></code> is not tested on the current version.
 It is possible to add support for the new methods (will be shown in the appropriate section).</p>
+</section>
+<section id="force-field">
+<h3>force_field<a class="headerlink" href="#force-field" title="Link to this heading"></a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only has an effect on <code class="xref py py-mod docutils literal notranslate"><span class="pre">dp5.conformer_search.macromodel</span></code>.</p>
+</div>
+<p>Force field to use. Currently supports <code class="docutils literal notranslate"><span class="pre">mmff</span></code> or <code class="docutils literal notranslate"><span class="pre">opls</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">mmff</span></code>.</p>
+</section>
+<section id="step-count">
+<h3>step_count<a class="headerlink" href="#step-count" title="Link to this heading"></a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only has an effect on <code class="xref py py-mod docutils literal notranslate"><span class="pre">dp5.conformer_search.macromodel</span></code>.</p>
+</div>
+<p>Maximum number of steps to use in the conformational search. Default is <code class="docutils literal notranslate"><span class="pre">10000</span></code>.</p>
+</section>
+<section id="steps-per-rotatable-bond">
+<h3>steps_per_rotatable_bond<a class="headerlink" href="#steps-per-rotatable-bond" title="Link to this heading"></a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only has an effect on <code class="xref py py-mod docutils literal notranslate"><span class="pre">dp5.conformer_search.macromodel</span></code>.</p>
+</div>
+<p>Maximum number of steps per bond to use in the conformational search. Default is <code class="docutils literal notranslate"><span class="pre">2500</span></code>.</p>
+</section>
+<section id="manual-five-membered-rings">
+<h3>manual_five_membered_rings<a class="headerlink" href="#manual-five-membered-rings" title="Link to this heading"></a></h3>
+<p>Use special method <code class="xref py py-mod docutils literal notranslate"><span class="pre">dp5.conformer_search.five_conf</span></code> to generate conformers for five-membred rings. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</section>
+<section id="five-membered-ring-atoms">
+<h3>five_membered_ring_atoms<a class="headerlink" href="#five-membered-ring-atoms" title="Link to this heading"></a></h3>
+<p>List of 1-based indices for atoms in five-membred rings to be handled by <code class="xref py py-mod docutils literal notranslate"><span class="pre">dp5.conformer_search.five_conf</span></code>. Default is an empty list.</p>
+</section>
+<section id="conf-prune">
+<h3>conf_prune<a class="headerlink" href="#conf-prune" title="Link to this heading"></a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This method is not aware of molecular symmetry</p>
+</div>
+<p>If number of conformers per molecule exceeds <code class="docutils literal notranslate"><span class="pre">conf_per_structure</span></code>,
+remove redundant conformers if their RMSD is below <code class="docutils literal notranslate"><span class="pre">rmsd_cutoff</span></code> Ångström. Default value is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</section>
+<section id="conf-limit">
+<h3>conf_limit<a class="headerlink" href="#conf-limit" title="Link to this heading"></a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method does nothing.</p>
+</div>
+<p>Total limit of conformers across all candidates. Default is <code class="docutils literal notranslate"><span class="pre">1000</span></code>.</p>
+</section>
+<section id="rmsd-cutoff">
+<h3>rmsd_cutoff<a class="headerlink" href="#rmsd-cutoff" title="Link to this heading"></a></h3>
+<p>Cutoff threshold (in Ångström) to use when <code class="docutils literal notranslate"><span class="pre">conf_prune</span></code> is set to <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</section>
+<section id="energy-cutoff">
+<h3>energy_cutoff<a class="headerlink" href="#energy-cutoff" title="Link to this heading"></a></h3>
+<p>Energy cutoff (in kJ/mol). Default is <code class="docutils literal notranslate"><span class="pre">10</span></code>.</p>
+</section>
+<section id="executable">
+<h3>executable<a class="headerlink" href="#executable" title="Link to this heading"></a></h3>
+<p>Path to your favourite executable. Add your new methods as appropriate.</p>
+<section id="schrodinger">
+<h4>schrodinger<a class="headerlink" href="#schrodinger" title="Link to this heading"></a></h4>
+<p>Path to root folder for Schrodinger Suite (Maestro, MacroModel).</p>
+</section>
+<section id="tinker">
+<h4>tinker<a class="headerlink" href="#tinker" title="Link to this heading"></a></h4>
+<p>Path to root folder for tinker.</p>
+</section>
+</section>
+</section>
+<section id="dft">
+<h2>dft<a class="headerlink" href="#dft" title="Link to this heading"></a></h2>
+<p>Configuration of DFT workflows.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Uses Gaussian keywords as default.</p>
+</div>
+<section id="id8">
+<h3>method<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<p>Accepts <code class="docutils literal notranslate"><span class="pre">gaussian</span></code>, <code class="docutils literal notranslate"><span class="pre">nwchem</span></code>, <code class="docutils literal notranslate"><span class="pre">orca</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">gaussian</span></code>.
+It is possible to add support for the new methods (will be shown in the appropriate section).</p>
+</section>
+<section id="charge">
+<h3>charge<a class="headerlink" href="#charge" title="Link to this heading"></a></h3>
+<p>Leave as <code class="docutils literal notranslate"><span class="pre">nan</span></code> if charges are computed from structure input, set manually otherwise.</p>
+</section>
+<section id="id9">
+<h3>solvent<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<p>Solvent to use in implicit solvation DFT calculations.
+Automatically takes the value specified <a class="reference internal" href="#solvent"><span class="std std-ref">previously</span></a>.</p>
+</section>
+<section id="n-basis-set">
+<h3>n_basis_set<a class="headerlink" href="#n-basis-set" title="Link to this heading"></a></h3>
+<p>Basis set for DFT NMR calculations</p>
+</section>
+<section id="n-functional">
+<h3>n_functional<a class="headerlink" href="#n-functional" title="Link to this heading"></a></h3>
+<p>Functional for DFT NMR calculations</p>
+</section>
+<section id="o-basis-set">
+<h3>o_basis_set<a class="headerlink" href="#o-basis-set" title="Link to this heading"></a></h3>
+<p>Basis set for DFT geometry optimisation</p>
+</section>
+<section id="o-functional">
+<h3>o_functional<a class="headerlink" href="#o-functional" title="Link to this heading"></a></h3>
+<p>Functional for DFT geometry optimisation</p>
+</section>
+<section id="e-basis-set">
+<h3>e_basis_set<a class="headerlink" href="#e-basis-set" title="Link to this heading"></a></h3>
+<p>Basis set for DFT single-point energy calculation</p>
+</section>
+<section id="e-functional">
+<h3>e_functional<a class="headerlink" href="#e-functional" title="Link to this heading"></a></h3>
+<p>Functional for DFT single-point energy calculation</p>
+</section>
+<section id="id10">
+<h3>optimisation_converged<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<p>Use to skip optimisation convergence check. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code></p>
+</section>
+<section id="id11">
+<h3>dft_complete<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<p>Use if DFT calculations are complete adn new calculations are not required. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</section>
+<section id="max-opt-cycles">
+<h3>max_opt_cycles<a class="headerlink" href="#max-opt-cycles" title="Link to this heading"></a></h3>
+<p>Number of optimisation cycles allowed. Default is <code class="docutils literal notranslate"><span class="pre">50</span></code>.</p>
+</section>
+<section id="calc-force-constants">
+<h3>calc_force_constants<a class="headerlink" href="#calc-force-constants" title="Link to this heading"></a></h3>
+<p>Use to include Hessian calculations in DFT optimisation. Speeds up convergence.</p>
+</section>
+<section id="opt-step-size">
+<h3>opt_step_size<a class="headerlink" href="#opt-step-size" title="Link to this heading"></a></h3>
+<p>Optimisation step size (in Bohr or radians). Default value is <code class="docutils literal notranslate"><span class="pre">0.3</span></code></p>
+</section>
+<section id="num-processors">
+<h3>num_processors<a class="headerlink" href="#num-processors" title="Link to this heading"></a></h3>
+<p>Number of processors for each DFT calculation.</p>
+</section>
+<section id="memory">
+<h3>memory<a class="headerlink" href="#memory" title="Link to this heading"></a></h3>
+<p>Allocated memory in megabytes. Default is <code class="docutils literal notranslate"><span class="pre">2000</span></code>.</p>
+</section>
+<section id="c13-tms">
+<h3>c13_tms<a class="headerlink" href="#c13-tms" title="Link to this heading"></a></h3>
+<p>Total isotropic shielding tensor for carbon in tetramethylsilane. Default value <code class="docutils literal notranslate"><span class="pre">191.69255</span></code> is calculated using B3LYP/6-31G** in gas phase.</p>
+</section>
+<section id="h1-tms">
+<h3>h1_tms<a class="headerlink" href="#h1-tms" title="Link to this heading"></a></h3>
+<p>Total isotropic shielding tensor for proton in tetramethylsilane. Default value <code class="docutils literal notranslate"><span class="pre">31.7518583</span></code> is calculated using B3LYP/6-31G** in gas phase.</p>
+</section>
+<section id="id12">
+<h3>executable<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<p>Path to your favourite executable. Add your new methods as appropriate.</p>
+<section id="gaussian">
+<h4>gaussian<a class="headerlink" href="#gaussian" title="Link to this heading"></a></h4>
+<p>Path to Gaussian executable.</p>
+</section>
+<section id="nwchem">
+<h4>nwchem<a class="headerlink" href="#nwchem" title="Link to this heading"></a></h4>
+<p>Path to NWChem executable.</p>
+</section>
+<section id="orca">
+<h4>orca<a class="headerlink" href="#orca" title="Link to this heading"></a></h4>
+<p>Path to ORCA executable.</p>
+</section>
+</section>
+<section id="cluster">
+<h3>cluster<a class="headerlink" href="#cluster" title="Link to this heading"></a></h3>
+<p>Support for running DFT jobs on the remote cluster yet to be implemented.</p>
+</section>
+</section>
+<section id="id13">
+<h2>dp4<a class="headerlink" href="#id13" title="Link to this heading"></a></h2>
+<p>Parameters for DP4 analysis.</p>
+<section id="stats-model">
+<h3>stats_model<a class="headerlink" href="#stats-model" title="Link to this heading"></a></h3>
+<p>Accepts <code class="docutils literal notranslate"><span class="pre">g</span></code> for single gaussian, <code class="docutils literal notranslate"><span class="pre">m</span></code> for multuple gaussian.
+Type of statictical model to use.</p>
+</section>
+<section id="param-file">
+<h3>param_file<a class="headerlink" href="#param-file" title="Link to this heading"></a></h3>
+<p>Path to DP4 parameters file. If left as <code class="docutils literal notranslate"><span class="pre">none</span></code>, uses default parameters.</p>
 </section>
 </section>
 </section>

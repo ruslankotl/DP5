@@ -14,7 +14,8 @@ documentation for details.
 
 .. toctree::
    :caption: Contents:
-
+   :maxdepth: 2
+   
    usage
    config_anatomy
    api

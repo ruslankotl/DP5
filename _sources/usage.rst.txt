@@ -25,7 +25,7 @@ Then install the repository using
 Configuration
 -------------
 
-This version adds human-editable configuration files. They can be supplied in `.json` and `.toml` formats.
+This version adds :doc:`human-editable configuration files <config_anatomy>`. They can be supplied in `.json` and `.toml` formats.
 The basic elements of former command-line interface are retained for experienced user convenience.
 
 Command line arguments
@@ -42,7 +42,7 @@ Command line arguments
    ``-c``, ``--config``              Path to configuration file for the run. Defaults to ``dp5/config/default_config.toml``.
    ``-o``, ``--output``             Path to output directory. Defaults to current working folder.
    ``-i``, ``--input_type``         Input file type. Can be ``sdf``, ``smiles``, ``smarts``, or ``inchi``. Default is ``sdf``.
-   ``-w``, ``--workflow <flags>``    Workflow type. Must be followed by :ref:`workflow flags<workflowflags>` without spaces. 
+   ``-w``, ``--workflow <flags>``    Workflow type. Must be followed by :ref:`workflow flags <workflowflags>` without spaces. 
    ``--stereocentres``               When generating diastereomers, limit generation to specified stereocentres.
    ``-l``, ``--log_filename``       Log file name.
    ``--log_level``                   Logging levels. Can be ``warning``, ``info``, or ``debug``. Default level is ``info``.
@@ -52,24 +52,24 @@ Command line arguments
 Workflow arguments
 ^^^^^^^^^^^^^^^^^^
 
-Specifies workflow actions. 
+Specifies workflow actions. Will load the values from the :ref:`configuration file <cfg_workflowflags>` if left unset.
 
 .. _workflowflags:
 
 
-=============== ==============
-Workflow Flags  What they mean
-=============== ==============
-c               generate 3D structure, optimise using MMFF
-g               generate diastereomers
-m               perform conformational search
-o               optimise geometries using DFT
-e               calculate single point energies using DFT
-n               calculate NMR spectra using DFT-GIAO method
-a               assignment only **(currently not supported)**
-s               perform DP4 analysis
-w               perform DP5 analysis
-=============== ==============
+=============== ======================== ===============
+Workflow Flags   Config file equivalents What they mean
+=============== ======================== ===============
+``c``           ``cleanup``              generate 3D structure, optimise using MMFF
+``g``           ``generate``             generate diastereomers
+``m``           ``conf_search``          perform conformational search
+``o``           ``dft_opt``              optimise geometries using DFT
+``e``           ``dft_energies``         calculate single point energies using DFT
+``n``           ``dft_nmr``              calculate NMR spectra using DFT-GIAO method
+``a``           ``assign_only``          assignment only **(currently not supported)**
+``s``           ``dp4``                  perform DP4 analysis
+``w``           ``dp5``                  perform DP5 analysis
+=============== ======================== ===============
 
 Default DP4 workflow for establishing stereochemistry would be specified as ``-w gnms``, 
 the best results would be produced using ``-w gnomes``.
