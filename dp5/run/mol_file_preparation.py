@@ -1,6 +1,6 @@
 from pathlib import Path
 import logging
-
+from typing import List, Union, Dict
 
 from rdkit import Chem
 from rdkit.Chem import AllChem, EnumerateStereoisomers
@@ -85,9 +85,9 @@ def read_textfile(input_file: str, input_type: str):
 
 def _generate_diastereomers(
     mol: Chem.rdchem.Mol,
-    mutable_atoms: list[int] | None = None,
+    mutable_atoms: Union[List[int], None] = None,
     double_bonds: bool = False,
-) -> list[Chem.rdchem.Mol]:
+) -> List[Chem.rdchem.Mol]:
     """
     Enumerates all diastereomers and double bond isomers.
 
@@ -155,8 +155,8 @@ def _generate_diastereomers(
 
 
 def prepare_inputs(
-    input_files: list[str], input_type: str, stereocentres: list[int], workflow: dict
-) -> list[str]:
+    input_files: List[str], input_type: str, stereocentres: List[int], workflow: Dict
+) -> List[str]:
     """
     Reads files at the path specified by input config, prepares them as required by the user. Returns paths to the new files.
 

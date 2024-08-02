@@ -14,6 +14,11 @@ setup(
         "openbabel-wheel",
         "scipy<1.10",
         "nmrglue",
+        "tqdm",
+        "scikit-learn",
+        "pathos",
+        "pandas",
+        "statsmodels",
     ],
     entry_points={
         "console_scripts": ["pydp4 = dp5.run.load_config:main"],
