@@ -7,6 +7,7 @@ Should have an assignment method
 from .helper_functions import *
 from .proton.process import proton_processing, proton_assignment
 from .description_files import process_description, pairwise_assignment
+from .carbon.process import carbon_processing, carbon_assignment
 
 import pickle
 import logging
@@ -100,7 +101,23 @@ class NMRData:
 
     def process_carbon(self):
         """NMR-AI not yet implemented"""
-        raise NotImplementedError("Automated 13C processing not yet implemented")
+        cdir = self.output_folder / "carbondata"
+        gdir = self.output_folder / "graphs" / "carbondata"
+        if cdir.exists():
+            with open(cdir, "rb") as f:
+                self.carbondata = pickle.load(f)
+        else:
+            ydata, uc = self.carbon_fid
+
+            (
+                self.carbondata["xdata"],
+                self.carbondata["ydata"],
+                self.carbondata["exppeaks"],
+                self.carbondata["simulated_ydata"],
+                self.carbondata["removed"],
+            ) = carbon_processing(ydata, uc, self.solvent)
+            with open(cdir, "wb") as f:
+                pickle.dump(self.carbondata, f)
 
     def process_description(self, file):
 
@@ -135,12 +152,12 @@ class NMRData:
 
         if self.protondata:
             H_exp = proton_assignment(self.protondata, _mol, H_shifts, H_labels)
-        else:
+        elif hasattr(self, "H_exp"):
             H_exp = pairwise_assignment(H_shifts, self.H_exp)
 
         if self.carbondata:
-            raise NotImplementedError("Automated 13C processing not integrated yet")
-        else:
+            C_exp = carbon_assignment(self.carbondata, _mol, C_shifts, C_labels)
+        elif hasattr(self, "C_exp"):
             C_exp = pairwise_assignment(C_shifts, self.C_exp)
 
         return C_exp, H_exp

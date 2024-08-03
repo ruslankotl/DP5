@@ -11,7 +11,7 @@ from dp5.nmr_processing.proton import (
     multiproc_BIC_minimisation,
     simulate_regions,
     weighted_region_centres,
-    iterative_assignment
+    iterative_assignment,
 )
 
 
@@ -30,7 +30,7 @@ def proton_processing(total_spectral_ydata, uc, solvent):
     returns:
         - spectral_xdata_ppm
         - total_spectral_ydata
-        - peak_regions 
+        - peak_regions
         - grouped_peaks
         - solvent_region_ind
         - picked_peaks
@@ -169,7 +169,7 @@ def integrate_and_remove_impurities(
 
 
 def proton_assignment(nmr_data, molecule, shifts, labels) -> list:
-    '''
+    """
     Handles final round of impurity removal
     arguments:
     - NMRData object
@@ -178,7 +178,7 @@ def proton_assignment(nmr_data, molecule, shifts, labels) -> list:
     - labels(list) list of proton labels
     returns:
     list of experimetal peak values, same order as in shifts
-    '''
+    """
     (
         exp_peaks,
         spectral_xdata_ppm,
@@ -191,22 +191,29 @@ def proton_assignment(nmr_data, molecule, shifts, labels) -> list:
         picked_peaks,
         total_params,
         sim_regions,
-    ) = integrate_and_remove_impurities(mol=molecule,
-                                        spectral_xdata_ppm=nmr_data['xdata'],
-                                        total_spectral_ydata=nmr_data['ydata'],
-                                        peak_regions=nmr_data['peakregions'],
-                                        grouped_peaks=nmr_data['grouped_peaks'],
-                                        picked_peaks=nmr_data['picked_peaks'],
-                                        total_params=nmr_data['params'],
-                                        sim_regions=nmr_data['sim_regions'])
-    assigned_shifts, assigned_peaks, assigned_labels, scaled_shifts = iterative_assignment(
-        mol=molecule, exp_peaks=exp_peaks,
-        calculated_shifts=shifts, H_labels=labels,
-        rounded_integrals=integrals)
-    H_exp = [None]*len(shifts)
+    ) = integrate_and_remove_impurities(
+        mol=molecule,
+        spectral_xdata_ppm=nmr_data["xdata"],
+        total_spectral_ydata=nmr_data["ydata"],
+        peak_regions=nmr_data["peakregions"],
+        grouped_peaks=nmr_data["grouped_peaks"],
+        picked_peaks=nmr_data["picked_peaks"],
+        total_params=nmr_data["params"],
+        sim_regions=nmr_data["sim_regions"],
+    )
+    assigned_shifts, assigned_peaks, assigned_labels, scaled_shifts = (
+        iterative_assignment(
+            mol=molecule,
+            exp_peaks=exp_peaks,
+            calculated_shifts=shifts,
+            H_labels=labels,
+            rounded_integrals=integrals,
+        )
+    )
+    H_exp = [None] * len(shifts)
     for label, peak in zip(assigned_labels, assigned_peaks):
 
-        w = labels.index(label)
+        w = labels.tolist().index(label)
 
         H_exp[w] = peak
     return H_exp
