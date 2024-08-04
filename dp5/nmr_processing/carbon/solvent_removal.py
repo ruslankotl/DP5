@@ -1,43 +1,23 @@
 import itertools
+import json
 import numpy as np
 from lmfit import Parameters
+from pathlib import Path
 
 from ..helper_functions import lorentzian
 
 
 def solvent_removal(simulated_y_data, spectral_xdata_ppm, solvent, uc, picked_peaks):
 
-    if solvent == "chloroform":
+    solvent_file = (Path(__file__).parent / "solvents.json").resolve()
 
-        exp_ppm = [77]
+    with open(solvent_file) as f:
+        solvent_dict = json.load(f)
 
-        Jv = [[64]]
-
-    elif solvent == "dimethylsulfoxide":
-
-        exp_ppm = [39.51]
-
-        Jv = [[42, 42, 42]]
-
-    elif solvent == "pyridine":
-
-        exp_ppm = [150.35, 135.91, 123.87]
-
-        Jv = [[55, 55], [49, 49], [50, 50]]
-
-    elif solvent == "methanol":
-
-        exp_ppm = [49.15]
-
-        Jv = [[42.8, 42.8, 42.8]]
-
-    elif solvent == "benzene":
-
-        exp_ppm = [128.39]
-
-        Jv = [[24.3]]
-
+    if solvent in solvent_dict:
+        solvent_data = solvent_dict[solvent]
     else:
+        solvent_data = []
 
         exp_ppm = []
         Jv = [[]]
@@ -46,7 +26,9 @@ def solvent_removal(simulated_y_data, spectral_xdata_ppm, solvent, uc, picked_pe
 
     removed = []
 
-    for J, p in zip(Jv, exp_ppm):
+    for peak in solvent_data:
+
+        p, J = peak["exp_ppm"], peak["Jv"]
 
         exp = uc(p, "ppm")
 
