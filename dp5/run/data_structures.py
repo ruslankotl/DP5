@@ -26,6 +26,7 @@ class Molecule:
         self._energies = np.array([float(ff.CalcEnergy()) * 4.184])
         # creates mol object for further manipulation
         self._rdkit_mols = None
+        self._populations = None
         self._mol = mol
 
     def __repr__(self) -> str:
