@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "DP5"
+version = "0.1"
+requires-python = ">=3.9"
+description = "A short description of the project"
+readme = "README.md"
+authors = [
+    {name = "Ruslan Kotlyarov", email = "rk582@cam.ac.uk"}
+]
+
+dependencies = [
+        "tomli",
+        "numpy",
+        "rdkit",
+        "lmfit",
+        "matplotlib",
+        "openbabel-wheel",
+        "scipy>=1.10",
+        "nmrglue",
+        "tqdm",
+        "scikit-learn",
+        "pathos",
+        "pandas",
+        "statsmodels",
+        "tensorflow<=2.14"
+    ]
+
+[project.urls]
+Documentation = "https://ruslankotl.github.io/DP5/index.html"
+Source = "https://github.com/ruslankotl/DP5"
+
+
+
+[project.scripts]
+pydp4 = "dp5.run.load_config:main"
+
+[tool.setuptools.packages.find]
+include = ["dp5"]
