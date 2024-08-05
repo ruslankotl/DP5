@@ -19,6 +19,9 @@ Then change to the top-level directory of the repository and install the reposit
 
     pip install -e .
 
+.. note::
+    The repository works best on x86 Linux machines. 
+    For Apple Silicon, please refer to `this guide <https://developer.apple.com/metal/tensorflow-plugin/>`_
 
 .. _configuration:
 

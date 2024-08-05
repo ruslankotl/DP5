@@ -129,6 +129,7 @@
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analysis.html">Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dp5_analysis.html">DP5 Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dft_methods.html">DFT Method Guidance</a></li>
 </ul>
 
         </div>
@@ -402,35 +403,35 @@ Automatically takes the value specified <a class="reference internal" href="#sol
 </section>
 <section id="n-basis-set">
 <h3>n_basis_set<a class="headerlink" href="#n-basis-set" title="Link to this heading"></a></h3>
-<p>Basis set for DFT NMR calculations</p>
+<p>Basis set for DFT NMR calculations. Default is <code class="docutils literal notranslate"><span class="pre">&quot;6-311g(d)&quot;</span></code>.</p>
 </section>
 <section id="n-functional">
 <h3>n_functional<a class="headerlink" href="#n-functional" title="Link to this heading"></a></h3>
-<p>Functional for DFT NMR calculations</p>
+<p>Functional for DFT NMR calculations. Default is <code class="docutils literal notranslate"><span class="pre">&quot;mPW1PW91&quot;</span></code>.</p>
 </section>
 <section id="o-basis-set">
 <h3>o_basis_set<a class="headerlink" href="#o-basis-set" title="Link to this heading"></a></h3>
-<p>Basis set for DFT geometry optimisation</p>
+<p>Basis set for DFT geometry optimisation. Default is <code class="docutils literal notranslate"><span class="pre">&quot;6-31g(d,p)&quot;&quot;</span></code></p>
 </section>
 <section id="o-functional">
 <h3>o_functional<a class="headerlink" href="#o-functional" title="Link to this heading"></a></h3>
-<p>Functional for DFT geometry optimisation</p>
+<p>Functional for DFT geometry optimisation. Default is <code class="docutils literal notranslate"><span class="pre">&quot;b3lyp&quot;</span></code>.</p>
 </section>
 <section id="e-basis-set">
 <h3>e_basis_set<a class="headerlink" href="#e-basis-set" title="Link to this heading"></a></h3>
-<p>Basis set for DFT single-point energy calculation</p>
+<p>Basis set for DFT single-point energy calculation. Default is <code class="docutils literal notranslate"><span class="pre">&quot;def2tzvp&quot;</span></code>.</p>
 </section>
 <section id="e-functional">
 <h3>e_functional<a class="headerlink" href="#e-functional" title="Link to this heading"></a></h3>
-<p>Functional for DFT single-point energy calculation</p>
+<p>Functional for DFT single-point energy calculation. Default is <code class="docutils literal notranslate"><span class="pre">&quot;m062x&quot;</span></code>.</p>
 </section>
 <section id="id10">
 <h3>optimisation_converged<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
-<p>Use to skip optimisation convergence check. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code></p>
+<p>Use to skip optimisation convergence check. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 </section>
 <section id="id11">
 <h3>dft_complete<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
-<p>Use if DFT calculations are complete adn new calculations are not required. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<p>Use if DFT calculations are complete and new calculations are not required. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 </section>
 <section id="max-opt-cycles">
 <h3>max_opt_cycles<a class="headerlink" href="#max-opt-cycles" title="Link to this heading"></a></h3>
@@ -438,15 +439,15 @@ Automatically takes the value specified <a class="reference internal" href="#sol
 </section>
 <section id="calc-force-constants">
 <h3>calc_force_constants<a class="headerlink" href="#calc-force-constants" title="Link to this heading"></a></h3>
-<p>Use to include Hessian calculations in DFT optimisation. Speeds up convergence.</p>
+<p>Use to include Hessian calculations in DFT optimisation. Default is <code class="docutils literal notranslate"><span class="pre">false</span></code>. Speeds up optimisation convergence.</p>
 </section>
 <section id="opt-step-size">
 <h3>opt_step_size<a class="headerlink" href="#opt-step-size" title="Link to this heading"></a></h3>
-<p>Optimisation step size (in Bohr or radians). Default value is <code class="docutils literal notranslate"><span class="pre">0.3</span></code></p>
+<p>Optimisation step size (in Bohr or radians). Default value is <code class="docutils literal notranslate"><span class="pre">0.3</span></code>.</p>
 </section>
 <section id="num-processors">
 <h3>num_processors<a class="headerlink" href="#num-processors" title="Link to this heading"></a></h3>
-<p>Number of processors for each DFT calculation.</p>
+<p>Number of processors for each DFT calculation. Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
 </section>
 <section id="memory">
 <h3>memory<a class="headerlink" href="#memory" title="Link to this heading"></a></h3>
