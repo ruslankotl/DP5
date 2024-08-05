@@ -12,7 +12,7 @@ setup(
         "lmfit",
         "matplotlib",
         "openbabel-wheel",
-        "scipy<1.10",
+        "scipy>=1.10",
         "nmrglue",
         "tqdm",
         "scikit-learn",
