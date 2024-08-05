@@ -21,4 +21,5 @@ documentation for details.
    api
    analysis
    dp5_analysis
+   dft_methods
 

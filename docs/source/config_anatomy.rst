@@ -271,35 +271,35 @@ Automatically takes the value specified :ref:`previously <solvent>`.
 
 n_basis_set
 ^^^^^^^^^^^
-Basis set for DFT NMR calculations
+Basis set for DFT NMR calculations. Default is ``"6-311g(d)"``.
 
 n_functional
 ^^^^^^^^^^^^
-Functional for DFT NMR calculations
+Functional for DFT NMR calculations. Default is ``"mPW1PW91"``.
 
 o_basis_set
 ^^^^^^^^^^^
-Basis set for DFT geometry optimisation
+Basis set for DFT geometry optimisation. Default is ``"6-31g(d,p)""``
 
 o_functional
 ^^^^^^^^^^^^
-Functional for DFT geometry optimisation
+Functional for DFT geometry optimisation. Default is ``"b3lyp"``.
 
 e_basis_set
 ^^^^^^^^^^^
-Basis set for DFT single-point energy calculation
+Basis set for DFT single-point energy calculation. Default is ``"def2tzvp"``.
 
 e_functional
 ^^^^^^^^^^^^
-Functional for DFT single-point energy calculation
+Functional for DFT single-point energy calculation. Default is ``"m062x"``.
 
 optimisation_converged
 ^^^^^^^^^^^^^^^^^^^^^^
-Use to skip optimisation convergence check. Default is ``false``
+Use to skip optimisation convergence check. Default is ``false``.
 
 dft_complete
 ^^^^^^^^^^^^^
-Use if DFT calculations are complete adn new calculations are not required. Default is ``false``.
+Use if DFT calculations are complete and new calculations are not required. Default is ``false``.
 
 max_opt_cycles
 ^^^^^^^^^^^^^^
@@ -307,15 +307,15 @@ Number of optimisation cycles allowed. Default is ``50``.
 
 calc_force_constants
 ^^^^^^^^^^^^^^^^^^^^^
-Use to include Hessian calculations in DFT optimisation. Speeds up convergence.
+Use to include Hessian calculations in DFT optimisation. Default is ``false``. Speeds up optimisation convergence.
 
 opt_step_size
 ^^^^^^^^^^^^^^
-Optimisation step size (in Bohr or radians). Default value is ``0.3``
+Optimisation step size (in Bohr or radians). Default value is ``0.3``.
 
 num_processors
 ^^^^^^^^^^^^^^
-Number of processors for each DFT calculation.
+Number of processors for each DFT calculation. Default is ``1``.
 
 memory
 ^^^^^^^
