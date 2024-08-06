@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "Python: DFT-DP5",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "cwd": "/home/rk582/DP5/S11",
             "env": {
@@ -31,7 +31,7 @@
         },
         {
             "name": "Python: Rapid-DP5",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "cwd": "/home/rk582/DP5/S11",
             "env": {
@@ -47,6 +47,31 @@
                 "S11_NMR",
                 "-w",
                 "wmoe",
+                "--log_level",
+                "debug",
+                "-c",
+                "../dp5/config/default_config.toml"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Python: DP4",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "/home/rk582/DP5/S11",
+            "env": {
+                "PYTHONPATH": "/home/rk582/miniconda3/envs/dp5_cascade/bin/python"
+            },
+            "program": "/home/rk582/DP5/dp5/run/load_config.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-s",
+                "S11a_.sdf",
+                "S11b_.sdf",
+                "-n",
+                "S11_NMR",
+                "-w",
+                "nsmoe",
                 "--log_level",
                 "debug",
                 "-c",
