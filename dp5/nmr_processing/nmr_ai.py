@@ -8,6 +8,7 @@ from .helper_functions import *
 from .proton.process import proton_processing, proton_assignment
 from .description_files import process_description, pairwise_assignment
 from .carbon.process import carbon_processing, carbon_assignment
+from .carbon.plot import plot_carbon
 
 import pickle
 import logging
@@ -157,6 +158,7 @@ class NMRData:
 
         if self.carbondata:
             C_exp = carbon_assignment(self.carbondata, _mol, C_shifts, C_labels)
+            plot_carbon(self.carbondata, self.output_folder, mol, C_exp)
         elif hasattr(self, "C_exp"):
             C_exp = pairwise_assignment(C_shifts, self.C_exp)
 

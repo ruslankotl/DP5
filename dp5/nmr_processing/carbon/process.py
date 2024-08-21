@@ -65,4 +65,4 @@ def carbon_assignment(nmr_data, molecule, shifts, labels):
 
         C_exp[w] = peak
 
-    return C_exp
+    return np.array(C_exp)

@@ -216,4 +216,4 @@ def proton_assignment(nmr_data, molecule, shifts, labels) -> list:
         w = labels.tolist().index(label)
 
         H_exp[w] = peak
-    return H_exp
+    return np.array(H_exp)
