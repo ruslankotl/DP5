@@ -63,6 +63,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#dp5.analysis.dp5.DP5ProbabilityCalculator.get_shifts_and_labels"><code class="docutils literal notranslate"><span class="pre">DP5ProbabilityCalculator.get_shifts_and_labels()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#notes">Notes</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="dft_methods.html">DFT Method Guidance</a></li>
@@ -185,6 +186,13 @@ assigned experimental shifts
 
 </dd></dl>
 
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
+<p>DP5 analysis generates vector-based representations for each atom and compares them with reference representations using Kernel Density Estimation.
+It runs in two modes, denoted as <cite>Error</cite> and <cite>Experimental</cite>.</p>
+<p>In the <cite>Error</cite> mode, for each conformer, the scaled errors of calculation shifts are concatenated with condensed atom representations and compared with scaled errors for <cite>Exp5K</cite> NMR data set.
+In the <cite>Experimental</cite> mode, the Boltzmann-weighted calculated shifts are compared directly with experimental data.</p>
+</section>
 </section>
 
 
