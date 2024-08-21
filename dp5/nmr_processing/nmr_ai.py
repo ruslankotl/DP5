@@ -6,6 +6,7 @@ Should have an assignment method
 
 from .helper_functions import *
 from .proton.process import proton_processing, proton_assignment
+from .proton.plot import plot_proton
 from .description_files import process_description, pairwise_assignment
 from .carbon.process import carbon_processing, carbon_assignment
 from .carbon.plot import plot_carbon
@@ -153,6 +154,7 @@ class NMRData:
 
         if self.protondata:
             H_exp = proton_assignment(self.protondata, _mol, H_shifts, H_labels)
+            plot_proton(self.protondata, self.output_folder, mol, H_exp)
         elif hasattr(self, "H_exp"):
             H_exp = pairwise_assignment(H_shifts, self.H_exp)
 
