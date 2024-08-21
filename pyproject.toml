@@ -9,6 +9,10 @@ requires-python = ">=3.9"
 description = "A short description of the project"
 readme = "README.md"
 authors = [
+    {name = "Kristaps Ermanis"},
+    {name = "Alexander Howarth"}
+]
+maintainers = [
     {name = "Ruslan Kotlyarov", email = "rk582@cam.ac.uk"}
 ]
 
