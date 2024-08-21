@@ -195,7 +195,7 @@ def proton_assignment(nmr_data, molecule, shifts, labels) -> list:
         mol=molecule,
         spectral_xdata_ppm=nmr_data["xdata"],
         total_spectral_ydata=nmr_data["ydata"],
-        peak_regions=nmr_data["peakregions"],
+        peak_regions=nmr_data["peak_regions"],
         grouped_peaks=nmr_data["grouped_peaks"],
         picked_peaks=nmr_data["picked_peaks"],
         total_params=nmr_data["params"],
