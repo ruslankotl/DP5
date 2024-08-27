@@ -28,6 +28,8 @@ def get_nn_shifts(mols, batch_size=16):
 
 
 def predict_C_shifts(mols, batch_size):
+    import os
+    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
     return get_shifts_and_labels(
         mols,
         atomic_symbol="C",
