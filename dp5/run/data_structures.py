@@ -16,9 +16,9 @@ class Molecule:
         self.base_name = input_file.rsplit(".", maxsplit=1)[0]
         mol = Chem.MolFromMolFile(input_file, removeHs=False)
 
-        self._atoms = [at.GetSymbol() for at in mol.GetAtoms()]
-        self._conformers = [mol.GetConformer(0).GetPositions()]
-        self._charge = sum([at.GetFormalCharge() for at in mol.GetAtoms()])
+        self.atoms = [at.GetSymbol() for at in mol.GetAtoms()]
+        self.conformers = [mol.GetConformer(0).GetPositions()]
+        self.charge = sum([at.GetFormalCharge() for at in mol.GetAtoms()])
 
         # estimates force field energy
         prop = rdForceFieldHelpers.MMFFGetMoleculeProperties(mol, mmffVariant="MMFF94s")
