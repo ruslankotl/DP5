@@ -103,7 +103,10 @@ def _generate_diastereomers(
     list of Mols
     """
     # copy the input to prevent accidental editing
-    target_mol = Chem.Mol(mol)
+    if Chem.rdmolops.NeedsHs(mol):
+        target_mol = AllChem.AddHs(mol)
+    else:
+        target_mol = Chem.Mol(mol)
     mutable_atoms = mutable_atoms.copy()
 
     enum_opts = EnumerateStereoisomers.StereoEnumerationOptions(
