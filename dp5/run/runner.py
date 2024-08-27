@@ -16,6 +16,10 @@ logger = logging.getLogger(__name__)
 def runner(config):
     logger.info("Starting DP4 workflow")
 
+    # ignore gpus
+    import os
+    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
     data = Molecules(config)
 
     if config["workflow"]["conf_search"] and not (
