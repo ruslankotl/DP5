@@ -211,7 +211,7 @@ class Molecules:
     def get_conformers(self):
         """Runs conformational search."""
         mm_data = conf_search(self.mols, self.config["conformer_search"])
-        for mol, data in zip(self.mols, mm_data, strict=True):
+        for mol, data in zip(self.mols, mm_data):
             mol.add_conformer_data(data)
 
     def get_dft_data(self):
@@ -220,7 +220,7 @@ class Molecules:
         dft_data = dft_calculations(
             dft_mols, self.config["workflow"], self.config["dft"]
         )
-        for mol, data in zip(self.mols, dft_data, strict=True):
+        for mol, data in zip(self.mols, dft_data):
             mol.add_dft_data(data)
 
     def get_nn_nmr_shifts(self):
