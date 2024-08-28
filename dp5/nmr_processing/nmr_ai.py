@@ -7,7 +7,7 @@ Should have an assignment method
 from .helper_functions import *
 from .proton.process import proton_processing, proton_assignment
 from .proton.plot import plot_proton
-from .description_files import process_description, pairwise_assignment
+from .description_files import process_description, pairwise_assignment, matching_assignment
 from .carbon.process import carbon_processing, carbon_assignment
 from .carbon.plot import plot_carbon
 
@@ -162,7 +162,7 @@ class NMRData:
             C_exp = carbon_assignment(self.carbondata, _mol, C_shifts, C_labels)
             plot_carbon(self.carbondata, self.output_folder, mol, C_exp)
         elif hasattr(self, "C_exp"):
-            C_exp = pairwise_assignment(C_shifts, self.C_exp)
+            C_exp = matching_assignment(C_shifts, self.C_exp)
 
         return C_exp, H_exp
 
