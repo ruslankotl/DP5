@@ -49,7 +49,7 @@ class DP5:
                 model_file="NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5",
                 batch_size=16,
                 transform_file="pca_10_EXP_decomp.p",
-                kde_file="pca_10_kde_EXP_sklearn_kde.pkl",
+                kde_file="pca_10_EXP_sklearn_kde.pkl",
                 dp5_correct_scaling=None,
                 dp5_incorrect_scaling=None,
             )
