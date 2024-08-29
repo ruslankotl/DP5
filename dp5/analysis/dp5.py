@@ -2,11 +2,13 @@
 
 from pathlib import Path
 import logging
-import pickle
+import dill as pickle
 from abc import abstractmethod
 
 from tqdm import tqdm
-import pathos.multiprocessing as mp
+from joblib import Parallel, delayed
+from scipy.stats.kde import gaussian_kde
+from sklearn.neighbors import KernelDensity
 
 from dp5.neural_net.CNN_model import *
 from dp5.analysis.utils import scale_nmr, AnalysisData
@@ -47,7 +49,7 @@ class DP5:
                 model_file="NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5",
                 batch_size=16,
                 transform_file="pca_10_EXP_decomp.p",
-                kde_file="pca_10_kde_EXP_kernel.p",
+                kde_file="pca_10_kde_EXP_sklearn_kde.pkl",
                 dp5_correct_scaling=None,
                 dp5_incorrect_scaling=None,
             )
@@ -102,24 +104,20 @@ class DP5ProbabilityCalculator:
           model_file (str): path for representation generating model to load.
           batch_size (int): batch size for the model.
           transform_file (str): Path to the Scikit-learn PCA file relative to ``dp5/analysis`` folder. Reduces dimensionality of the representation.
-          kde_file (str): Path to :py:obj:`scipy.stats.gaussian_kde` object. Estimates DP5 probabilities
-          dp5_correct_scaling (str). Path to :py:obj:`scipy.stats.gaussian_kde` object. Estimates :math:`P(correct|structure)` for rescaling. Default is None (no scaling)
-          dp5_incorrect_scaling (str). Path to :py:obj:`scipy.stats.gaussian_kde` object. Estimates :math:`P(incorrect|structure)` for rescaling. Default is None (no scaling)
+          kde_file (str): Path to :py:obj:`scipy.stats.gaussian_kde` or :py:obj:`sklearn.neighbors.KernelDensity` object. Estimates DP5 probabilities
+          dp5_correct_scaling (str). Path to :py:obj:`scipy.stats.gaussian_kde` or :py:obj:`sklearn.neighbors.KernelDensity` object. Estimates :math:`P(correct|structure)` for rescaling. Default is None (no scaling)
+          dp5_incorrect_scaling (str). Path to :py:obj:`scipy.stats.gaussian_kde` or :py:obj:`sklearn.neighbors.KernelDensity` object. Estimates :math:`P(incorrect|structure)` for rescaling. Default is None (no scaling)
 
         """
         self.atom_type = atom_type
         self.model = build_model(model_file=model_file)
         self.batch_size = batch_size
-        with open(Path(__file__).parent / transform_file, "rb") as tf:
-            self.transform = pickle.load(tf)
-        with open(Path(__file__).parent / kde_file, "rb") as kf:
-            self.kde = pickle.load(kf)
+        self.transform = _load_pickle(transform_file)
+        self.kde = KernelDensityEstimator(kde_file)
         if dp5_correct_scaling is not None:
-            with open(Path(__file__).parent / dp5_correct_scaling, "rb") as ckf:
-                self.dp5_correct_kde = pickle.load(ckf)
+            self.dp5_correct_kde = KernelDensityEstimator(dp5_correct_scaling)
         if dp5_incorrect_scaling is not None:
-            with open(Path(__file__).parent / dp5_incorrect_scaling, "rb") as ikf:
-                self.dp5_incorrect_kde = pickle.load(ikf)
+            self.dp5_incorrect_kde = KernelDensityEstimator(dp5_incorrect_scaling)
 
     @abstractmethod
     def rescale_probabilities(self, mol_probs, errors, error_threshold=2):
@@ -276,7 +274,7 @@ class ErrorDP5ProbabilityCalculator(DP5ProbabilityCalculator):
         x = np.linspace(min_value, max_value, n_points)
 
         probs = []
-        with mp.ProcessingPool(nodes=mp.cpu_count()) as pool:
+        with Parallel(prefer="threads", n_jobs=-1) as pool:
             for i, (rep, errors) in tqdm(
                 df[["representations", "errors"]].iterrows(),
                 total=len(df),
@@ -292,7 +290,7 @@ class ErrorDP5ProbabilityCalculator(DP5ProbabilityCalculator):
                 )
                 point = np.concatenate((rep_b, x_b), axis=1)
 
-                results = pool.map(self.kde, point[:])
+                results = pool(delayed(self.kde)(atom) for atom in point[:])
 
                 conf_probs = []
                 for pdf, error in zip(results, errors):
@@ -351,7 +349,7 @@ class ExpDP5ProbabilityCalculator(DP5ProbabilityCalculator):
         x = np.linspace(min_value, max_value, n_points)
 
         mol_probs = []
-        with mp.ProcessingPool(nodes=mp.cpu_count()) as pool:
+        with Parallel(prefer="threads", n_jobs=-1) as pool:
             for i, (rep, exp) in tqdm(
                 mol_df[["representations", "exp_shifts"]].iterrows(),
                 total=len(mol_df),
@@ -367,7 +365,7 @@ class ExpDP5ProbabilityCalculator(DP5ProbabilityCalculator):
                 )
                 point = np.concatenate((rep_b, x_b), axis=1)
 
-                results = pool.map(self.kde, point[:])
+                results = pool(delayed(self.kde)(atom) for atom in point[:])
 
                 conf_probs = []
                 for pdf, value in zip(results, exp):
@@ -393,6 +391,24 @@ class ExpDP5ProbabilityCalculator(DP5ProbabilityCalculator):
 
     def rescale_probabilities(self, *args, **kwargs):
         return super().rescale_probabilities(*args, **kwargs)
+
+
+class KernelDensityEstimator:
+    def __init__(self, path_to_pickle):
+        self.estimator = _load_pickle(path_to_pickle)
+        if type(self.estimator) is gaussian_kde:
+            self.evaluate = self._scipy_estimator
+        elif type(self.estimator) is KernelDensity:
+            self.evaluate = self._sklearn_estimator
+
+    def __call__(self, data):
+        return self.evaluate(data)
+
+    def _scipy_estimator(self, data):
+        return self.estimator(data)
+
+    def _sklearn_estimator(self, data):
+        return self.estimator.score_samples(data.T)
 
 
 class DP5Data(AnalysisData):
@@ -456,3 +472,27 @@ class DP5Data(AnalysisData):
         for lab, calc, ex, er, p in zip(slabels, svalues, sexp, serror, sprob):
             output += f"\n{lab:6s} {calc:6.2f} {ex:6.2f} {er:6.2f} {p:6.2f}"
         return output
+
+
+def _load_pickle(path: str):
+    """
+    Loads a pickled object from relative or absolute path.
+    Searches within this folder first, then within current folder, then by absolute path.
+
+    Arguments
+      path(str): path to the pickled file
+
+    Returns
+      Loaded object
+    """
+    _abs_path = Path(path).resolve()
+    _default_path = Path(__file__).parent / path
+
+    if _default_path.exists():
+        _path = _default_path
+    elif _abs_path.exists():
+        _path = _abs_path
+    else:
+        raise FileNotFoundError("No files found at %s" % (path))
+    with open(_path, "rb") as f:
+        return pickle.load(f)

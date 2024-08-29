@@ -30,7 +30,11 @@ dependencies = [
         "pathos",
         "pandas",
         "statsmodels",
-        "tensorflow<=2.14"
+        "tensorflow>=2",
+        "dill",
+        "joblib",
+        "networkx"
+
     ]
 
 [project.urls]
