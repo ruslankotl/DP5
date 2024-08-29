@@ -1,4 +1,5 @@
 import re
+import networkx as nx
 import logging
 
 logger = logging.getLogger(__name__)
@@ -55,5 +56,49 @@ def pairwise_assignment(calculated, experimental: list):
     for calc, exp in zip(sorted_calc, sorted_exp):
         index = list(calculated).index(calc)
         assigned[index] = exp
+
+    return assigned
+
+
+def matching_assignment(calculated, experimental, threshold=40):
+
+    scaled = calculated
+
+    # Create a bipartite graph
+    G = nx.Graph()
+
+    # Add nodes for calc and exp with a bipartite attribute
+    calc_nodes = [("calc", i) for i in range(len(scaled))]
+    exp_nodes = [("exp", i) for i in range(len(experimental))]
+    G.add_nodes_from(calc_nodes, bipartite=0)
+    G.add_nodes_from(exp_nodes, bipartite=1)
+
+    # Add edges for all pairs within the threshold
+    for i, c in enumerate(scaled):
+        for j, e in enumerate(experimental):
+            deviation = abs(c - e)
+            if deviation <= threshold:
+                G.add_edge(("calc", i), ("exp", j), weight=-deviation)
+
+    # Find the maximum matching
+    matching = nx.algorithms.matching.max_weight_matching(G, maxcardinality=True)
+
+    matched_pair_indices = set()
+
+    for pair in matching:
+        # pair could be (('calc', i), ('exp', j)) or the reverse
+        calc, exp = sorted(pair)
+        # after sorting, 'calc' goes before 'exp'
+        calc_index = calc[1]
+        exp_index = exp[1]
+
+        matched_pair_indices.add((calc_index, exp_index))
+
+    # Now, use these indices to access values in calc and exp
+    matched_pairs = [(calculated[i], experimental[j]) for i, j in matched_pair_indices]
+    assigned = [None] * len(calculated)
+    for calc_shift, exp_shift in matched_pairs:
+        index = list(calculated).index(calc_shift)
+        assigned[index] = exp_shift
 
     return assigned
