@@ -18,7 +18,6 @@
         <script src="_static/documentation_options.js?v=2709fde1"></script>
         <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -52,17 +51,6 @@
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analysis.html">Analysis</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">DP5 Analysis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#dp5.analysis.dp5.DP5"><code class="docutils literal notranslate"><span class="pre">DP5</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#dp5.analysis.dp5.DP5.__init__"><code class="docutils literal notranslate"><span class="pre">DP5.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#dp5.analysis.dp5.DP5.__call__"><code class="docutils literal notranslate"><span class="pre">DP5.__call__()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#dp5.analysis.dp5.DP5ProbabilityCalculator"><code class="docutils literal notranslate"><span class="pre">DP5ProbabilityCalculator</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#dp5.analysis.dp5.DP5ProbabilityCalculator.__init__"><code class="docutils literal notranslate"><span class="pre">DP5ProbabilityCalculator.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#dp5.analysis.dp5.DP5ProbabilityCalculator.__call__"><code class="docutils literal notranslate"><span class="pre">DP5ProbabilityCalculator.__call__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#dp5.analysis.dp5.DP5ProbabilityCalculator.get_shifts_and_labels"><code class="docutils literal notranslate"><span class="pre">DP5ProbabilityCalculator.get_shifts_and_labels()</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="#notes">Notes</a></li>
 </ul>
 </li>
@@ -95,97 +83,6 @@
              
   <section id="dp5-analysis">
 <h1>DP5 Analysis<a class="headerlink" href="#dp5-analysis" title="Link to this heading"></a></h1>
-<dl class="py class">
-<dt class="sig sig-object py" id="dp5.analysis.dp5.DP5">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dp5.analysis.dp5.</span></span><span class="sig-name descname"><span class="pre">DP5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dft_shifts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dp5.analysis.dp5.DP5" title="Link to this definition"></a></dt>
-<dd><p>Performs DP5 analysis</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="dp5.analysis.dp5.DP5.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dft_shifts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dp5.analysis.dp5.DP5.__init__" title="Link to this definition"></a></dt>
-<dd><p>Initialise the settings.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>output_folder</strong> (<em>Path</em>) – path for saved DP5 data</p></li>
-<li><p><strong>use_dft_shifts</strong> (<em>bool</em>) – if set, analyses errors of DFT calculations, compares shifts againt their environments otherwise.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dp5.analysis.dp5.DP5.__call__">
-<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dp5.analysis.dp5.DP5.__call__" title="Link to this definition"></a></dt>
-<dd><p>Runs DP5 calculations.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>mols</strong> – Molecule objects</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="dp5.analysis.dp5.DP5ProbabilityCalculator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dp5.analysis.dp5.</span></span><span class="sig-name descname"><span class="pre">DP5ProbabilityCalculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atom_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kde_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp5_correct_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp5_incorrect_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dp5.analysis.dp5.DP5ProbabilityCalculator" title="Link to this definition"></a></dt>
-<dd><dl class="py method">
-<dt class="sig sig-object py" id="dp5.analysis.dp5.DP5ProbabilityCalculator.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atom_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kde_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp5_correct_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp5_incorrect_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dp5.analysis.dp5.DP5ProbabilityCalculator.__init__" title="Link to this definition"></a></dt>
-<dd><p>Initialises DP5 Probability calculator for one atom.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>atom_type</strong> (<em>str</em>) – atom symbol. Can be ‘C’ or ‘H’</p></li>
-<li><p><strong>model_file</strong> (<em>str</em>) – path for representation generating model to load.</p></li>
-<li><p><strong>batch_size</strong> (<em>int</em>) – batch size for the model.</p></li>
-<li><p><strong>transform_file</strong> (<em>str</em>) – Path to the Scikit-learn PCA file relative to <code class="docutils literal notranslate"><span class="pre">dp5/analysis</span></code> folder. Reduces dimensionality of the representation.</p></li>
-<li><p><strong>kde_file</strong> (<em>str</em>) – Path to <code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.gaussian_kde</span></code> object. Estimates DP5 probabilities</p></li>
-<li><p><strong>dp5_correct_scaling</strong> (str). Path to <code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.gaussian_kde</span></code> object. Estimates <span class="math notranslate nohighlight">\(P(correct|structure)\)</span> for rescaling. Default is None (no scaling)</p></li>
-<li><p><strong>dp5_incorrect_scaling</strong> (str). Path to <code class="xref py py-obj docutils literal notranslate"><span class="pre">scipy.stats.gaussian_kde</span></code> object. Estimates <span class="math notranslate nohighlight">\(P(incorrect|structure)\)</span> for rescaling. Default is None (no scaling)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dp5.analysis.dp5.DP5ProbabilityCalculator.__call__">
-<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dp5.analysis.dp5.DP5ProbabilityCalculator.__call__" title="Link to this definition"></a></dt>
-<dd><p>Carries out DP5 analysis.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>mols</strong> (list of <code class="xref py py-class docutils literal notranslate"><span class="pre">Molecule</span></code>) – <code class="xref py py-class docutils literal notranslate"><span class="pre">dp5.run.data_structures.Molecule</span></code> objects used in the calculation. Must contain shifts and labels for the provided atom.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A tuple containing lists of labels of atoms used in the analysis,
-their calculated shifts, their experimental shifts,
-scaled errors, DP5 probabilities for each atom in each conformer,
-Boltzmann-weighted atom DP5 probabilites, and total molecular DP5 probabilities.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="dp5.analysis.dp5.DP5ProbabilityCalculator.get_shifts_and_labels">
-<span class="sig-name descname"><span class="pre">get_shifts_and_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dp5.analysis.dp5.DP5ProbabilityCalculator.get_shifts_and_labels" title="Link to this definition"></a></dt>
-<dd><p>Returns calculated and experimental shifts for nuclei in the molecule.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self.atom_type</strong> (<em>str</em>) – nuclei being analysed</p></li>
-<li><p><strong>mols</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Molecule</span></code>) – <code class="xref py py-class docutils literal notranslate"><span class="pre">dp5.run.data_structures.Molecule</span></code>. Must contain shifts and labels for the provided atom.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>calculated conformer shifts
-assigned experimental shifts
-0-based indices of relevant atoms</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading"></a></h2>
 <p>DP5 analysis generates vector-based representations for each atom and compares them with reference representations using Kernel Density Estimation.
