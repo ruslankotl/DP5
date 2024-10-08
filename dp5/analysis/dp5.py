@@ -8,6 +8,8 @@ from abc import abstractmethod
 from tqdm import tqdm
 from joblib import Parallel, delayed
 from scipy.stats.kde import gaussian_kde
+from scipy.stats import norm
+from scipy.optimize import curve_fit
 from sklearn.neighbors import KernelDensity
 
 from dp5.neural_net.CNN_model import *
@@ -44,14 +46,11 @@ class DP5:
             )
         else:
             # must load model for shift preiction
-            self.C_DP5 = ExpDP5ProbabilityCalculator(
+            self.C_DP5 = QuantileDP5ProbabilityCalculator(
                 atom_type="C",
                 model_file="NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5",
                 batch_size=16,
-                transform_file="pca_10_EXP_decomp.p",
-                kde_file="pca_10_kde_EXP_kernel.p",
-                dp5_correct_scaling=None,
-                dp5_incorrect_scaling=None,
+                quantile_regressor="quantile99.zip",
             )
 
         if not self.output_folder.exists():
@@ -92,10 +91,6 @@ class DP5ProbabilityCalculator:
         atom_type,
         model_file,
         batch_size,
-        transform_file,
-        kde_file,
-        dp5_correct_scaling=None,
-        dp5_incorrect_scaling=None,
     ):
         """Initialises DP5 Probability calculator for one atom.
 
@@ -112,12 +107,6 @@ class DP5ProbabilityCalculator:
         self.atom_type = atom_type
         self.model = build_model(model_file=model_file)
         self.batch_size = batch_size
-        self.transform = _load_pickle(transform_file)
-        self.kde = KernelDensityEstimator(kde_file)
-        if dp5_correct_scaling is not None:
-            self.dp5_correct_kde = KernelDensityEstimator(dp5_correct_scaling)
-        if dp5_incorrect_scaling is not None:
-            self.dp5_incorrect_kde = KernelDensityEstimator(dp5_incorrect_scaling)
 
     @abstractmethod
     def rescale_probabilities(self, mol_probs, errors, error_threshold=2):
@@ -126,11 +115,11 @@ class DP5ProbabilityCalculator:
 
         Computes geometric means of atomic probabilities to generate final molecular probabilities.
         """
-        total_probs = np.array([np.exp(np.log(arr).mean()) for arr in mol_probs])
+        total_probs = np.array([np.exp(np.log(arr + 1e-6).mean()) for arr in mol_probs])
         return mol_probs, total_probs
 
     @abstractmethod
-    def kde_probfunction(self, df):
+    def probfunction(self, df):
         return NotImplementedError("KDE sampling function not implemented")
 
     @staticmethod
@@ -204,13 +193,9 @@ class DP5ProbabilityCalculator:
         rep_df["representations"] = extract_representations(
             self.model, rep_df, self.batch_size
         )
-        logger.debug("Transforming representations")
-        rep_df["representations"] = rep_df["representations"].apply(
-            self.transform.transform
-        )
-        logger.info("Estimating atomic probabilities")
-        rep_df["atom_probs"] = self.kde_probfunction(rep_df)
-        atom_probs = [np.stack(df) for i, df in rep_df.groupby("mol_id")["atom_probs"]]
+
+        atom_probs = self.probfunction(rep_df)
+        # should be abstracted into KDE-based calculator
 
         weighted_probs = self.boltzmann_weight(rep_df, "atom_probs")
         weighted_probs = 1 - weighted_probs
@@ -259,8 +244,34 @@ class DP5ProbabilityCalculator:
 
 
 class ErrorDP5ProbabilityCalculator(DP5ProbabilityCalculator):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        atom_type,
+        model_file,
+        batch_size,
+        transform_file,
+        kde_file,
+        dp5_correct_scaling=None,
+        dp5_incorrect_scaling=None,
+    ):
+        super().__init__(atom_type, model_file, batch_size)
+        self.transform = _load_pickle(transform_file)
+        self.kde = KernelDensityEstimator(kde_file)
+        if dp5_correct_scaling is not None:
+            self.dp5_correct_kde = KernelDensityEstimator(dp5_correct_scaling)
+        if dp5_incorrect_scaling is not None:
+            self.dp5_incorrect_kde = KernelDensityEstimator(dp5_incorrect_scaling)
+
+    def probfunction(self, rep_df):
+        logger.debug("Transforming representations")
+        rep_df["representations"] = rep_df["representations"].apply(
+            self.transform.transform
+        )
+        # should be abstracted into KDE-based calculator
+        logger.info("Estimating atomic probabilities")
+        rep_df["atom_probs"] = self.kde_probfunction(rep_df)
+        atom_probs = [np.stack(df) for i, df in rep_df.groupby("mol_id")["atom_probs"]]
+        return atom_probs
 
     def kde_probfunction(self, df):
         # loop through atoms in the test molecule - generate kde for all of them.
@@ -332,8 +343,34 @@ class ErrorDP5ProbabilityCalculator(DP5ProbabilityCalculator):
 
 
 class ExpDP5ProbabilityCalculator(DP5ProbabilityCalculator):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        atom_type,
+        model_file,
+        batch_size,
+        transform_file,
+        kde_file,
+        dp5_correct_scaling=None,
+        dp5_incorrect_scaling=None,
+    ):
+        super().__init__(atom_type, model_file, batch_size)
+        self.transform = _load_pickle(transform_file)
+        self.kde = KernelDensityEstimator(kde_file)
+        if dp5_correct_scaling is not None:
+            self.dp5_correct_kde = KernelDensityEstimator(dp5_correct_scaling)
+        if dp5_incorrect_scaling is not None:
+            self.dp5_incorrect_kde = KernelDensityEstimator(dp5_incorrect_scaling)
+
+    def probfunction(self, rep_df):
+        logger.debug("Transforming representations")
+        rep_df["representations"] = rep_df["representations"].apply(
+            self.transform.transform
+        )
+        # should be abstracted into KDE-based calculator
+        logger.info("Estimating atomic probabilities")
+        rep_df["atom_probs"] = self.kde_probfunction(rep_df)
+        atom_probs = [np.stack(df) for i, df in rep_df.groupby("mol_id")["atom_probs"]]
+        return atom_probs
 
     def kde_probfunction(self, df):
         """Since the result is compared to the experimental shifts, weights the representations and runs KDE on those."""
@@ -391,6 +428,69 @@ class ExpDP5ProbabilityCalculator(DP5ProbabilityCalculator):
 
     def rescale_probabilities(self, *args, **kwargs):
         return super().rescale_probabilities(*args, **kwargs)
+
+
+class QuantileDP5ProbabilityCalculator(DP5ProbabilityCalculator):
+    def __init__(
+        self, atom_type, model_file, batch_size, quantile_regressor="quantile99.zip"
+    ):
+        super().__init__(atom_type, model_file, batch_size)
+        self.regressor = PercentileRegressor.load(
+            Path(__file__).parent / quantile_regressor
+        )
+
+    def probfunction(self, df):
+        # take representations
+        df[["quantiles", "mu", "sigma"]] = self.generate_quantiles(
+            df["representations"]
+        )
+        atom_probs_all = []
+        for i, (mus, sigmas, exps) in df[["mu", "sigma", "exp_shifts"]].iterrows():
+            atom_probs = []
+            for mu, sigma, peak in zip(mus, sigmas, exps):
+                perc = norm.cdf(peak, mu, sigma)
+                prob = np.abs(1 - 2 * perc)
+                atom_probs.append(prob)
+            atom_probs = np.array(atom_probs)
+            atom_probs_all.append(atom_probs)
+        df["atom_probs"] = atom_probs_all
+        atom_probs = [np.stack(df) for i, df in df.groupby("mol_id")["atom_probs"]]
+        return atom_probs
+
+    def generate_quantiles(self, rep_col):
+        # in principle, should be able to explode then reassemble
+        # makes for easier handling
+        # that or compute lengths
+        atom_nums = rep_col.apply(len).values
+        slice_inds = np.cumsum(atom_nums)[:-1]
+        reps = np.concatenate(rep_col.values)
+        # make quantiles into series
+        quantiles = self.regressor(reps, batch_size=32)
+        # fit distributions, then spit out mean and std
+        mus = []
+        sigmas = []
+        for q in quantiles:
+            percentiles = self.regressor.quantiles
+            dims = len(percentiles)
+            median = q[dims // 2]
+            std = (q[dims * 2 // 3] - q[dims // 3]) / 2
+
+            mu, sigma = curve_fit(norm.cdf, q, percentiles, p0=[median, std])[0]
+            mus.append(mu)
+            sigmas.append(sigma)
+
+        mus = np.array(mus)
+        sigmas = np.array(sigmas)
+        result_df = pd.DataFrame(
+            {
+                "quantiles": np.split(quantiles, slice_inds),
+                "mu": np.split(mus, slice_inds),
+                "sigma": np.split(sigmas, slice_inds),
+            },
+            index=rep_col.index,
+        )
+
+        return result_df
 
 
 class KernelDensityEstimator:
