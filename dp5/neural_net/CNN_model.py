@@ -303,6 +303,27 @@ def load_NMR_prediction_model(
     return model
 
 
+def load_quantile_model(
+    filepath="CASCADE_quantile_extended.keras",
+):
+    """
+    Loads NMR predicting mode with quantile regression. Make sure your model is in neural_net folder!
+    """
+
+    model = load_model(
+        str(Path(__file__).parent / filepath),
+        custom_objects={
+            "GraphModel": GraphModel,
+            "Squeeze": Squeeze,
+            "GatherAtomToBond": GatherAtomToBond,
+            "ReduceBondToAtom": ReduceBondToAtom,
+            "ReduceAtomToPro": ReduceAtomToPro,
+            "_qloss": QuantileLoss(np.linspace(0.01, 0.99, 99)),
+        },
+    )
+    return model
+
+
 def get_shifts_and_labels(mols, atomic_symbol, model_path, batch_size=16):
     model = load_NMR_prediction_model(model_path)
     logger.info("Loaded NMR prediction model")

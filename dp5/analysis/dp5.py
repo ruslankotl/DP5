@@ -48,9 +48,8 @@ class DP5:
             # must load model for shift preiction
             self.C_DP5 = QuantileDP5ProbabilityCalculator(
                 atom_type="C",
-                model_file="NMRdb-CASCADEset_Exp_mean_model_atom_features256.hdf5",
+                model_file="CASCADE_quantile_extended.keras",
                 batch_size=16,
-                quantile_regressor="quantile99.zip",
             )
 
         if not self.output_folder.exists():
@@ -89,8 +88,6 @@ class DP5ProbabilityCalculator:
     def __init__(
         self,
         atom_type,
-        model_file,
-        batch_size,
     ):
         """Initialises DP5 Probability calculator for one atom.
 
@@ -105,8 +102,6 @@ class DP5ProbabilityCalculator:
 
         """
         self.atom_type = atom_type
-        self.model = build_model(model_file=model_file)
-        self.batch_size = batch_size
 
     @abstractmethod
     def rescale_probabilities(self, mol_probs, errors, error_threshold=2):
@@ -190,9 +185,7 @@ class DP5ProbabilityCalculator:
         )
         logger.info("Extracting atomic representations")
         # now return condensed representations! These are now grouped by conformer
-        rep_df["representations"] = extract_representations(
-            self.model, rep_df, self.batch_size
-        )
+        # need to redo to accommodate
 
         atom_probs = self.probfunction(rep_df)
         # should be abstracted into KDE-based calculator
@@ -254,7 +247,9 @@ class ErrorDP5ProbabilityCalculator(DP5ProbabilityCalculator):
         dp5_correct_scaling=None,
         dp5_incorrect_scaling=None,
     ):
-        super().__init__(atom_type, model_file, batch_size)
+        super().__init__(atom_type)
+        self.model = build_model(model_file=model_file)
+        self.batch_size = batch_size
         self.transform = _load_pickle(transform_file)
         self.kde = KernelDensityEstimator(kde_file)
         if dp5_correct_scaling is not None:
@@ -264,6 +259,9 @@ class ErrorDP5ProbabilityCalculator(DP5ProbabilityCalculator):
 
     def probfunction(self, rep_df):
         logger.debug("Transforming representations")
+        rep_df["representations"] = extract_representations(
+            self.model, rep_df, self.batch_size
+        )
         rep_df["representations"] = rep_df["representations"].apply(
             self.transform.transform
         )
@@ -353,7 +351,9 @@ class ExpDP5ProbabilityCalculator(DP5ProbabilityCalculator):
         dp5_correct_scaling=None,
         dp5_incorrect_scaling=None,
     ):
-        super().__init__(atom_type, model_file, batch_size)
+        super().__init__(atom_type)
+        self.model = build_model(model_file=model_file)
+        self.batch_size = batch_size
         self.transform = _load_pickle(transform_file)
         self.kde = KernelDensityEstimator(kde_file)
         if dp5_correct_scaling is not None:
@@ -363,6 +363,9 @@ class ExpDP5ProbabilityCalculator(DP5ProbabilityCalculator):
 
     def probfunction(self, rep_df):
         logger.debug("Transforming representations")
+        rep_df["representations"] = extract_representations(
+            self.model, rep_df, self.batch_size
+        )
         rep_df["representations"] = rep_df["representations"].apply(
             self.transform.transform
         )
@@ -434,16 +437,14 @@ class QuantileDP5ProbabilityCalculator(DP5ProbabilityCalculator):
     def __init__(
         self, atom_type, model_file, batch_size, quantile_regressor="quantile99.zip"
     ):
-        super().__init__(atom_type, model_file, batch_size)
-        self.regressor = PercentileRegressor.load(
-            Path(__file__).parent / quantile_regressor
-        )
+        super().__init__(atom_type)
+        self.model = load_quantile_model(model_file)
+        self.batch_size = batch_size
 
     def probfunction(self, df):
         # take representations
-        df[["quantiles", "mu", "sigma"]] = self.generate_quantiles(
-            df["representations"]
-        )
+        df["quantiles"] = extract_representations(self.model, df, self.batch_size)
+        df[["mu", "sigma"]] = self.generate_distributions(df["quantiles"])
         atom_probs_all = []
         for i, (mus, sigmas, exps) in df[["mu", "sigma", "exp_shifts"]].iterrows():
             atom_probs = []
@@ -457,20 +458,19 @@ class QuantileDP5ProbabilityCalculator(DP5ProbabilityCalculator):
         atom_probs = [np.stack(df) for i, df in df.groupby("mol_id")["atom_probs"]]
         return atom_probs
 
-    def generate_quantiles(self, rep_col):
+    def generate_distributions(self, quantile_col):
         # in principle, should be able to explode then reassemble
         # makes for easier handling
         # that or compute lengths
-        atom_nums = rep_col.apply(len).values
+        atom_nums = quantile_col.apply(len).values
         slice_inds = np.cumsum(atom_nums)[:-1]
-        reps = np.concatenate(rep_col.values)
-        # make quantiles into series
-        quantiles = self.regressor(reps, batch_size=32)
+        quantiles = np.concatenate(quantile_col.values)
+
         # fit distributions, then spit out mean and std
         mus = []
         sigmas = []
         for q in quantiles:
-            percentiles = self.regressor.quantiles
+            percentiles = np.linspace(0.01, 0.99, 99)
             dims = len(percentiles)
             median = q[dims // 2]
             std = (q[dims * 2 // 3] - q[dims // 3]) / 2
@@ -483,11 +483,10 @@ class QuantileDP5ProbabilityCalculator(DP5ProbabilityCalculator):
         sigmas = np.array(sigmas)
         result_df = pd.DataFrame(
             {
-                "quantiles": np.split(quantiles, slice_inds),
                 "mu": np.split(mus, slice_inds),
                 "sigma": np.split(sigmas, slice_inds),
             },
-            index=rep_col.index,
+            index=quantile_col.index,
         )
 
         return result_df
