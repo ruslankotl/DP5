@@ -37,7 +37,11 @@ def cleanup_3d(mol):
     - a reasonable conformer
     """
     mol = AllChem.AddHs(mol, addCoords=True)
-    cid = AllChem.EmbedMolecule(mol, randomSeed=0)
+    cid = AllChem.EmbedMolecule(
+        mol,
+        randomSeed=0,
+        forceTol=0.0135,
+    )
     if cid == -1:
         raise ValueError("Molecule could not be sanitised")
     AllChem.MMFFOptimizeMolecule(mol)
@@ -146,7 +150,7 @@ def _generate_diastereomers(
         target_mol, options=enum_opts
     ):
         isomer.RemoveAllConformers()
-        cid = Chem.rdDistGeom.EmbedMolecule(isomer, randomSeed=0)
+        cid = AllChem.EmbedMolecule(isomer, randomSeed=0, forceTol=0.0135)
         if cid >= 0:
             AllChem.MMFFOptimizeMolecule(isomer)
             Chem.rdmolops.AssignStereochemistryFrom3D(isomer)
