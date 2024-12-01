@@ -6,7 +6,7 @@ Molecules is the container class to contain all the data. MM and DFT methods no 
 
 import logging
 
-from .data_structures import Molecules
+from dp5.run.data_structures import Molecules
 from dp5.nmr_processing import NMRData
 
 
