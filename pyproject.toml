@@ -44,7 +44,7 @@ Source = "https://github.com/ruslankotl/DP5"
 
 
 [project.scripts]
-pydp4 = "dp5.run.load_config:main"
+pydp4 = "dp5.load_config:main"
 
 [tool.setuptools.packages.find]
 include = ["dp5"]
