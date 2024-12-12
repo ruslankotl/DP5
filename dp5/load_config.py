@@ -143,6 +143,12 @@ def main():
     logger.info(f"DP4 analysis required: {config['workflow']['dp4']}")
     logger.info(f"DP5 analysis required: {config['workflow']['dp5']}")
 
+    # calculations_complete should set MM and DFT completion flags as True
+    if config["workflow"]["calculations_complete"]:
+        config["workflow"]["mm_complete"] = True
+        config["dft"]["dft_complete"] = True
+        config["workflow"]["dft_complete"] = True
+
     # reads command line argument if supplied, else reads config
     if args.structure_files:
         config["structure"] = args.structure_files
