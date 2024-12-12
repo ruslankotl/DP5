@@ -387,7 +387,8 @@ def predict_shifts(model, test, batch_size=16):
 
     test["shift_arrays"] = iso_shifts
     all_shifts = [
-        np.stack(shifts) for i, shifts in test.groupby("mol_id")["shift_arrays"]
+        np.stack(shifts)
+        for i, shifts in test.groupby("mol_id", sort=False)["shift_arrays"]
     ]
 
     return all_shifts
