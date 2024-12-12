@@ -48,7 +48,7 @@ class DP5:
             # must load model for shift preiction
             self.C_DP5 = QuantileDP5ProbabilityCalculator(
                 atom_type="C",
-                model_file="CASCADE_quantile_extended.keras",
+                model_file="NMRdb_CASCADE_99quantiles.zip",
                 batch_size=16,
             )
 
@@ -438,7 +438,8 @@ class QuantileDP5ProbabilityCalculator(DP5ProbabilityCalculator):
         self, atom_type, model_file, batch_size, quantile_regressor="quantile99.zip"
     ):
         super().__init__(atom_type)
-        self.model = load_quantile_model(model_file)
+        default_path = str(Path(__file__).parent.parent / "neural_net" / model_file)
+        self.model = CASCADE_Quantile.load(default_path)
         self.batch_size = batch_size
 
     def probfunction(self, df):
@@ -470,7 +471,7 @@ class QuantileDP5ProbabilityCalculator(DP5ProbabilityCalculator):
         mus = []
         sigmas = []
         for q in quantiles:
-            percentiles = np.linspace(0.01, 0.99, 99)
+            percentiles = self.model.quantiles
             dims = len(percentiles)
             median = q[dims // 2]
             std = (q[dims * 2 // 3] - q[dims // 3]) / 2

@@ -612,9 +612,27 @@ class CASCADE_Quantile:
             # Load the TensorFlow model
             model_dir = os.path.join(temp_dir, "model.keras")
             model = tf.keras.models.load_model(
-                model_dir, custom_objects={"_qloss": QuantileLoss(arr)}
+                model_dir,
+                custom_objects={
+                    "GraphModel": GraphModel,
+                    "Squeeze": Squeeze,
+                    "GatherAtomToBond": GatherAtomToBond,
+                    "ReduceBondToAtom": ReduceBondToAtom,
+                    "ReduceAtomToPro": ReduceAtomToPro,
+                    "_qloss": QuantileLoss(arr),
+                },
+                compile=False,
             )
+            initial_learning_rate = 5e-4
+            lr_schedule = ExponentialDecay(
+                initial_learning_rate,
+                decay_steps=100000,
+                decay_rate=0.96,
+                staircase=True,
+            )
+            optimizer = Adam(learning_rate=lr_schedule)
 
+            model.compile(optimizer=optimizer, loss=QuantileLoss(arr))
             return cls(model, arr)
 
     def fit(self, *args, **kwargs):
