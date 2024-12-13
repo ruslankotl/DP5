@@ -66,6 +66,7 @@ class BaseDFTMethod(ABC):
                 geom = conf
 
                 if output_name.exists():
+                    logger.debug(f"Reading DFT data from file {output_name}")
                     atoms, coords, *_, completed, converged = self.read_file(
                         output_name
                     )
@@ -86,12 +87,13 @@ class BaseDFTMethod(ABC):
                             continue
                     else:
                         output_name.unlink()
-
+                logger.debug(f"Creating new DFT file {input_name}")
                 self.write_file(filename, geom, mol.atoms, charge, calc_type)
                 input_files[mol.base_name].append(filename)
                 files_to_run.append(filename)
 
         if files_to_run:
+            logger.debug(f"Starting DFT calculations for {calc_type}")
             completed = self._run_calcs(files_to_run)
 
             for mol in mols:
@@ -121,13 +123,19 @@ class BaseDFTMethod(ABC):
 
         if data.is_dir():
             for mol in mols:
+                outputs = []
                 pattern = f"{mol}{self.tag}inp*{self.input_format}"
+                logger.debug(f"Searching for {pattern}")
                 inputs = sorted([file for file in data.glob(pattern)])
-                outputs = [
-                    file.with_suffix(self.output_format)
-                    for file in inputs
-                    if self.is_completed(file.with_suffix(self.output_format))
-                ]
+                for input_file in inputs:
+                    output_file = input_file.with_suffix(self.output_format)
+                    if not output_file.exists():
+                        logger.warning(f"Cannot find output file for {input_file}")
+                        continue
+                    if self.is_completed(output_file):
+                        outputs.append(output_file)
+                    else:
+                        logger.warning(f"Calculations not complete for {output_file}")
                 prerun_files.append(outputs)
         else:
             logger.error(f"No folder found at {data}!")
@@ -136,8 +144,10 @@ class BaseDFTMethod(ABC):
 
     def get_files(self, mols, calc_type):
         if self.dft_complete:
+            logger.debug("Loading pre-run files")
             files = self._get_prerun_files(mols, calc_type)
         else:
+            logger.debug("No pre-run files found, starting new calculations")
             files = self._get_files(mols, calc_type)
         return files
 
@@ -152,9 +162,9 @@ class BaseDFTMethod(ABC):
             mol_conformers = []
             mol_energies = []
             for file in mol_data:
-                mol_atoms, coords, energy, *_, opt_converged = self.read_file(
-                    file.with_suffix(self.output_format)
-                )
+                filename = file.with_suffix(self.output_format)
+                logger.debug(f"Reading DFT output file: {filename}")
+                mol_atoms, coords, energy, *_, opt_converged = self.read_file(filename)
 
                 if opt_converged or self.force_converge:
                     mol_conformers.append(coords)
@@ -182,9 +192,9 @@ class BaseDFTMethod(ABC):
             mol_conformers = []
             mol_energies = []
             for file in mol_data:
-                mol_atoms, coords, energy, *_ = self.read_file(
-                    file.with_suffix(self.output_format)
-                )
+                filename = file.with_suffix(self.output_format)
+                logger.debug(f"Reading DFT output file: {filename}")
+                mol_atoms, coords, energy, *_ = self.read_file(filename)
                 mol_conformers.append(coords)
                 mol_energies.append(energy)
 
@@ -209,9 +219,9 @@ class BaseDFTMethod(ABC):
             mol_shieldings = []
             mol_shielding_labels = []
             for file in mol_data:
-                mol_atoms, coords, energy, shielding, shielding_label, *flags = (
-                    self.read_file(file.with_suffix(self.output_format))
-                )
+                filename = file.with_suffix(self.output_format)
+                logger.debug(f"Reading DFT output file: {filename}")
+                mol_atoms, coords, energy, shielding, shielding_label, *flags = filename
                 mol_conformers.append(coords)
                 mol_energies.append(energy)
                 mol_shieldings.append(shielding)
@@ -243,7 +253,6 @@ class BaseDFTMethod(ABC):
             sys.exit(1)
 
         for file in jobs:
-            time.sleep(3)
             logger.info(f"Starting calculations for {file}")
             cmd = self.prepare_command(file)
             outp = subprocess.check_output(cmd, shell=True, timeout=86400)

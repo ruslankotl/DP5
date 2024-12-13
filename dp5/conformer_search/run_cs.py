@@ -40,6 +40,7 @@ def conf_search(mols, config) -> List:
 
     flipped_inputs = []
     if config["manual_five_membered_rings"]:
+        logger.info("Using manual procedure to flip five-membered rings")
         import five_conf
 
         for file in input_names:
