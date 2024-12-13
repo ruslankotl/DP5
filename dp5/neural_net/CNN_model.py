@@ -320,7 +320,11 @@ def load_quantile_model(
             "ReduceAtomToPro": ReduceAtomToPro,
             "_qloss": QuantileLoss(np.linspace(0.01, 0.99, 99)),
         },
+        compile=False,
     )
+    # separate compilation required to suppress a warning
+    # https://stackoverflow.com/questions/77150716/loading-keras-model-issues-warning-skipping-variable-loading-for-optimizer-ada
+    model.compile()
     return model
 
 
@@ -513,3 +517,130 @@ def QuantileLoss(perc, delta=1e-4):
         return huber_loss + q_order_loss
 
     return _qloss
+
+
+class CASCADE_Quantile:
+    def __init__(
+        self,
+        model,
+        quantiles,
+    ):
+        self.model = model
+        self.quantiles = quantiles
+
+    @classmethod
+    def from_cascade(
+        cls,
+        quantiles,
+        model_path,
+    ):
+        """
+        Creates a quantile regressor out of CASCADE model. Requires training
+        Arguments:
+          quantiles: list or numpy array of quantiles to see.
+          model_path: path to saved model. Saves all pretrained model weights
+        """
+        full_model = load_model(
+            model_path,
+            custom_objects={
+                "GraphModel": GraphModel,
+                "Squeeze": Squeeze,
+                "GatherAtomToBond": GatherAtomToBond,
+                "ReduceBondToAtom": ReduceBondToAtom,
+                "ReduceAtomToPro": ReduceAtomToPro,
+            },
+        )
+
+        quantiles = np.array(quantiles)
+        quantiles = np.sort(quantiles)
+        dims = len(quantiles)
+
+        rep, atomwise_shift = (
+            full_model.get_layer(name="loc_3").output,
+            full_model.get_layer(name="reduce_atom_to_pro_1").output,
+        )
+        rep = Dense(dims, name="loc_reduce")(rep)
+        output = Add(name="final_layer")([rep, atomwise_shift])
+
+        model = GraphModel(inputs=full_model.input, outputs=output)
+
+        w, b = full_model.get_layer("loc_reduce").weights
+        w_c = np.broadcast_to(w, shape=(w.shape[0], dims))
+        b_c = np.broadcast_to(b, shape=(dims))
+        model.get_layer("loc_reduce").set_weights([w_c, b_c])
+
+        initial_learning_rate = 5e-4
+        lr_schedule = ExponentialDecay(
+            initial_learning_rate, decay_steps=100000, decay_rate=0.96, staircase=True
+        )
+        optimizer = Adam(learning_rate=lr_schedule)
+
+        model.compile(optimizer=optimizer, loss=QuantileLoss(quantiles))
+
+        ready = cls(model, quantiles)
+
+        return ready
+
+    def save(self, archive_path):
+        # Use tempfile to create a temporary directory
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Save the NumPy array in the temporary directory
+            array_path = os.path.join(temp_dir, "array.npy")
+            np.save(array_path, self.quantiles)
+
+            # Save the TensorFlow model in the temporary directory
+            model_path = os.path.join(temp_dir, "model.keras")
+            self.model.save(model_path)
+
+            # Create a ZIP archive containing both the array and the model
+            with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+                # Add the NumPy array to the ZIP archive
+                zipf.write(array_path, "array.npy")
+                zipf.write(model_path, "model.keras")
+
+    @classmethod
+    def load(cls, archive_path):
+        # Use tempfile to extract the ZIP archive to a temporary directory
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Extract the archive contents into the temporary directory
+            with zipfile.ZipFile(archive_path, "r") as zipf:
+                zipf.extractall(temp_dir)
+
+            # Load the NumPy array
+            array_path = os.path.join(temp_dir, "array.npy")
+            arr = np.load(array_path)
+
+            # Load the TensorFlow model
+            model_dir = os.path.join(temp_dir, "model.keras")
+            model = tf.keras.models.load_model(
+                model_dir,
+                custom_objects={
+                    "GraphModel": GraphModel,
+                    "Squeeze": Squeeze,
+                    "GatherAtomToBond": GatherAtomToBond,
+                    "ReduceBondToAtom": ReduceBondToAtom,
+                    "ReduceAtomToPro": ReduceAtomToPro,
+                    "_qloss": QuantileLoss(arr),
+                },
+                compile=False,
+            )
+            initial_learning_rate = 5e-4
+            lr_schedule = ExponentialDecay(
+                initial_learning_rate,
+                decay_steps=100000,
+                decay_rate=0.96,
+                staircase=True,
+            )
+            optimizer = Adam(learning_rate=lr_schedule)
+
+            model.compile(optimizer=optimizer, loss=QuantileLoss(arr))
+            return cls(model, arr)
+
+    def fit(self, *args, **kwargs):
+        return self.model.fit(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        return self.predict(*args, **kwargs)
+
+    def predict(self, *args, **kwargs):
+        return self.model(*args, **kwargs)
