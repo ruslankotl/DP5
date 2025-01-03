@@ -193,7 +193,7 @@ class ConfSearchMethod(BaseConfSearch):
             "113": "S",
             "114": "S",
         }
-
+        readline = re.compile(r'".*?"|\S+')
         atoms = []
         coordinates = []
         charge = None
@@ -203,6 +203,7 @@ class ConfSearchMethod(BaseConfSearch):
             while True:
                 try:
                     line = next(f)
+                    line = line.strip()
                     # get energies
                     if line.startswith("p_m_ct") or line.startswith("f_m_ct"):
                         energy_offset = 0
@@ -216,18 +217,20 @@ class ConfSearchMethod(BaseConfSearch):
                             line = next(f)
                         energies.append(float(line))
 
-                    if line.startswith(" m_atom["):
+                    if line.startswith("m_atom["):
+                        atype, xpos, ypos, zpos, cpos = None, None, None, None, None
                         offset = -1
                         while not ":::" in line:
-                            if line.startswith("  i_m_mmod_type"):
+                            line = line.strip()
+                            if line.startswith("i_m_mmod_type"):
                                 atype = offset
-                            elif line.startswith("  r_m_x_coord"):
+                            elif line.startswith("r_m_x_coord"):
                                 xpos = offset
-                            elif line.startswith("  r_m_y_coord"):
+                            elif line.startswith("r_m_y_coord"):
                                 ypos = offset
-                            elif line.startswith("  r_m_z_coord"):
+                            elif line.startswith("r_m_z_coord"):
                                 zpos = offset
-                            elif line.startswith("  r_m_charge1"):
+                            elif line.startswith("r_m_charge1"):
                                 cpos = offset
                             offset += 1
                             line = next(f)
@@ -242,7 +245,8 @@ class ConfSearchMethod(BaseConfSearch):
                             coords.append(
                                 [float(i) for i in (line[xpos], line[ypos], line[zpos])]
                             )
-                            _charge += float(line[cpos])
+                            if cpos is not None:
+                                _charge += float(line[cpos])
                             line = next(f)
                         if not atoms:
                             atoms = [atoms_to_symbols[i] for i in _atoms]
@@ -251,6 +255,7 @@ class ConfSearchMethod(BaseConfSearch):
                         coordinates.append(coords)
 
                 except StopIteration:
+                    logger.debug(f"Finished reading {file}-out.mae")
                     break
 
         final_coordinates = []
