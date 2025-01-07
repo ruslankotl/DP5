@@ -129,6 +129,7 @@ class ConfSearchMethod(BaseConfSearch):
         output = f"{file}.log"
         if self.IsMMCompleted(output):
             result = self.read_macromodel(file, self.energy_cutoff)
+            logger.debug(f"Reading {file}-out.mae output")
             conf_data = ConfData(*result)
         else:
             logger.critical(f"{output} is not completed")

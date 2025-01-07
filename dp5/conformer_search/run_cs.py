@@ -77,7 +77,12 @@ def conf_search(mols, config) -> List:
         all_conformers = [(e, c) for e, c in zip(energies, coords)]
         all_conformers.sort(key=lambda x: x[0])
 
-        emin = all_conformers[0][0]
+        try:
+            emin = all_conformers[0][0]
+        except:
+            logger.error("Cannot find minimum energy value")
+            logger.error(f"The file {mol} was not parsed correctly")
+            raise Exception(f"The file {mol} was not parsed correctly")
 
         all_conformers = [
             (energy, coordinates)
