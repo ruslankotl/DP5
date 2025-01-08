@@ -207,6 +207,12 @@ class ConfSearchMethod(BaseConfSearch):
                     line = line.strip()
                     # get energies
                     if line.startswith("p_m_ct") or line.startswith("f_m_ct"):
+                        if line.startswith("p_m_ct"):
+                            partial_block = True
+                            logger.debug("Reading partial connection table block")
+                        else:
+                            partial_block = False
+                            logger.debug("Reading full connection table block")
                         energy_offset = 0
                         while not ("mmod_Potential_Energy" in line):
                             line = next(f)
@@ -241,8 +247,9 @@ class ConfSearchMethod(BaseConfSearch):
                         coords = []
                         _charge = 0
                         while not ":::" in line:
-                            line = line.split()
-                            _atoms.append(line[atype])
+                            line = readline.findall(line)
+                            if atype is not None:
+                                _atoms.append(line[atype])
                             coords.append(
                                 [float(i) for i in (line[xpos], line[ypos], line[zpos])]
                             )
