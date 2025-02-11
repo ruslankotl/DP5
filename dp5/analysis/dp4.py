@@ -88,7 +88,7 @@ class DP4:
         return dictionary containing the data?
         """
         if len(mols) < 2:
-            logger.warn("DP4 score requires multiple candidate structures.")
+            logger.warning("DP4 score requires multiple candidate structures.")
         logger.info("Starting DP4 analysis")
         dp4_dicts = DP4Data(mols, self.save_dir / "data_dic.p")
         C_data = []

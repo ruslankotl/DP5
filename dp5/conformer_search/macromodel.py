@@ -201,6 +201,7 @@ class ConfSearchMethod(BaseConfSearch):
         energies = []
 
         with open(f"{file}-out.mae") as f:
+            partial_block = False
             while True:
                 try:
                     line = next(f)
