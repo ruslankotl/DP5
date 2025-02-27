@@ -8,19 +8,15 @@ Gets called by PyDP4.py if automatic 5-membered cycle corner-flipping is used.
 """
 
 import logging
-import numpy as np
-from math import sqrt, pi, cos, sin, acos
-import scipy.optimize as sciopt
-
-try:
-    from openbabel.openbabel import OBConversion, OBMol, OBAtomAtomIter, OBMolAtomIter
-except ImportError:
-    from openbabel import *
+from math import pi, cos, sin
+from scipy.optimize import minimize
+from rdkit import Chem, Geometry
+from rdkit.Geometry.rdGeometry import Point3D
 
 logger = logging.getLogger(__name__)
 
-def main(f, ring_atoms):
 
+def main(f, ring_atoms):
     """
     Find the axis atoms
     Find all the atoms to be rotated
@@ -35,238 +31,209 @@ def main(f, ring_atoms):
     Returns:
     none
     """
-    obconversion = OBConversion()
-    obconversion.SetInFormat("sdf")
-    obmol = OBMol()
 
-    obconversion.ReadFile(obmol, f)
+    mol = Chem.MolFromMolFile(f, removeHs=False)
+    conformer = mol.GetConformer()
 
-    obmol.ConnectTheDots()
-
-    #Find the atoms composing furan ring
-    Rings = obmol.GetSSSR()
-    furan = []
-    for ring in Rings:
+    # find atoms making up the five-membered ring
+    rings = Chem.GetSSSR(mol)
+    ring_to_alter = []
+    for ring in rings:
         if len(ring_atoms) == 5:
-            if all(x in ring._path for x in ring_atoms):
-                furan = ring
+            if all((at in ring) for at in ring_atoms):
+                ring_to_alter = ring
                 break
         else:
-            if ring.Size() == 5 and not ring.IsAromatic():
-                furan = ring
+            if len(ring) == 5 and not ring_is_aromatic(mol, ring):
+                ring_to_alter = ring
                 break
 
-    if furan == []:
-        logger.info("No five membered rings to rotate in %s. Skipping...",f)
+    if not ring_to_alter:
+        logger.info("No five membered rings to rotate in %s. Skipping...", f)
         return ""
-    #Find the plane of the 5-membered ring and the outlying atom
-    norm, d, outAtom = FindFuranPlane(obmol, furan)
 
-    #Find the atoms connected to the outlying atom and sort them
-    #as either part of the ring(axis atoms) or as atoms to be rotated
-    AxisAtoms = []
-    RotAtoms = []
+    # Find the plane of the 5-membered ring and the outlying atom
+    norm, d, out_atom_index = find_five_membered_ring_plane(conformer, ring_to_alter)
+    out_atom = mol.GetAtomWithIdx(out_atom_index)
+    out_atom_pos = conformer.GetAtomPosition(out_atom_index)
 
-    for NbrAtom in OBAtomAtomIter(outAtom):
-        #if NbrAtom.IsInRingSize(5):
-        if furan.IsInRing(NbrAtom.GetIdx()):
-            AxisAtoms.append(NbrAtom)
+    # Find the atoms connected to the outlying atom and sort them
+    # as either part of the ring(axis atoms) or as atoms to be rotated
+    backbone_atoms = []  # indices!
+    rotate_atoms = []  # indices!
+
+    # let's make everything index-centric!
+
+    # this iteration is atom-centric
+
+    for neighbor_atom in out_atom.GetNeighbors():
+        nbr_index = neighbor_atom.GetIdx()
+        if nbr_index in ring_to_alter:
+            backbone_atoms.append(nbr_index)
         else:
-            RotAtoms.append(NbrAtom)
-            FindSubstAtoms(NbrAtom, outAtom, RotAtoms)
+            rotate_atoms.append(nbr_index)
+            find_sub_atoms(mol, nbr_index, out_atom_index, rotate_atoms)
 
-    #Simple switch to help detect if the atoms are rotated the right way
-    WasAbove90 = False
-    angle = FindRotAngle(AxisAtoms[0], AxisAtoms[1], outAtom, norm)
-    if angle > 0.5*pi:
-        WasAbove90 = True
-        rotangle = 2*(angle-0.5*pi)
+    # Simple switch to help detect if the atoms are rotated the right way
+    angle = find_rot_angle(conformer, *backbone_atoms, out_atom_index, norm)
+    rotation_angle = 2 * (0.5 * pi - angle)
+    if angle > 0.5 * pi:
+        was_obtuse = True
+        rotation_angle = 2 * (angle - 0.5 * pi)
     else:
-        WasAbove90 = False
-        rotangle = 2*(0.5*pi-angle)
-    OldAtomCoords = outAtom.GetVector()
-    logger.info("Atom " + str(outAtom.GetAtomicNum()) + " will be rotated by " +\
-        str(rotangle*57.3) + ' degrees')
-    RotateAtom(outAtom, AxisAtoms[0], AxisAtoms[1], rotangle)
-    angle2 = FindRotAngle(AxisAtoms[0], AxisAtoms[1], outAtom, norm)
+        was_obtuse = False
+        rotation_angle = 2 * (0.5 * pi - angle)
 
-    #if the atom is on the same side of the plane as it was,
-    # it has been rotated in the wrong direction
-    if ((angle2 > 0.5*pi) and WasAbove90) or ((angle2 < 0.5*pi) and not WasAbove90):
-        #Flip the sign of the rotation angle, restore the coords
-        #and rotate the atom in the opposite direction
-        logger.debug("Atom was rotated the wrong way, switching the direction")
-        rotangle = -rotangle
-        outAtom.SetVector(OldAtomCoords)
-        RotateAtom(outAtom, AxisAtoms[0], AxisAtoms[1], rotangle)
+    logger.info(
+        "Atom "
+        + str(out_atom_index)
+        + " will be rotated by "
+        + str(rotation_angle * 57.3)
+        + " degrees"
+    )
 
-    RotatedAtoms = []  # Index to make sure that atoms are not rotated twice
-    for atom in RotAtoms:
-        if atom not in RotatedAtoms:
-            RotateAtom(atom, AxisAtoms[0], AxisAtoms[1], rotangle)
-            RotatedAtoms.append(atom)
+    # do not confuse positions, angles
+
+    new_angle = find_rot_angle(conformer, *backbone_atoms, out_atom_index, norm)
+
+    if ((new_angle > 0.5 * pi) and was_obtuse) or (
+        (new_angle < 0.5 * pi) and not was_obtuse
+    ):
+        rotation_angle = -rotation_angle
+
+    new_coords = rotate_atom_coords(conformer, out_atom_index, *backbone_atoms, angle)
+    conformer.SetAtomPosition(out_atom_index, new_coords)
+
+    rotated_atoms = []
+    for atom_index in rotate_atoms:
+        if atom_index not in rotated_atoms:
+            new_coords = rotate_atom_coords(
+                conformer, atom_index, *backbone_atoms, angle
+            )
+            conformer.SetAtomPosition(atom_index, new_coords)
+            rotated_atoms.append(atom_index)
         else:
             logger.info("Atom already rotated, skipping")
 
-    obconversion.SetOutFormat("sdf")
-    obconversion.WriteFile(obmol, f[:-4] + 'rot.sdf')
-    logger.info("Five membered rings processed in %s.",f)
+    new_id = mol.AddConformer(conformer, assignId=True)
+    Chem.MolToMolFile(mol, f[:-4] + "rot.sdf", confId=new_id)
+    logger.info("Five membered rings processed in %s.", f)
     return f
 
 
-#Recursively finds all the atoms connected to the input
-def FindSubstAtoms(atom, outAtom, al):
+def ring_is_aromatic(mol, ring_system):
+    """iterates through the rings, confirms all bonds are aromatic
+    Arguments:
+    - mol(rdkit.Chem.Mol): rdkit Mol object
+    - ring_system(tuple or list): a collection containing ring indices. Assumes the order of the atoms follows the ring
+    Returns a boolean
+    """
+    ring_size = len(ring_system)
 
-    indexes = [a.GetIdx() for a in al]
-    for NbrAtom in OBAtomAtomIter(atom):
+    for index in range(ring_size):
+        i1, i2 = ring_system[index], ring_system[(index + 1) % ring_size]
+        if not mol.GetAtomWithIdx(i1).GetIsAromatic():
+            return False
+        bond = mol.GetBondBetweenAtoms(i1, i2)
+        if not bond.GetIsAromatic():
+            return False
 
-        if (NbrAtom.GetIdx() not in indexes) and\
-                (NbrAtom.GetIdx() != outAtom.GetIdx()):
-            al.append(NbrAtom)
-            FindSubstAtoms(NbrAtom, outAtom, al)
-
-
-#Rotate atom around and axis by an angle
-def RotateAtom(atom, AxisAtom1, AxisAtom2, angle):
-
-    [u, v, w] = GetUnitVector(AxisAtom1, AxisAtom2)
-    [x, y, z] = [atom.x(), atom.y(), atom.z()]
-    [a, b, c] = [(AxisAtom1.x()+AxisAtom1.x())/2, (AxisAtom1.y()+AxisAtom1.y())/2,\
-                 (AxisAtom1.z()+AxisAtom1.z())/2]
-
-    X = (a*(v**2 + w**2) - u*(b*v+c*w-u*x-v*y-w*z))*(1-cos(angle))+x*cos(angle)\
-        +(-1*c*v+b*w-w*y+v*z)*sin(angle)
-    Y = (b*(u**2 + w**2) - v*(a*u+c*w-u*x-v*y-w*z))*(1-cos(angle))+y*cos(angle)\
-        +(c*u-a*w+w*x-u*z)*sin(angle) #was _+_u*z)*sin(angle)
-    Z = (c*(u**2 + v**2) - w*(a*u+b*v-u*x-v*y-w*z))*(1-cos(angle))+z*cos(angle)\
-        +(-1*b*u+a*v-v*x+u*y)*sin(angle)
-    
-    atom.SetVector(X, Y, Z)
+    return True
 
 
-def GetUnitVector(Atom1, Atom2):
-    vector = []
-    vector.append(Atom2.x() - Atom1.x())
-    vector.append(Atom2.y() - Atom1.y())
-    vector.append(Atom2.z() - Atom1.z())
+def find_plane(atom1: Point3D, atom2: Point3D, atom3: Point3D):
 
-    length = np.linalg.norm(vector)
-    return [x/length for x in vector]
+    vector1 = atom2 - atom1
+    vector2 = atom3 - atom1
+
+    normal_vector = vector1.CrossProduct(vector2)
+    d = atom1.DotProduct(normal_vector)
+
+    return normal_vector, d
 
 
-#Finds the angle by which atoms need to be rotated by taking the angle
-#the atom is out of the plane (the 2 neighbor atoms being the axis)
-#and doubling it
-def FindRotAngle(AxisAtom1, AxisAtom2, OutAtom, Normal):
+def point_plane_dist(norm: Point3D, d: float, atom: Point3D):
+    norm = Point3D(*norm)
+    a = abs(norm.DotProduct(atom) - d)
+    n_length = norm.Length()
+    return a / n_length
 
-    start = []
-    start.append((AxisAtom1.x() + AxisAtom2.x())/2)
-    start.append((AxisAtom1.y() + AxisAtom2.y())/2)
-    start.append((AxisAtom1.z() + AxisAtom2.z())/2)
 
-    vector = []
-    vector.append(OutAtom.x() - start[0])
-    vector.append(OutAtom.y() - start[1])
-    vector.append(OutAtom.z() - start[2])
+def plane_error(atoms, a, b, c, d):
+    dists = []
+    for atom in atoms:
+        dists.append(point_plane_dist([a, b, c], d, atom))
+    return sum(dists) / len(dists)
 
-    #Angle between plane normal and OOP atom
-    vangle = angle(vector, Normal)
 
-    #print "Measured angle: " + str(vangle*57.3)
+def least_squares_plane(atom1, atom2, atom3, atom4):
+    [a0, b0, c0], d0 = find_plane(atom1, atom2, atom3)
+
+    f = lambda a: plane_error([atom1, atom2, atom3, atom4], a[0], a[1], a[2], a[3])
+    res = minimize(f, (a0, b0, c0, d0), method="nelder-mead")
+    plane = list(res.x)
+
+    return Point3D(*plane[:3]), plane[3], f(plane)
+
+
+def find_five_membered_ring_plane(conformer, atom_ids):
+    """returns float, float, outlying atom index"""
+    atoms = [conformer.GetAtomPosition(i) for i in atom_ids]
+    min_error = 100.0
+
+    for index, atom in enumerate(atom_ids):
+        other_atoms = atoms[:index] + atoms[index + 1 :]
+        norm, d, error = least_squares_plane(*other_atoms)
+        if error < min_error:
+            min_error = error
+            max_norm = norm
+            max_d = d
+            out_atom = atom
+
+    return max_norm, max_d, out_atom
+
+
+# REDO!
+def find_sub_atoms(mol, atom_index: int, out_index: int, rotate_atoms: list[int]):
+    "Finds neighbourhood of an atom recursively"
+    # tread lightly
+    atom = mol.GetAtomWithIdx(atom_index)
+    for neighbor_atom in atom.GetNeighbors():
+        nbr_index = neighbor_atom.GetIdx()
+        if (nbr_index not in rotate_atoms) and nbr_index != out_index:
+            rotate_atoms.append(nbr_index)
+            find_sub_atoms(mol, nbr_index, out_index, rotate_atoms)
+
+
+def find_rot_angle(
+    conformer,
+    backbone_index1: int,
+    backbone_index2: int,
+    out_atom_index: int,
+    norm: Point3D,
+):
+    backbone_atom1 = conformer.GetAtomPosition(backbone_index1)
+    backbone_atom2 = conformer.GetAtomPosition(backbone_index2)
+    out_atom = conformer.GetAtomPosition(out_atom_index)
+
+    halfway_vec = (backbone_atom1 + backbone_atom2) / 2
+    vector = out_atom - halfway_vec
+    vangle = vector.AngleTo(norm)
     return vangle
 
 
-def crossproduct(v1, v2):
-    product = [0, 0, 0]
-    product[0] = v1[1]*v2[2]-v1[2]*v2[1]
-    product[1] = v1[2]*v2[0]-v1[0]*v2[2]
-    product[2] = v1[0]*v2[1]-v1[1]*v2[0]
-    return product
-
-
-def dotproduct(v1, v2):
-        return sum((a*b) for a, b in zip(v1, v2))
-
-
-def length(v):
-    return sqrt(dotproduct(v, v))
-
-
-def angle(v1, v2):
-    return acos(dotproduct(v1, v2) / (length(v1) * length(v2)))
-
-
-"""Finds planes for every 3 atoms, calculates distances to the plane
-for the other 2 atoms andchoose the plane with the smallest smallest distance
-"""
-def FindFuranPlane(mol, furan):
-
-    atomIds = furan._path
-    atoms = []
-
-    for i in atomIds:
-        atoms.append(mol.GetAtom(i))
-
-    MinError = 100.0
-
-    for atom in atoms:
-        pats = [a for a in atoms if a != atom]
-        norm, d, error = LstSqPlane(pats[0], pats[1], pats[2], pats[3])
-        if error < MinError:
-            MinError = error
-            MaxNorm = norm
-            MaxD = d
-            OutAtom = atom
-
-    return MaxNorm, MaxD, OutAtom
-
-
-#Given 3 atoms, finds a plane defined by a normal vector and d
-def FindPlane(atom1, atom2, atom3):
-
-    vector1 = [atom2.x() - atom1.x(), atom2.y() - atom1.y(),
-               atom2.z() - atom1.z()]
-    vector2 = [atom3.x() - atom1.x(), atom3.y() - atom1.y(),
-               atom3.z() - atom1.z()]
-    cross_product = [vector1[1] * vector2[2] - vector1[2] * vector2[1],
-                     -1 * vector1[0] * vector2[2] + vector1[2] * vector2[0],
-                     vector1[0] * vector2[1] - vector1[1] * vector2[0]]
-
-    d = cross_product[0] * atom1.x() - cross_product[1] * atom1.y() + \
-        cross_product[2] * atom1.z()
-
-    return cross_product, d
-
-
-def LstSqPlane(atom1, atom2, atom3, atom4):
-
-    # Inital guess of the plane
-    [a0, b0, c0], d0 = FindPlane(atom1, atom2, atom3)
-
-    f = lambda a: PlaneError([atom1, atom2, atom3, atom4], a[0], a[1], a[2], a[3])
-    res = sciopt.minimize(f, (a0, b0, c0, d0), method='nelder-mead')
-    plane = list(res.x)
-
-    return plane[:3], plane[3], f(plane)
-
-
-def PlaneError(atoms, a, b, c, d):
-    dists = []
-    for atom in atoms:
-        dists.append(abs(PointPlaneDist([a, b, c], d, atom)))
-    return sum(dists)/len(dists)
-
-
-#Calculates distance from an atom to a plane
-def PointPlaneDist(norm, d, atom):
-
-    point = []
-
-    point.append(atom.x())
-    point.append(atom.y())
-    point.append(atom.z())
-
-    a = norm[0]*point[0] + norm[1]*point[1] + norm[2]*point[2] + d
-    b = sqrt(norm[0]**2 + norm[1]**2 + norm[2]**2)
-
-    return a/b
+def rotate_atom_coords(
+    conformer, atom: int, backbone_index1: int, backbone_index2: int, angle
+):
+    backbone_atom1 = conformer.GetAtomPosition(backbone_index1)
+    backbone_atom2 = conformer.GetAtomPosition(backbone_index2)
+    k = backbone_atom1 - backbone_atom2
+    k.Normalize()
+    v = conformer.GetAtomPosition(atom)
+    # Rodrigues formula
+    v_rot = (
+        v * cos(angle)
+        + k.CrossProduct(v) * sin(angle)
+        + k * k.DotProduct(v) * (1 - cos(angle))
+    )
+    return v_rot
