@@ -550,24 +550,34 @@ class CASCADE_Quantile:
                 "ReduceAtomToPro": ReduceAtomToPro,
             },
         )
+        *_, penultimate_name, final_name = [
+            layer.name
+            for layer in full_model.layers
+            if layer.__class__.__name__ == "Dense"
+        ]
 
+        *_, reduce_layer_name = [
+            layer.name
+            for layer in full_model.layers
+            if layer.__class__.__name__ == "ReduceAtomToPro"
+        ]
         quantiles = np.array(quantiles)
         quantiles = np.sort(quantiles)
         dims = len(quantiles)
 
         rep, atomwise_shift = (
-            full_model.get_layer(name="loc_3").output,
-            full_model.get_layer(name="reduce_atom_to_pro_1").output,
+            full_model.get_layer(name=penultimate_name).output,
+            full_model.get_layer(name=reduce_layer_name).output,
         )
-        rep = Dense(dims, name="loc_reduce")(rep)
+        rep = Dense(dims, name=final_name)(rep)
         output = Add(name="final_layer")([rep, atomwise_shift])
 
         model = GraphModel(inputs=full_model.input, outputs=output)
 
-        w, b = full_model.get_layer("loc_reduce").weights
+        w, b = full_model.get_layer(final_name).weights
         w_c = np.broadcast_to(w, shape=(w.shape[0], dims))
         b_c = np.broadcast_to(b, shape=(dims))
-        model.get_layer("loc_reduce").set_weights([w_c, b_c])
+        model.get_layer(final_name).set_weights([w_c, b_c])
 
         initial_learning_rate = 5e-4
         lr_schedule = ExponentialDecay(
