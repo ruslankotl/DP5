@@ -44,7 +44,7 @@ def cleanup_3d(mol):
     )
     if cid == -1:
         raise ValueError("Molecule could not be sanitised")
-    AllChem.MMFFOptimizeMolecule(mol)
+    AllChem.MMFFOptimizeMolecule(mol, mmffVariant="MMFF94s")
     Chem.rdmolops.AssignStereochemistryFrom3D(mol)
 
     return mol
@@ -202,11 +202,15 @@ def prepare_inputs(
     if workflow["generate"]:
         logger.info("Generating diastereomers")
         mols2 = [_generate_diastereomers(mol, mutable_atoms) for mol in mols]
-    elif workflow["cleanup"] or (
-        not workflow["conf_search"] and not workflow["dft_opt"]
-    ):
-        logger.info("Generating MMFF geometries for inputs")
-        mols2 = [[cleanup_3d(mol)] for mol in mols]
+    elif not workflow["conf_search"] and not workflow["dft_opt"]:
+        if workflow["cleanup"]:
+            logger.info("Generating MMFF geometries for inputs")
+            mols2 = [[cleanup_3d(mol)] for mol in mols]
+        else:
+            logger.warning(
+                "Skipping cleanup without conformational search ofr DFT optimisation is not recommended!"
+            )
+            mols2 = [[mol] for mol in mols]
     else:
         mols2 = [[mol] for mol in mols]
 
