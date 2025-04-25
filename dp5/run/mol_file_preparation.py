@@ -54,6 +54,7 @@ def read_sdf(input_file: str):
 
     fullf = Path(input_file).resolve()
     mol = Chem.MolFromMolFile(str(fullf), removeHs=False, sanitize=True)
+    mol = Chem.AddHs(mol)
 
     return mol
 
