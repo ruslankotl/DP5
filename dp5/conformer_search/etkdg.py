@@ -97,7 +97,7 @@ class ConfSearchMethod(BaseConfSearch):
         )
 
         if len(ids) == 0:
-            ids = m.AddConformer(m.GetConformer, assignID=True)
+            ids = m.AddConformer(m.GetConformer, assignId=True)
 
         logger.info(f"Generated {len(ids)} conformers")
         diz = []
