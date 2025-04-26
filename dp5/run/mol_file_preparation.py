@@ -203,16 +203,14 @@ def prepare_inputs(
     if workflow["generate"]:
         logger.info("Generating diastereomers")
         mols2 = [_generate_diastereomers(mol, mutable_atoms) for mol in mols]
-    elif not workflow["conf_search"] and not workflow["dft_opt"]:
-        if workflow["cleanup"]:
-            logger.info("Generating MMFF geometries for inputs")
-            mols2 = [[cleanup_3d(mol)] for mol in mols]
-        else:
-            logger.warning(
-                "Skipping cleanup without conformational search ofr DFT optimisation is not recommended!"
-            )
-            mols2 = [[mol] for mol in mols]
+    elif workflow["cleanup"]:
+        logger.info("Generating MMFF geometries for inputs")
+        mols2 = [[cleanup_3d(mol)] for mol in mols]
     else:
+        if not workflow["conf_search"] and not workflow["dft_opt"]:
+            logger.warning(
+                "Skipping cleanup without conformational search or DFT optimisation is not recommended!"
+            )
         mols2 = [[mol] for mol in mols]
 
     logger.debug("Preparing to write structure files")
