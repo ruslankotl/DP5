@@ -221,7 +221,7 @@ class BaseDFTMethod(ABC):
             for file in mol_data:
                 filename = file.with_suffix(self.output_format)
                 logger.debug(f"Reading DFT output file: {filename}")
-                mol_atoms, coords, energy, shielding, shielding_label, *flags = filename
+                mol_atoms, coords, energy, shielding, shielding_label, *flags = self.read_file(filename)
                 mol_conformers.append(coords)
                 mol_energies.append(energy)
                 mol_shieldings.append(shielding)
