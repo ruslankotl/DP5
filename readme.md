@@ -6,7 +6,7 @@ To get started:
 - clone this repository using `git clone https://github.com/ruslankotl/DP5.git`
 - navigate to the folder on your machine
 - install via `pip install -e .`
-- run `pydp4 -s <SD_FILE>` -n <NMR_FILE>
+- run `pydp4 -s <SD_FILE> -n <NMR_FILE>`
 
 NMR files are provided as a list of shifts with assignments, e.g., `
 153.0(any),125.6(any)`
