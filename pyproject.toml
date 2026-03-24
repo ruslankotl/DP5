@@ -32,7 +32,7 @@ dependencies = [
         "tensorflow>=2,<=2.14",
         "dill",
         "joblib",
-        "networkx"
+        "networkx>=3"
 
     ]
 
