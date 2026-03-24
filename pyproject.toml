@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "DP5"
 version = "0.1"
-requires-python = ">=3.9"
+requires-python = ">=3.9, <=3.11"
 description = "A short description of the project"
 readme = "README.md"
 authors = [
@@ -18,7 +18,7 @@ maintainers = [
 
 dependencies = [
         "tomli",
-        "numpy",
+        "numpy<2",
         "rdkit",
         "lmfit",
         "matplotlib",
