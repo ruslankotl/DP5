@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "DP5"
-version = "0.1"
+version = "0.1.0"
 requires-python = ">=3.9, <=3.11"
 description = "A short description of the project"
 readme = "readme.md"
@@ -29,7 +29,8 @@ dependencies = [
         "pathos",
         "pandas",
         "statsmodels",
-        "tensorflow>=2,<=2.14",
+        "tensorflow>=2.13,<=2.14; sys_platform != 'darwin' or platform_machine != 'arm64'",
+        "tensorflow-metal>=1.0; sys_platform == 'darwin' and platform_machine == 'arm64'",
         "dill",
         "joblib",
         "networkx>=3"
