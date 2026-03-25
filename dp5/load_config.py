@@ -16,8 +16,6 @@ import logging
 import tomli
 import json
 
-from dp5.run import prepare_inputs
-from .runner import runner
 from .logger import setup_logger
 
 LOGLEVEL_CHOICES = tuple(level.lower() for level in logging._nameToLevel.keys())
@@ -99,6 +97,10 @@ def main():
     parser.add_argument("--log_level", choices=LOGLEVEL_CHOICES)
 
     args = parser.parse_args()
+
+    # Delay heavy imports until after CLI parsing so `pydp4 -h` returns quickly.
+    from dp5.run import prepare_inputs
+    from .runner import runner
 
     # load custom configuration
     config_path = (Path.cwd() / args.config).resolve()
