@@ -13,7 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 class DFTMethod(BaseDFTMethod):
+    """Gaussian implementation of :class:`dp5.dft.base_dft_method.BaseDFTMethod`."""
+
     def __init__(self, settings):
+        """Initialise Gaussian backend settings and executable resolution.
+
+        :param settings: DFT configuration dictionary.
+        :type settings: dict
+        """
         super().__init__(settings)
 
         self.tag = "g"
@@ -38,6 +45,19 @@ class DFTMethod(BaseDFTMethod):
         return "Gaussian"
 
     def write_file(self, filename, coordinates, atoms, charge, type):
+        """Write a Gaussian ``.com`` input file for one conformer.
+
+        :param filename: Output file stem.
+        :type filename: pathlib.Path
+        :param coordinates: Cartesian coordinates.
+        :type coordinates: list
+        :param atoms: Element symbols.
+        :type atoms: list[str]
+        :param charge: Molecular charge.
+        :type charge: int | float
+        :param type: Calculation type (``"opt"``, ``"e"``, ``"nmr"``).
+        :type type: str
+        """
 
         with open(f"{filename}.com", "w") as f:
 
@@ -63,6 +83,11 @@ class DFTMethod(BaseDFTMethod):
             # type specific footer
 
     def nmr_options(self):
+        """Build Gaussian route section for NMR shielding jobs.
+
+        :returns: Gaussian route section.
+        :rtype: str
+        """
 
         ultrafine = (
             " int=ultrafine"
@@ -83,6 +108,11 @@ class DFTMethod(BaseDFTMethod):
         return route
 
     def e_options(self):
+        """Build Gaussian route section for single-point energy jobs.
+
+        :returns: Gaussian route section.
+        :rtype: str
+        """
 
         ultrafine = (
             " int=ultrafine"
@@ -103,6 +133,11 @@ class DFTMethod(BaseDFTMethod):
         return route
 
     def opt_options(self):
+        """Build Gaussian route section for geometry optimisation jobs.
+
+        :returns: Gaussian route section.
+        :rtype: str
+        """
 
         ultrafine = (
             " int=ultrafine"
@@ -132,9 +167,24 @@ class DFTMethod(BaseDFTMethod):
         return super()._run_calcs(jobs)
 
     def prepare_command(self, file):
+        """Prepare Gaussian execution command using input redirection.
+
+        :param file: Input/output file stem.
+        :type file: pathlib.Path
+        :returns: Shell command string.
+        :rtype: str
+        """
         return f"{self.executable} < {file}{self.input_format} > {file}{self.output_format}"
 
     def read_file(self, file):
+        """Parse Gaussian output into DP5-standard result fields.
+
+        :param file: Gaussian output path.
+        :type file: pathlib.Path
+        :returns: ``(atoms, coordinates, energy, shieldings, shielding_labels,
+            completed, opt_converged)``.
+        :rtype: tuple
+        """
 
         atoms = []
         coordinates = []

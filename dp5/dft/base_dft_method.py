@@ -18,12 +18,28 @@ logger = logging.getLogger(__name__)
 
 
 class BaseDFTMethod(ABC):
+    """Abstract base class for all DFT backends used by DP5.
+
+    Concrete backends (for example Gaussian, ORCA, and NWChem) inherit from
+    this class and implement file generation, command preparation, and output
+    parsing for a specific quantum chemistry engine.
+
+    The class also provides the orchestration logic that is backend-agnostic:
+    selecting files to run, reusing completed calculations, launching jobs, and
+    collecting parsed optimisation/energy/NMR data.
+    """
 
     hartree_to_kJ = 2625.499629554010
     gasConstant = 8.3145
     temperature = 298.15
 
     def __init__(self, settings):
+        """Initialise a DFT backend from the DFT config section.
+
+        :param settings: DFT configuration dictionary loaded from the DP5
+            input configuration.
+        :type settings: dict
+        """
         self.settings = settings
         if not isnan(self.settings["charge"]):
             self.charge = self.settings["charge"]
@@ -44,6 +60,20 @@ class BaseDFTMethod(ABC):
         return "DFTMethod"
 
     def _get_files(self, mols, calc_type):
+        """Create missing inputs, run required jobs, and collect outputs.
+
+        For each conformer in each molecule, this method determines whether an
+        output already exists and can be reused, whether an incomplete output
+        must be discarded, or whether a new input file must be written and run.
+
+        :param mols: Molecules with conformer geometries.
+        :type mols: list
+        :param calc_type: Calculation type label (``"opt"``, ``"e"``,
+            ``"nmr"``).
+        :type calc_type: str
+        :returns: Output file stems grouped per molecule.
+        :rtype: list[list[pathlib.Path]]
+        """
         jobdir = Path.cwd()
 
         data = jobdir / calc_type
@@ -143,6 +173,18 @@ class BaseDFTMethod(ABC):
         return prerun_files
 
     def get_files(self, mols, calc_type):
+        """Return completed calculation files for the requested calculation.
+
+        If ``self.dft_complete`` is set, pre-existing files are loaded from
+        disk. Otherwise new calculations are prepared and executed.
+
+        :param mols: Molecules with conformer geometries.
+        :type mols: list
+        :param calc_type: Calculation type label.
+        :type calc_type: str
+        :returns: Output file stems grouped per molecule.
+        :rtype: list[list[pathlib.Path]]
+        """
         if self.dft_complete:
             logger.debug("Loading pre-run files")
             files = self._get_prerun_files(mols, calc_type)
@@ -152,6 +194,15 @@ class BaseDFTMethod(ABC):
         return files
 
     def opt(self, mols):
+        """Run/read geometry optimisation results.
+
+        :param mols: Molecules to optimise.
+        :type mols: list
+        :returns: Tuple of ``(atoms, conformers, energies)`` grouped by
+            molecule, where conformers and energies correspond to converged
+            optimisation outputs.
+        :rtype: tuple[list, list, list]
+        """
         files = self.get_files(mols, "opt")
 
         atoms = []
@@ -182,6 +233,14 @@ class BaseDFTMethod(ABC):
         return atoms, conformers, energies
 
     def energy(self, mols):
+        """Run/read single-point energy calculations.
+
+        :param mols: Molecules to evaluate.
+        :type mols: list
+        :returns: Tuple of ``(atoms, conformers, energies)`` grouped by
+            molecule.
+        :rtype: tuple[list, list, list]
+        """
         files = self.get_files(mols, "e")
 
         atoms = []
@@ -205,6 +264,14 @@ class BaseDFTMethod(ABC):
         return atoms, conformers, energies
 
     def nmr(self, mols):
+        """Run/read NMR shielding calculations.
+
+        :param mols: Molecules to evaluate.
+        :type mols: list
+        :returns: Tuple of ``(atoms, conformers, energies, shieldings,
+            shielding_labels)`` grouped by molecule.
+        :rtype: tuple[list, list, list, list, list]
+        """
         files = self.get_files(mols, "nmr")
 
         atoms = []
@@ -237,11 +304,29 @@ class BaseDFTMethod(ABC):
 
     @abstractmethod
     def write_file(self, filename, coordinates, atoms, charge, calc_type):
+        """Write an engine-specific input file for one conformer.
+
+        :param filename: File stem without extension.
+        :type filename: pathlib.Path
+        :param coordinates: Cartesian coordinates for one conformer.
+        :type coordinates: list
+        :param atoms: Element symbols matching ``coordinates``.
+        :type atoms: list[str]
+        :param charge: Molecular charge to use for the job.
+        :type charge: int | float
+        :param calc_type: Calculation type label.
+        :type calc_type: str
+        """
         raise NotImplementedError("not implemented")
 
     def _run_calcs(self, jobs: list):
         """
-        - jobs: list of gaussian input files for which calculations are required
+        Execute backend commands for a list of prepared input file stems.
+
+        :param jobs: List of file stems for which calculations are required.
+        :type jobs: list[pathlib.Path]
+        :returns: Subset of ``jobs`` with outputs marked as completed.
+        :rtype: list[pathlib.Path]
         """
         num_complete = 0
         jobs_complete = []
@@ -271,15 +356,39 @@ class BaseDFTMethod(ABC):
 
     @abstractmethod
     def prepare_command(self, file):
+        """Build a shell command to run one calculation.
+
+        Concrete subclasses can override this to handle engine-specific command
+        syntax.
+
+        :param file: File stem without extension.
+        :type file: pathlib.Path
+        :returns: Shell command string.
+        :rtype: str
+        """
         return (
             f"{self.executable} {file}{self.input_format} > {file}{self.output_format}"
         )
 
     def is_converged(self, file):
+        """Check whether an optimisation is marked as converged.
+
+        :param file: Output file path.
+        :type file: pathlib.Path
+        :returns: ``True`` if optimisation converged.
+        :rtype: bool
+        """
         *_, converged = self.read_file(file)
         return converged
 
     def is_completed(self, file):
+        """Check whether a calculation terminated normally.
+
+        :param file: Output file path.
+        :type file: pathlib.Path
+        :returns: ``True`` if calculation completion flag is found.
+        :rtype: bool
+        """
         *_, completed, converged = self.read_file(file)
         return completed
 
@@ -344,6 +453,13 @@ class BaseDFTMethod(ABC):
         )
 
     def atom_num_to_symbol(self, anum: int) -> str:
+        """Convert atomic number to element symbol.
+
+        :param anum: Atomic number (1-indexed).
+        :type anum: int
+        :returns: Element symbol.
+        :rtype: str
+        """
 
         Lookup = [
             "H",

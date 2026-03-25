@@ -9,7 +9,14 @@ logger = logging.getLogger(__name__)
 
 
 class DFTMethod(BaseDFTMethod):
+    """ORCA implementation of :class:`dp5.dft.base_dft_method.BaseDFTMethod`."""
+
     def __init__(self, settings):
+        """Initialise ORCA backend settings and executable path.
+
+        :param settings: DFT configuration dictionary.
+        :type settings: dict
+        """
         super().__init__(settings)
 
         self.tag = "o"
@@ -37,6 +44,19 @@ class DFTMethod(BaseDFTMethod):
         return super().prepare_command(file)
 
     def write_file(self, filename, coordinates, atoms, charge, calc_type):
+        """Write an ORCA ``.inp`` input file for one conformer.
+
+        :param filename: Output file stem.
+        :type filename: pathlib.Path
+        :param coordinates: Cartesian coordinates.
+        :type coordinates: list
+        :param atoms: Element symbols.
+        :type atoms: list[str]
+        :param charge: Molecular charge.
+        :type charge: int | float
+        :param calc_type: Calculation type.
+        :type calc_type: str
+        """
 
         with open(f"{filename}.inp", "w") as f:
 
@@ -81,6 +101,11 @@ class DFTMethod(BaseDFTMethod):
     basis_dict = {"def2tzvp": "def2-tzvp"}
 
     def _opt_settings(self):
+        """Build ORCA block for optimisation settings.
+
+        :returns: ORCA method/basis/geometry block.
+        :rtype: str
+        """
         route = (
             "%method\n"
             "  Method dft\n"
@@ -99,6 +124,11 @@ class DFTMethod(BaseDFTMethod):
         return route
 
     def _nmr_settings(self):
+        """Build ORCA block for NMR-related energy settings.
+
+        :returns: ORCA method/basis block.
+        :rtype: str
+        """
         route = (
             "%method\n"
             "  Method dft\n"
@@ -112,6 +142,11 @@ class DFTMethod(BaseDFTMethod):
         return route
 
     def _energy_settings(self):
+        """Build ORCA block for single-point energy settings.
+
+        :returns: ORCA method/basis block.
+        :rtype: str
+        """
         route = (
             "%method\n"
             "  Method dft\n"
@@ -125,6 +160,14 @@ class DFTMethod(BaseDFTMethod):
         return route
 
     def read_file(self, file):
+        """Parse ORCA output into DP5-standard result fields.
+
+        :param file: ORCA output path.
+        :type file: pathlib.Path
+        :returns: ``(atoms, coordinates, energy, shieldings, shielding_labels,
+            completed, converged)``.
+        :rtype: tuple
+        """
         atoms = []
         coordinates = []
         energy = None

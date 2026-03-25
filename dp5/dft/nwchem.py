@@ -13,7 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 class DFTMethod(BaseDFTMethod):
+    """NWChem implementation of :class:`dp5.dft.base_dft_method.BaseDFTMethod`."""
+
     def __init__(self, settings):
+        """Initialise NWChem backend settings and executable path.
+
+        :param settings: DFT configuration dictionary.
+        :type settings: dict
+        """
         super().__init__(settings)
 
         self.tag = "nw"
@@ -36,6 +43,19 @@ class DFTMethod(BaseDFTMethod):
         return "NWChem"
 
     def write_file(self, filename, coordinates, atoms, charge, calc_type):
+        """Write an NWChem ``.nw`` input file for one conformer.
+
+        :param filename: Output file stem.
+        :type filename: pathlib.Path
+        :param coordinates: Cartesian coordinates.
+        :type coordinates: list
+        :param atoms: Element symbols.
+        :type atoms: list[str]
+        :param charge: Molecular charge.
+        :type charge: int | float
+        :param calc_type: Calculation type.
+        :type calc_type: str
+        """
         with open(f"{filename}.nw", "w") as f:
             f.write("memory stack 1500 mb heap 1500 mb global 3000 mb\n")
             # scratch folder left for hpc
@@ -81,6 +101,11 @@ class DFTMethod(BaseDFTMethod):
                 f.write(self.e_options())
 
     def nmr_options(self):
+        """Build NWChem task block for NMR shielding calculation.
+
+        :returns: NWChem task block.
+        :rtype: str
+        """
         functional = self.settings["n_functional"]
         functional = self.functional_dict.get(functional.lower(), functional)
 
@@ -91,6 +116,11 @@ class DFTMethod(BaseDFTMethod):
         return suffix
 
     def opt_options(self):
+        """Build NWChem task block for geometry optimisation.
+
+        :returns: NWChem task block.
+        :rtype: str
+        """
         functional = self.settings["o_functional"]
         functional = self.functional_dict.get(functional.lower(), functional)
 
@@ -98,6 +128,11 @@ class DFTMethod(BaseDFTMethod):
         return suffix
 
     def e_options(self):
+        """Build NWChem task block for single-point energy.
+
+        :returns: NWChem task block.
+        :rtype: str
+        """
         functional = self.settings["e_functional"]
         functional = self.functional_dict.get(functional.lower(), functional)
 
@@ -111,6 +146,14 @@ class DFTMethod(BaseDFTMethod):
         return super().prepare_command(file)
 
     def read_file(self, file):
+        """Parse NWChem output into DP5-standard result fields.
+
+        :param file: NWChem output path.
+        :type file: pathlib.Path
+        :returns: ``(atoms, coordinates, energy, shieldings, shielding_labels,
+            completed, opt_converged)``.
+        :rtype: tuple
+        """
 
         atoms = []
         coordinates = []
