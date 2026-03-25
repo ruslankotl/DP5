@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DFT Method Guidance &mdash; DP5 0.1 documentation</title>
+  <title>DFT Module &mdash; DP5 0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
@@ -19,6 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DFT Architecture And Class Logic" href="dft_architecture.html" />
     <link rel="prev" title="DP5 Analysis" href="dp5_analysis.html" /> 
 </head>
 
@@ -48,7 +49,11 @@
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analysis.html">Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dp5_analysis.html">DP5 Analysis</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">DFT Method Guidance</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DFT Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dft_architecture.html">DFT Architecture And Class Logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dft_api.html">DFT API Reference</a></li>
+</ul>
+</li>
 </ul>
 
         </div>
@@ -65,7 +70,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">DFT Method Guidance</li>
+      <li class="breadcrumb-item active">DFT Module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/dft_methods.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -75,18 +80,35 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="dft-method-guidance">
-<h1>DFT Method Guidance<a class="headerlink" href="#dft-method-guidance" title="Link to this heading"></a></h1>
-<p>This version of DP5 is made extendable to different DFT packages.
-Currently, it supports running calculations locally,
-but support for running calculations on a remote cluster with passwordless ssh tunnel will be added soon.</p>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dp5.dft.base_dft_method.BaseDFTMethod</span></code>(settings)</p></td>
-<td><p></p></td>
-</tr>
-</tbody>
-</table>
+  <section id="dft-module">
+<h1>DFT Module<a class="headerlink" href="#dft-module" title="Link to this heading"></a></h1>
+<p>The <a class="reference internal" href="generated/dp5.dft.html#module-dp5.dft" title="dp5.dft"><code class="xref py py-mod docutils literal notranslate"><span class="pre">dp5.dft</span></code></a> package provides a backend-agnostic workflow for running
+quantum chemistry calculations and parsing outputs into the data structures used
+by DP5.</p>
+<p>This section documents:</p>
+<ul class="simple">
+<li><p>the class inheritance model used by DFT backends,</p></li>
+<li><p>the orchestration logic from dispatch to parsed outputs,</p></li>
+<li><p>the backend class methods and helper functions.</p></li>
+</ul>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dft_architecture.html">DFT Architecture And Class Logic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dft_architecture.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dft_architecture.html#class-inheritance">Class Inheritance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dft_architecture.html#execution-flow">Execution Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dft_architecture.html#core-base-class-logic">Core Base Class Logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dft_architecture.html#backend-responsibilities">Backend Responsibilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dft_api.html">DFT API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dft_api.html#module-dp5.dft.run_dft">Dispatcher Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dft_api.html#module-dp5.dft.base_dft_method">Base Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dft_api.html#concrete-backends">Concrete Backends</a></li>
+</ul>
+</li>
+</ul>
+</div>
 </section>
 
 
@@ -94,6 +116,7 @@ but support for running calculations on a remote cluster with passwordless ssh t
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="dp5_analysis.html" class="btn btn-neutral float-left" title="DP5 Analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dft_architecture.html" class="btn btn-neutral float-right" title="DFT Architecture And Class Logic" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -1,9 +1,18 @@
-DFT Method Guidance
-====================
+DFT Module
+==========
 
-This version of DP5 is made extendable to different DFT packages.
-Currently, it supports running calculations locally, 
-but support for running calculations on a remote cluster with passwordless ssh tunnel will be added soon.
+The :mod:`dp5.dft` package provides a backend-agnostic workflow for running
+quantum chemistry calculations and parsing outputs into the data structures used
+by DP5.
 
-.. autosummary::
-    dp5.dft.base_dft_method.BaseDFTMethod
+This section documents:
+
+* the class inheritance model used by DFT backends,
+* the orchestration logic from dispatch to parsed outputs,
+* the backend class methods and helper functions.
+
+.. toctree::
+    :maxdepth: 2
+
+    dft_architecture
+    dft_api
