@@ -8,19 +8,30 @@ from dp5.nmr_processing.helper_functions import methyl_protons
 
 
 def iterative_assignment(mol, exp_peaks, calculated_shifts, H_labels, rounded_integrals):
-    """
-    Arguments:
-    mol: rdkit Mol object. Required to store the molecular conectivity
-    exp_peaks: experimental signals as processed by NMR-AI
-    calculated_shifts: simulated shifts using DFT or NN
-    H_labels: atomic labels for H atoms. Must follow SD File numbering
-    rounded_integrals: integrals as processed by NMR-AI
+    """Assign calculated proton shifts to processed multiplet centres.
 
-    returns:
-    - assigned shifts: unused
-    - assigned peaks
-    - assigned labels
-    - sclaed_shifts: unused
+    The implementation mirrors the DP4-AI proton assignment strategy described
+    in the paper and ESI. A first pass uses external scaling, methyl groups are
+    assigned as integral-constrained bundles, the remaining protons are matched
+    with a Hungarian optimisation over a probability matrix, and the assignment
+    is repeated after internal scaling until it converges.
+
+    :param mol: RDKit molecule used to identify methyl groups from connectivity.
+    :type mol: object
+    :param exp_peaks: Experimental multiplet centres in ppm, expanded according
+        to the rounded integrals so that peaks can be assigned multiple times.
+    :type exp_peaks: numpy.ndarray
+    :param calculated_shifts: Calculated proton shifts from DFT or a surrogate
+        model.
+    :type calculated_shifts: numpy.ndarray
+    :param H_labels: Proton labels corresponding to ``calculated_shifts``.
+    :type H_labels: numpy.ndarray
+    :param rounded_integrals: Integer-like multiplet integrals derived from the
+        deconvolved proton spectrum.
+    :type rounded_integrals: numpy.ndarray
+    :returns: Assigned calculated shifts, assigned experimental peaks, assigned
+        labels, and the final scaled shifts used internally.
+    :rtype: tuple[list, list, list, numpy.ndarray]
     """
 
     calculated_shifts = np.array(calculated_shifts)
@@ -310,15 +321,31 @@ def removecrossassignments(exp, calc, labels):
 
 
 def external_scale_proton_shifts(calculated_shifts):
+    """Apply the empirical external scaling used in the first proton pass.
+
+    :param calculated_shifts: Unscaled calculated proton shifts.
+    :type calculated_shifts: numpy.ndarray
+    :returns: Externally scaled proton shifts.
+    :rtype: numpy.ndarray
     """
-    - Calculated_shifts(numpy array)
-    may not be true, depends on particular basis set"""
     scaled = 0.9770793502768845 * calculated_shifts - 0.019505417520415236
 
     return scaled
 
 
 def internal_scale_proton_shifts(assigned_shifts, assigned_peaks, calculated_shifts):
+    """Refit the proton scaling relation from a provisional assignment.
+
+    :param assigned_shifts: Calculated shifts assigned in the previous round.
+    :type assigned_shifts: array-like
+    :param assigned_peaks: Experimental peaks assigned in the previous round.
+    :type assigned_peaks: array-like
+    :param calculated_shifts: Original calculated proton shifts.
+    :type calculated_shifts: numpy.ndarray
+    :returns: Internally rescaled shifts together with the fitted slope and
+        intercept.
+    :rtype: tuple[numpy.ndarray, float, float]
+    """
 
     slope, intercept, r_value, p_value, std_err = linregress(
         assigned_shifts, assigned_peaks)

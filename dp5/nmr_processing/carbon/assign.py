@@ -11,6 +11,34 @@ from rdkit import Chem
 def iterative_assignment(
     picked_peaks, spectral_xdata_ppm, total_spectral_ydata, calculated_shifts, C_labels
 ):
+    """Assign calculated carbon shifts to experimental carbon peaks.
+
+    The carbon workflow implements the three-stage logic from DP4-AI: an
+    initial assignment with external scaling, a second assignment after
+    internal scaling, and a final bias-driven reassignment pass that promotes
+    intense nearby peaks when the first optimisation appears to have preferred
+    weak local noise.
+
+    Compared with the proton algorithm, the carbon routine also handles the
+    case where a single experimental peak can represent multiple equivalent
+    carbons by horizontally duplicating the assignment matrix and progressively
+    penalising repeat use of the same peak.
+
+    :param picked_peaks: Experimental peak indices returned by the carbon peak
+        picking stage.
+    :type picked_peaks: array-like
+    :param spectral_xdata_ppm: PPM axis for the processed spectrum.
+    :type spectral_xdata_ppm: numpy.ndarray
+    :param total_spectral_ydata: Processed carbon spectrum intensities.
+    :type total_spectral_ydata: numpy.ndarray
+    :param calculated_shifts: Calculated carbon shifts.
+    :type calculated_shifts: array-like
+    :param C_labels: Carbon labels corresponding to ``calculated_shifts``.
+    :type C_labels: array-like
+    :returns: Assigned calculated shifts, assigned experimental peaks, assigned
+        labels, and the final scaled shifts.
+    :rtype: tuple[list, list, list, numpy.ndarray]
+    """
     calculated_shifts = np.array(calculated_shifts)
 
     original_C_labels = np.array(C_labels)
@@ -270,12 +298,31 @@ def iterative_assignment(
 
 
 def external_scale_carbon_shifts(calculated_shifts):
+    """Apply the empirical external scaling used in the first carbon pass.
+
+    :param calculated_shifts: Unscaled calculated carbon shifts.
+    :type calculated_shifts: numpy.ndarray
+    :returns: Externally scaled carbon shifts.
+    :rtype: numpy.ndarray
+    """
     scaled = calculated_shifts * 0.9601578792266342 - 1.2625604390657088
 
     return scaled
 
 
 def internal_scale_carbon_shifts(assigned_shifts, assigned_peaks, calculated_shifts):
+    """Refit the carbon scaling relation from a provisional assignment.
+
+    :param assigned_shifts: Calculated shifts assigned in the previous round.
+    :type assigned_shifts: array-like
+    :param assigned_peaks: Experimental peaks assigned in the previous round.
+    :type assigned_peaks: array-like
+    :param calculated_shifts: Original calculated carbon shifts.
+    :type calculated_shifts: numpy.ndarray
+    :returns: Internally rescaled shifts together with the fitted slope and
+        intercept.
+    :rtype: tuple[numpy.ndarray, float, float]
+    """
     slope, intercept, r_value, p_value, std_err = linregress(
         assigned_shifts, assigned_peaks
     )
@@ -331,6 +378,27 @@ def amp_weighting(
 
 
 def amp_kde(total_spectral_ydata, picked_peaks, prob_matrix, shifts):
+    """Estimate amplitude weights for the carbon assignment matrix.
+
+    A Gaussian KDE is fitted to the observed peak amplitudes, the peaks are
+    grouped between minima in the second derivative of that density estimate,
+    and each group is assigned a weight based on the cumulative number of peaks
+    remaining above its lower bound. The duplicated weights implement the
+    multiple-assignment penalty used by the carbon algorithm.
+
+    :param total_spectral_ydata: Processed carbon spectrum intensities.
+    :type total_spectral_ydata: numpy.ndarray
+    :param picked_peaks: Peak indices selected for assignment.
+    :type picked_peaks: array-like
+    :param prob_matrix: Positional probability matrix before amplitude
+        weighting.
+    :type prob_matrix: numpy.ndarray
+    :param shifts: Calculated carbon shifts.
+    :type shifts: array-like
+    :returns: Amplitude-weight matrix aligned with the duplicated assignment
+        matrix used by the optimiser.
+    :rtype: numpy.ndarray
+    """
     peak_amps = total_spectral_ydata[picked_peaks]
 
     peak_amps = peak_amps

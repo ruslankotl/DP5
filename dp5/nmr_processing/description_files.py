@@ -6,6 +6,20 @@ logger = logging.getLogger(__name__)
 
 
 def process_description(nmr_source):
+    """Parse a legacy DP4 description file.
+
+    The text format stores carbon shifts on the first line, proton shifts on the
+    third line, and optional equivalence or omission directives below. This
+    parser preserves the loose syntax used by historical DP4 workflows so that
+    the modern package can still consume manually curated descriptions when raw
+    FID data are not available.
+
+    :param nmr_source: Path to the description file.
+    :type nmr_source: str or pathlib.Path
+    :returns: Carbon labels, carbon shifts, proton labels, proton shifts,
+        equivalence groups, and omitted labels.
+    :rtype: tuple[list, list, list, list, list, list]
+    """
     with open(nmr_source) as f:
         Cexp = f.readline()
         f.readline()

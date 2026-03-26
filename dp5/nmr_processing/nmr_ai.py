@@ -1,7 +1,9 @@
-"""
-Functions after rewrite:
-NMRData structure
-Should have an assignment method
+"""High-level orchestration for NMR data ingestion, processing, and assignment.
+
+The :class:`NMRData` class is the public entry point for the
+``dp5.nmr_processing`` package. It detects the input format, dispatches to the
+proton and carbon processing pipelines, and exposes a single assignment method
+that maps calculated shifts onto processed experimental peaks.
 """
 
 from .helper_functions import *
@@ -27,20 +29,31 @@ logger = logging.getLogger(__name__)
 
 
 class NMRData:
-    """
-    must spit out the labels and shifts
-    Arguments:
-    nmr_source: NMR source files
-    solvent: solvent used
-    output_folder: path to output folder
+    """Container for processed experimental NMR data.
+
+    The class mirrors the DP4-AI workflow described in the 2020 Chemical
+    Science paper: it accepts raw FID data or a pre-written description file,
+    performs automated processing where possible, and stores the processed
+    proton and carbon data required for the downstream assignment step.
+
+    :param nmr_source: Sequence of Bruker directories, JCAMP-DX files, or
+        DP4-style description files.
+    :type nmr_source: list[str]
+    :param solvent: Solvent identifier used for solvent suppression and for
+        aligning the NMR workflow with the DFT solvent model.
+    :type solvent: str
+    :param output_folder: Folder used to cache processed spectra and write
+        assignment plots. Defaults to the current working directory at call
+        time when ``None``.
+    :type output_folder: pathlib.Path or None
     """
 
     def __init__(
-        self, nmr_source: List[str], solvent: str, output_folder: Path = Path.cwd()
+        self, nmr_source: List[str], solvent: str, output_folder: Path = None
     ):
         self.nmr_source = [Path(i) for i in nmr_source]
         self.solvent = solvent
-        self.output_folder = output_folder
+        self.output_folder = Path.cwd() if output_folder is None else output_folder
         self.Atoms = []  # Element labels
         self.Cshifts = []  # Experimental C NMR shifts
         self.Clabels = []  # Experimental C NMR labels, if any
@@ -64,7 +77,17 @@ class NMRData:
             self.process_carbon()
 
     def search_files(self):
-        """Automatically searches the path for NMR data, guesses the nucleus."""
+        """Inspect the provided inputs and dispatch them by format.
+
+        Bruker directories and JCAMP-DX files are parsed into frequency-domain
+        data together with an ``nmrglue`` unit-conversion object. Plain text
+        files are treated as manual NMR descriptions and parsed with
+        :func:`dp5.nmr_processing.description_files.process_description`.
+
+        :returns: ``None``. The method populates ``self.proton_fid``,
+            ``self.carbon_fid``, or the manual description attributes in-place.
+        :rtype: None
+        """
         for item in self.nmr_source:
             if item.is_dir() and (item / "fid").exists():
                 logging.info("Bruker FID data found at %s" % (str(item)))
@@ -86,6 +109,16 @@ class NMRData:
         return
 
     def process_proton(self):
+        """Run the automated proton processing pipeline.
+
+        The results are cached in ``output_folder / "protondata"`` so that the
+        expensive peak-model fitting stage does not have to be repeated across
+        runs.
+
+        :returns: ``None``. The processed data are stored in
+            :attr:`protondata`.
+        :rtype: None
+        """
         pdir = self.output_folder / "protondata"
         gdir = self.output_folder / "graphs" / "protondata"
         if pdir.exists():
@@ -106,7 +139,16 @@ class NMRData:
                 pickle.dump(self.protondata, f)
 
     def process_carbon(self):
-        """NMR-AI not yet implemented"""
+        """Run the automated carbon processing pipeline.
+
+        The results are cached in ``output_folder / "carbondata"`` and include
+        the processed spectrum, the final picked peaks, and bookkeeping about
+        solvent peaks removed during referencing.
+
+        :returns: ``None``. The processed data are stored in
+            :attr:`carbondata`.
+        :rtype: None
+        """
         cdir = self.output_folder / "carbondata"
         gdir = self.output_folder / "graphs" / "carbondata"
         if cdir.exists():
@@ -126,6 +168,15 @@ class NMRData:
                 pickle.dump(self.carbondata, f)
 
     def process_description(self, file):
+        """Parse a manual DP4-style NMR description file.
+
+        :param file: Path to a text file containing carbon shifts, proton
+            shifts, equivalence groups, and optional omitted atoms.
+        :type file: pathlib.Path
+        :returns: ``None``. Parsed labels, shifts, and constraints are stored
+            on the instance.
+        :rtype: None
+        """
 
         (
             self.C_labels,
@@ -137,14 +188,20 @@ class NMRData:
         ) = process_description(file)
 
     def assign(self, mol):
-        """
-        mol: Molecule object
-        Assigns data to molecule
-        returns:
-        - assigned experimental carbon shifts
-        - scaled calculated carbon shifts
-        - assigned experimental proton shifts
-        - scaled calculated proton shifts
+        """Assign processed experimental peaks to a candidate molecule.
+
+        The method selects the automated proton and carbon assignment routines
+        when processed FID data are available. If the input came from a manual
+        description file, it falls back to the simpler matching utilities used
+        by legacy DP4 workflows.
+
+        :param mol: Molecule object containing RDKit connectivity together with
+            calculated shift arrays and atom labels.
+        :type mol: object
+        :returns: Two arrays containing experimental carbon shifts and
+            experimental proton shifts in the same order as the calculated
+            shifts stored on ``mol``.
+        :rtype: tuple[list, list]
         """
         C_exp = []
         H_exp = []

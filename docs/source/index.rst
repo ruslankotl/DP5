@@ -22,4 +22,5 @@ documentation for details.
    analysis
    dp5_analysis
    dft_methods
+   nmr_processing
 

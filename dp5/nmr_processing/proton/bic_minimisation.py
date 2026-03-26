@@ -10,6 +10,33 @@ from dp5.nmr_processing.proton.pearson7 import p7sim, p7residual
 def BIC_minimisation_region_full(
     ind1, uc, peak_regions, grouped_peaks, total_spectral_ydata, corr_distance, std
 ):
+    """Fit and prune a Pearson-VII model for a single proton region.
+
+    The routine constructs an initial multi-peak model from the candidate peaks
+    in one region, relaxes the Pearson-VII parameters with ``lmfit``, and then
+    removes peaks one at a time whenever doing so lowers the Bayesian
+    Information Criterion by more than a fixed threshold.
+
+    :param ind1: Region index within ``peak_regions``.
+    :type ind1: int
+    :param uc: ``nmrglue`` unit-conversion object.
+    :type uc: object
+    :param peak_regions: Regions of the spectrum identified as containing
+        proton signal.
+    :type peak_regions: sequence
+    :param grouped_peaks: Candidate peak indices grouped by region.
+    :type grouped_peaks: sequence
+    :param total_spectral_ydata: Processed proton spectrum intensities.
+    :type total_spectral_ydata: numpy.ndarray
+    :param corr_distance: Correlation distance used to constrain peak widths and
+        movement during fitting.
+    :type corr_distance: int
+    :param std: Estimated noise level.
+    :type std: float
+    :returns: Surviving fitted peaks, fitted parameters, and the simulated line
+        shape for the region.
+    :rtype: tuple[list, lmfit.Parameters, numpy.ndarray]
+    """
 
     ################################################################################################################
     # initialise process
@@ -158,8 +185,7 @@ def BIC_minimisation_region_full(
         )
 
     out = Minimizer(
-        p7residual, params, fcn_args=(
-            region, fitted_peaks, region_y, ind1, False)
+        p7residual, params, fcn_args=(region, fitted_peaks, region_y, ind1, False)
     )
 
     results = out.minimize()
@@ -187,8 +213,7 @@ def BIC_minimisation_region_full(
 
     N = len(chi2)
 
-    BIC = N * np.log(np.sum(chi2) / N) + np.log(N) * \
-        (3 * len(fitted_peaks) + 2)
+    BIC = N * np.log(np.sum(chi2) / N) + np.log(N) * (3 * len(fitted_peaks) + 2)
 
     while len(trial_peaks) > 0:
 
@@ -209,8 +234,7 @@ def BIC_minimisation_region_full(
         new_params.__delitem__("mu" + str(minpeak))
         new_params.__delitem__("std" + str(minpeak))
 
-        new_fitted_peaks = np.delete(
-            fitted_peaks, np.where(fitted_peaks == minpeak))
+        new_fitted_peaks = np.delete(fitted_peaks, np.where(fitted_peaks == minpeak))
 
         # simulate data with one fewer peak
 
@@ -222,8 +246,7 @@ def BIC_minimisation_region_full(
 
         N = len(new_trial_y)
 
-        new_BIC = N * np.log(chi2 / N) + np.log(N) * \
-            (3 * len(new_fitted_peaks) + 2)
+        new_BIC = N * np.log(chi2 / N) + np.log(N) * (3 * len(new_fitted_peaks) + 2)
 
         # if the fit is significantly better remove this peak
 
@@ -246,6 +269,30 @@ def BIC_minimisation_region_full(
 def multiproc_BIC_minimisation(
     peak_regions, grouped_peaks, total_spectral_ydata, corr_distance, uc, std
 ):
+    """Fit all proton regions in parallel and rebuild the final multiplets.
+
+    This wrapper dispatches :func:`BIC_minimisation_region_full` over all
+    preliminary proton regions, collects the per-region peak models, and then
+    rebuilds the final region boundaries after splitting fitted groups that are
+    more than 20 Hz apart.
+
+    :param peak_regions: Preliminary proton signal regions.
+    :type peak_regions: sequence
+    :param grouped_peaks: Candidate peak indices grouped by preliminary region.
+    :type grouped_peaks: sequence
+    :param total_spectral_ydata: Processed proton spectrum intensities.
+    :type total_spectral_ydata: numpy.ndarray
+    :param corr_distance: Correlation distance estimated during spectral
+        processing.
+    :type corr_distance: int
+    :param uc: ``nmrglue`` unit-conversion object.
+    :type uc: object
+    :param std: Estimated noise level.
+    :type std: float
+    :returns: Final picked peaks, grouped peaks, region boundaries, simulated
+        global fit, and the combined fitted parameters.
+    :rtype: tuple
+    """
     maxproc = mp.cpu_count()
 
     pool = mp.Pool(maxproc)
@@ -305,8 +352,7 @@ def multiproc_BIC_minimisation(
             final_grouped_peaks.append([])
             total_params.add(
                 "vregion" + str(newgroupind),
-                value=new_grouped_params[oldgroupind]["vregion" +
-                                                      str(oldgroupind)],
+                value=new_grouped_params[oldgroupind]["vregion" + str(oldgroupind)],
             )
 
             final_peaks.extend(group)
@@ -362,20 +408,16 @@ def multiproc_BIC_minimisation(
 
         if ind4 == 0:
             lower_point = 0
-            higher_point = int(
-                (group[-1] + final_grouped_peaks[ind4 + 1][0]) / 2)
+            higher_point = int((group[-1] + final_grouped_peaks[ind4 + 1][0]) / 2)
 
         elif ind4 == len(final_grouped_peaks) - 1:
-            lower_point = int(
-                (group[0] + final_grouped_peaks[ind4 - 1][-1]) / 2)
+            lower_point = int((group[0] + final_grouped_peaks[ind4 - 1][-1]) / 2)
             higher_point = len(total_spectral_ydata)
 
         else:
-            lower_point = int(
-                (group[0] + final_grouped_peaks[ind4 - 1][-1]) / 2)
+            lower_point = int((group[0] + final_grouped_peaks[ind4 - 1][-1]) / 2)
 
-            higher_point = int(
-                (group[-1] + final_grouped_peaks[ind4 + 1][0]) / 2)
+            higher_point = int((group[-1] + final_grouped_peaks[ind4 + 1][0]) / 2)
 
         final_peak_regions[ind4] = np.arange(lower_point, higher_point)
 
@@ -388,8 +430,13 @@ def multiproc_BIC_minimisation(
         final_sim_y[ind3] = fit_y
     # obligatory numpyfication
     final_peaks = np.array(final_peaks)
-    final_grouped_peaks = np.array([np.array(i)
-                                   for i in final_grouped_peaks], dtype=object)
+    final_grouped_peaks = np.array(
+        [np.array(i) for i in final_grouped_peaks], dtype=object
+    )
+    # Close and join the pool to release resources
+    pool.close()
+    pool.join()
+
     return (
         final_peaks,
         final_grouped_peaks,

@@ -1,6 +1,9 @@
 API
 ===
 
+For a narrative description of the automated NMR workflow, see
+:doc:`nmr_processing`.
+
 .. autosummary::
     :toctree: generated
 

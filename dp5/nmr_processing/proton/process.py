@@ -19,23 +19,24 @@ logger = logging.getLogger(__name__)
 
 
 def proton_processing(total_spectral_ydata, uc, solvent):
-    """
-    Handles the initial processing, peak picking, solvent removal and integration.
-    Should not handle impurities until assignment
-    arguments:
-        - total_spectral_ydata: complex array for FID data
-        – uc: nmrglue unit conversion object
-        - solvent: required for solvent removal
+    """Process a proton FID into assignment-ready multiplets.
 
-    returns:
-        - spectral_xdata_ppm
-        - total_spectral_ydata
-        - peak_regions
-        - grouped_peaks
-        - solvent_region_ind
-        - picked_peaks
-        - total_params
-        - sim_regions
+    The proton pipeline implements the most complete DP4-AI processing path:
+    spectral correction, derivative-based peak picking, BIC-guided peak-model
+    pruning, solvent removal, and region simulation for later integration.
+
+    :param total_spectral_ydata: Complex frequency-domain proton spectrum.
+    :type total_spectral_ydata: numpy.ndarray
+    :param uc: ``nmrglue`` unit-conversion object for converting point indices
+        into ppm and Hz.
+    :type uc: object
+    :param solvent: Solvent identifier used for solvent detection and
+        referencing.
+    :type solvent: str
+    :returns: PPM axis, processed spectrum, final peak regions, grouped peaks,
+        fitted peak indices, combined fit parameters, and simulated regions for
+        downstream integration.
+    :rtype: tuple
     """
     (
         total_spectral_ydata,
