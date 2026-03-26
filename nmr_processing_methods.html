@@ -1,0 +1,301 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Method Summary &mdash; DP5 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=2709fde1"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="nmr_processing_api.html" />
+    <link rel="prev" title="NMR Processing" href="nmr_processing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            DP5
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config_anatomy.html">Anatomy of a config file</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dp5_analysis.html">DP5 Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dft_methods.html">DFT Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="nmr_processing.html">NMR Processing</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Method Summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#paper-context">Paper Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#implementation-map">Implementation Map</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#input-handling">Input handling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#proton-pipeline">Proton pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#carbon-pipeline">Carbon pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#assignment-logic">Assignment Logic</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#shared-idea">Shared idea</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#external-and-internal-scaling">External and internal scaling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#proton-specific-constraints">Proton-specific constraints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#carbon-specific-weighting">Carbon-specific weighting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#why-the-proton-pipeline-is-more-elaborate">Why the Proton Pipeline Is More Elaborate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#relationship-to-legacy-description-files">Relationship to Legacy Description Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#practical-reading-guide">Practical Reading Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nmr_processing_api.html">API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nmr_processing_api.html#orchestration">Orchestration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nmr_processing_api.html#processing-entrypoints">Processing Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nmr_processing_api.html#assignment-algorithms">Assignment Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nmr_processing_api.html#peak-modelling-and-manual-inputs">Peak Modelling and Manual Inputs</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DP5</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="nmr_processing.html">NMR Processing</a></li>
+      <li class="breadcrumb-item active">Method Summary</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/nmr_processing_methods.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="method-summary">
+<h1>Method Summary<a class="headerlink" href="#method-summary" title="Link to this heading"></a></h1>
+<p>This page records the implementation-level understanding used to document the
+<code class="docutils literal notranslate"><span class="pre">dp5.nmr_processing</span></code> package. It is based on the DP4-AI paper,
+<code class="docutils literal notranslate"><span class="pre">DP4-AI</span> <span class="pre">automated</span> <span class="pre">NMR</span> <span class="pre">data</span> <span class="pre">analysis:</span> <span class="pre">straight</span> <span class="pre">from</span> <span class="pre">spectrometer</span> <span class="pre">to</span> <span class="pre">structure</span></code>
+(Chem. Sci., 2020, 11, 4351-4359), together with the supplementary information
+sections on automated NMR processing and assignment.</p>
+</section>
+<section id="paper-context">
+<h1>Paper Context<a class="headerlink" href="#paper-context" title="Link to this heading"></a></h1>
+<p>DP4-AI was introduced to remove the most labour-intensive part of classical DP4
+analysis: manual extraction of peak positions, integrals, and assignments from
+1D proton and carbon NMR spectra. The method couples two ideas:</p>
+<ul class="simple">
+<li><p>robust automated processing of raw spectra,</p></li>
+<li><p>probabilistic matching of calculated GIAO shifts to experimental peaks.</p></li>
+</ul>
+<p>The paper’s central claim is not only that these steps can be automated, but
+that they can be automated without materially reducing stereochemical
+assignment performance relative to expert-curated DP4 input files.</p>
+<p>In the codebase, that automation is concentrated in
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">dp5.nmr_processing</span></code>. The package provides the experimental side of the
+workflow, while <a class="reference internal" href="generated/dp5.dft.html#module-dp5.dft" title="dp5.dft"><code class="xref py py-mod docutils literal notranslate"><span class="pre">dp5.dft</span></code></a> and <code class="xref py py-mod docutils literal notranslate"><span class="pre">dp5.analysis</span></code> consume the processed
+peak lists and calculated shifts.</p>
+</section>
+<section id="implementation-map">
+<h1>Implementation Map<a class="headerlink" href="#implementation-map" title="Link to this heading"></a></h1>
+<p>The current implementation divides the workflow into four layers.</p>
+<section id="input-handling">
+<h2>Input handling<a class="headerlink" href="#input-handling" title="Link to this heading"></a></h2>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">dp5.nmr_processing.nmr_ai.NMRData</span></code> class is the orchestration layer.
+It detects whether the user supplied Bruker data, JCAMP-DX data, or a manual
+description file. Raw FID inputs are converted into normalised frequency-domain
+spectra by <code class="xref py py-mod docutils literal notranslate"><span class="pre">dp5.nmr_processing.helper_functions</span></code>, while text descriptions
+are parsed by <code class="xref py py-mod docutils literal notranslate"><span class="pre">dp5.nmr_processing.description_files</span></code>.</p>
+</section>
+<section id="proton-pipeline">
+<h2>Proton pipeline<a class="headerlink" href="#proton-pipeline" title="Link to this heading"></a></h2>
+<p>The proton path follows the DP4-AI methodology most closely.</p>
+<ol class="arabic simple">
+<li><p>The FID is Fourier transformed, phased, baseline corrected, and analysed to
+estimate a correlation distance and noise level.</p></li>
+<li><p>Candidate peaks are identified from minima in the second derivative while
+retaining a deliberately low threshold so that weak signal peaks are not
+missed.</p></li>
+<li><p>Nearby peaks are grouped into provisional multiplets and each region is fit
+with a Pearson-VII line-shape model.</p></li>
+<li><p>Individual component peaks are removed if doing so lowers the Bayesian
+Information Criterion enough to justify the simpler model.</p></li>
+<li><p>Known solvent multiplets are identified from a solvent database, removed, and
+used to reference the spectrum.</p></li>
+<li><p>The fitted line-shape model is integrated, a plausible total proton count is
+selected by maximising an integer-likeness score, and low-integral regions
+are removed as impurities.</p></li>
+<li><p>The final multiplet centres and rounded integrals are passed to the proton
+assignment algorithm.</p></li>
+</ol>
+<p>This logic is implemented mainly in
+<a class="reference internal" href="nmr_processing_api.html#dp5.nmr_processing.proton.process.proton_processing" title="dp5.nmr_processing.proton.process.proton_processing"><code class="xref py py-func docutils literal notranslate"><span class="pre">dp5.nmr_processing.proton.process.proton_processing()</span></code></a>,
+<a class="reference internal" href="nmr_processing_api.html#dp5.nmr_processing.proton.bic_minimisation.multiproc_BIC_minimisation" title="dp5.nmr_processing.proton.bic_minimisation.multiproc_BIC_minimisation"><code class="xref py py-func docutils literal notranslate"><span class="pre">dp5.nmr_processing.proton.bic_minimisation.multiproc_BIC_minimisation()</span></code></a>,
+and <a class="reference internal" href="nmr_processing_api.html#dp5.nmr_processing.proton.assign.iterative_assignment" title="dp5.nmr_processing.proton.assign.iterative_assignment"><code class="xref py py-func docutils literal notranslate"><span class="pre">dp5.nmr_processing.proton.assign.iterative_assignment()</span></code></a>.</p>
+</section>
+<section id="carbon-pipeline">
+<h2>Carbon pipeline<a class="headerlink" href="#carbon-pipeline" title="Link to this heading"></a></h2>
+<p>The carbon path is simpler because integrals are not assignment constraints in
+the same way they are for proton spectra.</p>
+<ol class="arabic simple">
+<li><p>The spectrum is corrected and its noisy edges are zeroed.</p></li>
+<li><p>An iterative peak-picking loop repeatedly fits the most intense remaining
+peak and keeps any maxima that still rise sufficiently above the fitted
+background.</p></li>
+<li><p>Solvent peaks are removed using expected solvent patterns.</p></li>
+<li><p>The assignment step uses peak position and amplitude together, because
+carbon spectra often contain low-intensity noise peaks and may have fewer
+experimental peaks than atoms.</p></li>
+</ol>
+<p>This logic is implemented mainly in
+<code class="xref py py-func docutils literal notranslate"><span class="pre">dp5.nmr_processing.carbon.process.carbon_processing()</span></code> and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">dp5.nmr_processing.carbon.assign.iterative_assignment()</span></code>.</p>
+</section>
+</section>
+<section id="assignment-logic">
+<h1>Assignment Logic<a class="headerlink" href="#assignment-logic" title="Link to this heading"></a></h1>
+<section id="shared-idea">
+<h2>Shared idea<a class="headerlink" href="#shared-idea" title="Link to this heading"></a></h2>
+<p>Both nuclei use an assignment probability matrix whose element <code class="docutils literal notranslate"><span class="pre">M[i,</span> <span class="pre">j]</span></code>
+measures how plausible it is for calculated shift <code class="docutils literal notranslate"><span class="pre">i</span></code> to correspond to
+experimental peak <code class="docutils literal notranslate"><span class="pre">j</span></code>. The final assignment is obtained with a Hungarian
+linear-sum optimisation, which is the same core strategy described in the
+paper.</p>
+</section>
+<section id="external-and-internal-scaling">
+<h2>External and internal scaling<a class="headerlink" href="#external-and-internal-scaling" title="Link to this heading"></a></h2>
+<p>The paper emphasises that internal DP4-style scaling cannot be used at the
+start because the assignments are not known yet. The code therefore performs an
+initial pass with fixed empirical external scaling factors and then recalculates
+the scaling relation from the provisional assignment. This two-stage logic is
+present in both the proton and carbon assignment modules.</p>
+</section>
+<section id="proton-specific-constraints">
+<h2>Proton-specific constraints<a class="headerlink" href="#proton-specific-constraints" title="Link to this heading"></a></h2>
+<p>The proton assignment implementation uses integral information explicitly.
+Expanded multiplet centres allow a peak to be assigned as many times as its
+rounded integral permits. Methyl protons are handled first as grouped units,
+which reflects the paper’s observation that methyl groups behave as equivalent
+signals and should be assigned to the same peak before the remaining protons are
+optimised.</p>
+</section>
+<section id="carbon-specific-weighting">
+<h2>Carbon-specific weighting<a class="headerlink" href="#carbon-specific-weighting" title="Link to this heading"></a></h2>
+<p>The carbon assignment implementation follows the DP4-AI strategy of using peak
+amplitudes to distinguish more reliable signal peaks from likely noise. A KDE of
+peak heights is used to derive amplitude groups and weights. The code then
+duplicates assignment columns so that one experimental peak may explain multiple
+equivalent carbons, while progressively penalising repeated use of the same
+peak. After two assignment rounds, a bias-driven reassignment step checks for
+cases where a nearby intense unassigned peak is chemically more plausible than a
+weak peak chosen in the initial optimisation.</p>
+</section>
+</section>
+<section id="why-the-proton-pipeline-is-more-elaborate">
+<h1>Why the Proton Pipeline Is More Elaborate<a class="headerlink" href="#why-the-proton-pipeline-is-more-elaborate" title="Link to this heading"></a></h1>
+<p>The supplementary methods make clear that automated proton processing is harder
+than automated carbon processing because the final data product is not just a
+list of peak positions. The pipeline must also recover multiplet boundaries,
+remove over-picked noise peaks, estimate integer-like integrals, and preserve
+equivalence information needed by the proton assignment algorithm.</p>
+<p>That distinction is visible in the code:</p>
+<ul class="simple">
+<li><p>proton processing has dedicated modules for gradient peak picking, BIC-based
+deconvolution, analytic integration, and impurity filtering,</p></li>
+<li><p>carbon processing delegates more of the complexity to the assignment stage,
+where amplitude weighting and repeat assignments compensate for noisier peak
+lists.</p></li>
+</ul>
+</section>
+<section id="relationship-to-legacy-description-files">
+<h1>Relationship to Legacy Description Files<a class="headerlink" href="#relationship-to-legacy-description-files" title="Link to this heading"></a></h1>
+<p>The package still supports hand-written NMR description files because DP4-style
+workflows pre-date automated raw-data processing. When a description file is
+used, the code bypasses the FID pipelines and instead parses manually supplied
+shifts, equivalence groups, and omitted atoms. This is why
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">dp5.nmr_processing.description_files</span></code> remains part of the public module:
+it preserves compatibility with curated inputs while the automated pipelines are
+used whenever raw spectra are available.</p>
+</section>
+<section id="practical-reading-guide">
+<h1>Practical Reading Guide<a class="headerlink" href="#practical-reading-guide" title="Link to this heading"></a></h1>
+<p>For code readers, the most useful entry points are:</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dp5.nmr_processing.nmr_ai.NMRData</span></code> for orchestration,</p></li>
+<li><p><a class="reference internal" href="nmr_processing_api.html#dp5.nmr_processing.proton.process.proton_processing" title="dp5.nmr_processing.proton.process.proton_processing"><code class="xref py py-func docutils literal notranslate"><span class="pre">dp5.nmr_processing.proton.process.proton_processing()</span></code></a> for the proton
+pipeline,</p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">dp5.nmr_processing.carbon.process.carbon_processing()</span></code> for the carbon
+pipeline,</p></li>
+<li><p><a class="reference internal" href="nmr_processing_api.html#dp5.nmr_processing.proton.assign.iterative_assignment" title="dp5.nmr_processing.proton.assign.iterative_assignment"><code class="xref py py-func docutils literal notranslate"><span class="pre">dp5.nmr_processing.proton.assign.iterative_assignment()</span></code></a> for
+integral-constrained proton assignment,</p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">dp5.nmr_processing.carbon.assign.iterative_assignment()</span></code> for
+amplitude-aware carbon assignment.</p></li>
+</ul>
+<p>The API reference page links these functions directly to their source
+docstrings.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="nmr_processing.html" class="btn btn-neutral float-left" title="NMR Processing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nmr_processing_api.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Kristaps Ermanis, Alexander Howarth, Ruslan Kotlyarov, Benji Rowlands, Jonathan Goodman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
