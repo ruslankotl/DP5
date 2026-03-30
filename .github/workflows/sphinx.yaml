@@ -1,6 +1,11 @@
 name: "Sphinx: Render docs"
 
-on: [push, workflow_dispatch]
+on:
+  push:
+    paths:
+      - 'docs/source/**'
+      - '.github/workflows/sphinx.yaml'
+  workflow_dispatch:
 
 jobs:
   build:
