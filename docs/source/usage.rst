@@ -19,6 +19,12 @@ Then change to the top-level directory of the repository and install the reposit
 
     pip install -e .
 
+To also install documentation build dependencies (``sphinx`` and ``sphinx-rtd-theme``), use the ``dev`` extra:
+
+.. code-block:: console
+
+    pip install -e ".[dev]"
+
 .. note::
     The repository works best on x86 Linux machines. 
     For Apple Silicon, please refer to `this guide <https://developer.apple.com/metal/tensorflow-plugin/>`_

@@ -12,6 +12,7 @@ To get started:
 - navigate to the folder on your machine
 - create and activate a compatible environment, for example `uv venv --python 3.10 .venv && source .venv/bin/activate`
 - install via `uv pip install -e .` 
+- to also install documentation build dependencies, run `uv pip install -e ".[dev]"`
 - run `pydp4 -s <SD_FILE> -n <NMR_FILE> -w w`
 
 NMR files are provided as a list of shifts with assignments, e.g., `
