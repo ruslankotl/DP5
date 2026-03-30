@@ -7,11 +7,6 @@ DP5 documentation
 =================
 Check out the :doc:`usage` section for further information, including how to :ref:`install <installation>` the project.
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
-
-
 .. toctree::
    :caption: Contents:
    :maxdepth: 2

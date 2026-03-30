@@ -21,7 +21,7 @@ Then change to the top-level directory of the repository and install the reposit
 
 .. note::
     The repository works best on x86 Linux machines. 
-    For Apple Silicon, please refer to `this guide <https://developer.apple.com/metal/tensorflow-plugin/>`_
+    For Apple Silicon, additional library `Tensorflow-metal <https://developer.apple.com/metal/tensorflow-plugin/>`_ will be installed automatically.
 
 .. _configuration:
 
