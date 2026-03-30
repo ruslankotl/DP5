@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "DP5"
-version = "0.1.0"
+version = "0.1.2"
 requires-python = ">=3.9, <=3.11"
 description = "A short description of the project"
 readme = "readme.md"
@@ -36,6 +36,12 @@ dependencies = [
         "networkx>=3"
 
     ]
+
+[project.optional-dependencies]
+dev = [
+    "sphinx==7.4.7",
+    "sphinx-rtd-theme==2.0",
+]
 
 [project.urls]
 Documentation = "https://ruslankotl.github.io/DP5/index.html"
