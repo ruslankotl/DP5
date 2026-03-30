@@ -14,6 +14,12 @@ To get started:
 - install via `uv pip install -e .` 
 - run `pydp4 -s <SD_FILE> -n <NMR_FILE> -w w`
 
+  For example, run:
+```
+cd reassignments/S11
+pydp4 -s S11a_.sdf S11b_.sdf -n S11_NMR -w w
+```
+
 NMR files are provided as a list of shifts with assignments, e.g., `
 153.0(any),125.6(any)`
 Further documentation for workflow options is available [here](https://ruslankotl.github.io/DP5/)
