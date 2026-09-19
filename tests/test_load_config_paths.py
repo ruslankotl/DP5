@@ -56,6 +56,16 @@ class LoadConfigPathResolutionTests(unittest.TestCase):
 
             self.assertEqual(output_dir, structure_dir.resolve())
 
+    def test_default_output_folder_requires_structure_paths(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_dir = Path(tmpdir) / "config"
+            config_dir.mkdir()
+
+            with self.assertRaisesRegex(
+                ValueError, "Cannot infer output folder without structure input paths"
+            ):
+                _resolve_output_folder("", "", [], config_dir)
+
     def test_dft_workdir_prefers_configured_value(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             config_dir = Path(tmpdir) / "config"

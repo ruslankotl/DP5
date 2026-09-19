@@ -53,6 +53,8 @@ def _resolve_output_folder(
         return _resolve_cli_path(cli_output)
     if configured_output:
         return _resolve_path(configured_output, config_dir)
+    if not structure_paths:
+        raise ValueError("Cannot infer output folder without structure input paths")
     return Path(structure_paths[0]).resolve().parent
 
 
