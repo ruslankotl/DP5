@@ -89,6 +89,16 @@ class LoadConfigPathResolutionTests(unittest.TestCase):
 
             self.assertEqual(workdir, str((config_dir / "scratch/dft").resolve()))
 
+    def test_dft_workdir_defaults_to_output_folder(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_dir = Path(tmpdir) / "config"
+            config_dir.mkdir()
+            output_dir = (Path(tmpdir) / "output").resolve()
+
+            workdir = _resolve_dft_workdir("", output_dir, config_dir)
+
+            self.assertEqual(workdir, str(output_dir))
+
 
 if __name__ == "__main__":
     unittest.main()

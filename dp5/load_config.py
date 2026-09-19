@@ -267,7 +267,7 @@ def main():
     output_folder = _resolve_output_folder(
         args.output,
         config["output_folder"],
-        config["structure"],
+        config.get("structure", []),
         config_dir,
         config["nmr_file"],
     )
