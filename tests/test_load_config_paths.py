@@ -80,6 +80,24 @@ class LoadConfigPathResolutionTests(unittest.TestCase):
 
             self.assertEqual(output_dir, nmr_dir.resolve())
 
+    def test_text_inputs_default_output_folder_uses_explicit_base_dir(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_dir = Path(tmpdir) / "config"
+            config_dir.mkdir()
+            run_dir = Path(tmpdir) / "run"
+            run_dir.mkdir()
+
+            output_dir = _resolve_output_folder(
+                "",
+                "",
+                [str(Path(tmpdir) / "inputs.smi")],
+                config_dir,
+                input_type="smiles",
+                default_base_dir=run_dir,
+            )
+
+            self.assertEqual(output_dir, run_dir.resolve())
+
     def test_structure_validation_preserves_explicit_error(self):
         with self.assertRaisesRegex(ValueError, "No structures specified"):
             _require_structure_inputs([])

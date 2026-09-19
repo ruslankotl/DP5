@@ -58,11 +58,15 @@ def _resolve_output_folder(
     structure_paths: list[str],
     config_dir: Path,
     fallback_paths: list[str] | None = None,
+    input_type: str = "sdf",
+    default_base_dir: Path | None = None,
 ) -> Path:
     if cli_output:
         return _resolve_cli_path(cli_output)
     if configured_output:
         return _resolve_path(configured_output, config_dir)
+    if input_type != "sdf" and default_base_dir is not None:
+        return default_base_dir.resolve()
     anchor_paths = structure_paths or fallback_paths or []
     if not anchor_paths:
         raise ValueError("Cannot infer output folder without any input paths")
@@ -224,7 +228,7 @@ def main():
     if args.nmr_file:
         logger.debug(f"Read NMR File {args.nmr_file} from command line")
         config["nmr_file"] = _resolve_cli_path_list(args.nmr_file)
-    elif config["nmr_file"]:
+    elif config.get("nmr_file"):
         config["nmr_file"] = _resolve_path_list(config["nmr_file"], config_dir)
         logger.debug(f"Read NMR File {config['nmr_file']} from config file")
     else:
@@ -274,6 +278,8 @@ def main():
         config.get("structure", []),
         config_dir,
         config["nmr_file"],
+        config["input_type"],
+        _resolve_cli_path(".") if args.structure_files else config_dir,
     )
     output_folder.mkdir(parents=True, exist_ok=True)
     config["output_folder"] = output_folder
