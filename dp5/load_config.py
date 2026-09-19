@@ -47,15 +47,20 @@ def _resolve_cli_path_list(paths: list[str]) -> list[str]:
 
 
 def _resolve_output_folder(
-    cli_output: str, configured_output: str, structure_paths: list[str], config_dir: Path
+    cli_output: str,
+    configured_output: str,
+    structure_paths: list[str],
+    config_dir: Path,
+    fallback_paths: list[str] | None = None,
 ) -> Path:
     if cli_output:
         return _resolve_cli_path(cli_output)
     if configured_output:
         return _resolve_path(configured_output, config_dir)
-    if not structure_paths:
-        raise ValueError("Cannot infer output folder without structure input paths")
-    return Path(structure_paths[0]).resolve().parent
+    anchor_paths = structure_paths or fallback_paths or []
+    if not anchor_paths:
+        raise ValueError("Cannot infer output folder without any input paths")
+    return Path(anchor_paths[0]).resolve().parent
 
 
 def _resolve_dft_workdir(
@@ -260,7 +265,11 @@ def main():
     logger.info(f"1H reference shielding: {config['dft']['h1_tms']:.2f} ppm")
 
     output_folder = _resolve_output_folder(
-        args.output, config["output_folder"], config["structure"], config_dir
+        args.output,
+        config["output_folder"],
+        config["structure"],
+        config_dir,
+        config["nmr_file"],
     )
     output_folder.mkdir(parents=True, exist_ok=True)
     config["output_folder"] = output_folder

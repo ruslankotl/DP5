@@ -62,9 +62,22 @@ class LoadConfigPathResolutionTests(unittest.TestCase):
             config_dir.mkdir()
 
             with self.assertRaisesRegex(
-                ValueError, "Cannot infer output folder without structure input paths"
+                ValueError, "Cannot infer output folder without any input paths"
             ):
                 _resolve_output_folder("", "", [], config_dir)
+
+    def test_default_output_folder_falls_back_to_other_inputs(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_dir = Path(tmpdir) / "config"
+            config_dir.mkdir()
+            nmr_dir = Path(tmpdir) / "nmr"
+            nmr_dir.mkdir()
+
+            output_dir = _resolve_output_folder(
+                "", "", [], config_dir, [str(nmr_dir / "sample.dx")]
+            )
+
+            self.assertEqual(output_dir, nmr_dir.resolve())
 
     def test_dft_workdir_prefers_configured_value(self):
         with tempfile.TemporaryDirectory() as tmpdir:

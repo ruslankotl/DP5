@@ -47,11 +47,7 @@ class NMRData:
     :type output_folder: pathlib.Path
     """
 
-    def __init__(
-        self, nmr_source: List[str], solvent: str, output_folder: Path = None
-    ):
-        if output_folder is None:
-            raise ValueError("output_folder must be provided for NMR processing")
+    def __init__(self, nmr_source: List[str], solvent: str, output_folder: Path):
         self.nmr_source = [Path(i) for i in nmr_source]
         self.solvent = solvent
         self.output_folder = Path(output_folder).expanduser().resolve()
