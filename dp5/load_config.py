@@ -13,7 +13,10 @@ import json
 import logging
 from pathlib import Path
 
-import tomli
+try:
+    import tomllib as tomli
+except ModuleNotFoundError:
+    import tomli
 
 from .logger import setup_logger
 
@@ -41,6 +44,24 @@ def _resolve_path_list(paths: list[str], base_dir: Path) -> list[str]:
 
 def _resolve_cli_path_list(paths: list[str]) -> list[str]:
     return [str(_resolve_cli_path(path)) for path in paths]
+
+
+def _resolve_output_folder(
+    cli_output: str, configured_output: str, structure_paths: list[str], config_dir: Path
+) -> Path:
+    if cli_output:
+        return _resolve_cli_path(cli_output)
+    if configured_output:
+        return _resolve_path(configured_output, config_dir)
+    return Path(structure_paths[0]).resolve().parent
+
+
+def _resolve_dft_workdir(
+    configured_workdir: str, output_folder: Path, config_dir: Path
+) -> str:
+    if configured_workdir:
+        return str(_resolve_path(configured_workdir, config_dir))
+    return str(output_folder)
 
 
 def main():
@@ -236,17 +257,16 @@ def main():
     logger.info(f"13C reference shielding: {config['dft']['c13_tms']:.1f} ppm")
     logger.info(f"1H reference shielding: {config['dft']['h1_tms']:.2f} ppm")
 
-    if args.output:
-        output_folder = _resolve_cli_path(args.output)
-    elif config["output_folder"]:
-        output_folder = _resolve_path(config["output_folder"], config_dir)
-    else:
-        output_folder = Path(config["structure"][0]).resolve().parent
+    output_folder = _resolve_output_folder(
+        args.output, config["output_folder"], config["structure"], config_dir
+    )
     output_folder.mkdir(parents=True, exist_ok=True)
     config["output_folder"] = output_folder
 
     config["dft"]["solvent"] = config["solvent"]
-    config["dft"]["workdir"] = str(config["output_folder"])
+    config["dft"]["workdir"] = _resolve_dft_workdir(
+        config["dft"].get("workdir", ""), config["output_folder"], config_dir
+    )
 
     config["structure"] = prepare_inputs(
         config["structure"],
