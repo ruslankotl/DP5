@@ -43,17 +43,19 @@ class NMRData:
         aligning the NMR workflow with the DFT solvent model.
     :type solvent: str
     :param output_folder: Folder used to cache processed spectra and write
-        assignment plots. Defaults to the current working directory at call
-        time when ``None``.
-    :type output_folder: pathlib.Path or None
+        assignment plots.
+    :type output_folder: pathlib.Path
     """
 
     def __init__(
         self, nmr_source: List[str], solvent: str, output_folder: Path = None
     ):
+        if output_folder is None:
+            raise ValueError("output_folder must be provided for NMR processing")
         self.nmr_source = [Path(i) for i in nmr_source]
         self.solvent = solvent
-        self.output_folder = Path.cwd() if output_folder is None else output_folder
+        self.output_folder = Path(output_folder).expanduser().resolve()
+        self.output_folder.mkdir(parents=True, exist_ok=True)
         self.Atoms = []  # Element labels
         self.Cshifts = []  # Experimental C NMR shifts
         self.Clabels = []  # Experimental C NMR labels, if any

@@ -8,13 +8,12 @@ Takes one file with line-delineated Smiles or InChIs, or several SDFiles.
 Returns the final config for the run
 """
 
-from pathlib import Path
 import argparse
-import os
+import json
 import logging
+from pathlib import Path
 
 import tomli
-import json
 
 from .logger import setup_logger
 
@@ -23,6 +22,25 @@ LOGLEVEL_CHOICES = tuple(level.lower() for level in logging._nameToLevel.keys())
 DEFAULT_BASE_CONFIG_PATH = (
     Path(__file__).parent / "config/default_config.toml"
 ).resolve()
+
+
+def _resolve_path(path_value: str, base_dir: Path) -> Path:
+    path = Path(path_value).expanduser()
+    if not path.is_absolute():
+        path = base_dir / path
+    return path.resolve()
+
+
+def _resolve_cli_path(path_value: str) -> Path:
+    return Path(path_value).expanduser().resolve()
+
+
+def _resolve_path_list(paths: list[str], base_dir: Path) -> list[str]:
+    return [str(_resolve_path(path, base_dir)) for path in paths]
+
+
+def _resolve_cli_path_list(paths: list[str]) -> list[str]:
+    return [str(_resolve_cli_path(path)) for path in paths]
 
 
 def main():
@@ -60,7 +78,7 @@ def main():
     parser.add_argument(
         "-o",
         "--output",
-        help="Output directory for calculations, default is current working directory.",
+        help="Output directory for calculations.",
         default="",
     )
 
@@ -103,7 +121,8 @@ def main():
     from .runner import runner
 
     # load custom configuration
-    config_path = (Path.cwd() / args.config).resolve()
+    config_path = Path(args.config).expanduser().resolve()
+    config_dir = config_path.parent
     if config_path.suffix == ".toml":
         with open(config_path, "rb") as f:
             config = tomli.load(f)
@@ -153,13 +172,14 @@ def main():
 
     # reads command line argument if supplied, else reads config
     if args.structure_files:
-        config["structure"] = args.structure_files
+        config["structure"] = _resolve_cli_path_list(args.structure_files)
         config["input_type"] = args.input_type
         config["stereocentres"] = args.stereocentres
         logger.debug(
             f"Read structures {', '.join(config['structure'])} from command line"
         )
     elif config["structure"]:
+        config["structure"] = _resolve_path_list(config["structure"], config_dir)
         logger.debug(
             f"Read structures {', '.join(config['structure'])} from config file"
         )
@@ -171,8 +191,9 @@ def main():
 
     if args.nmr_file:
         logger.debug(f"Read NMR File {args.nmr_file} from command line")
-        config["nmr_file"] = args.nmr_file
+        config["nmr_file"] = _resolve_cli_path_list(args.nmr_file)
     elif config["nmr_file"]:
+        config["nmr_file"] = _resolve_path_list(config["nmr_file"], config_dir)
         logger.debug(f"Read NMR File {config['nmr_file']} from config file")
     else:
         logger.critical("No NMR data specified")
@@ -216,16 +237,23 @@ def main():
     logger.info(f"1H reference shielding: {config['dft']['h1_tms']:.2f} ppm")
 
     if args.output:
-        config["output_folder"] = args.output
-    config["output_folder"] = (Path.cwd() / config["output_folder"]).resolve()
+        output_folder = _resolve_cli_path(args.output)
+    elif config["output_folder"]:
+        output_folder = _resolve_path(config["output_folder"], config_dir)
+    else:
+        output_folder = Path(config["structure"][0]).resolve().parent
+    output_folder.mkdir(parents=True, exist_ok=True)
+    config["output_folder"] = output_folder
 
     config["dft"]["solvent"] = config["solvent"]
+    config["dft"]["workdir"] = str(config["output_folder"])
 
     config["structure"] = prepare_inputs(
         config["structure"],
         config["input_type"],
         config["stereocentres"],
         config["workflow"],
+        config["output_folder"],
     )
 
     logger.info(f"Final structure input files:{config['structure']}")

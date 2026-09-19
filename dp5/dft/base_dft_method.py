@@ -49,6 +49,11 @@ class BaseDFTMethod(ABC):
         self.dft_complete = self.settings["dft_complete"]
         self.memory = self.settings["memory"]
         self.num_processors = self.settings["num_processors"]
+        workdir = self.settings.get("workdir")
+        if not workdir:
+            raise ValueError("DFT workdir must be provided in the configuration")
+        self.workdir = Path(workdir).expanduser().resolve()
+        self.workdir.mkdir(parents=True, exist_ok=True)
 
         self.tag = ""
         self.input_format = ".in"
@@ -74,7 +79,7 @@ class BaseDFTMethod(ABC):
         :returns: Output file stems grouped per molecule.
         :rtype: list[list[pathlib.Path]]
         """
-        jobdir = Path.cwd()
+        jobdir = self.workdir
 
         data = jobdir / calc_type
         data.mkdir(exist_ok=True)
@@ -84,13 +89,14 @@ class BaseDFTMethod(ABC):
         output_files = {mol.base_name: [] for mol in mols}
 
         for mol in mols:
+            mol_name = Path(mol.base_name).name
             if self.charge:
                 charge = self.charge
             else:
                 charge = mol.charge
 
             for i, conf in enumerate(mol.conformers, start=1):
-                filename = data / f"{mol}{self.tag}inp{i:03}"
+                filename = data / f"{mol_name}{self.tag}inp{i:03}"
                 input_name = filename.with_suffix(self.input_format)
                 output_name = filename.with_suffix(self.output_format)
                 geom = conf
@@ -146,7 +152,7 @@ class BaseDFTMethod(ABC):
         Returns:
          - list of lists of output files
         """
-        jobdir = Path.cwd()
+        jobdir = self.workdir
         data = jobdir / calc_type
 
         prerun_files = []
@@ -154,7 +160,7 @@ class BaseDFTMethod(ABC):
         if data.is_dir():
             for mol in mols:
                 outputs = []
-                pattern = f"{mol}{self.tag}inp*{self.input_format}"
+                pattern = f"{Path(mol.base_name).name}{self.tag}inp*{self.input_format}"
                 logger.debug(f"Searching for {pattern}")
                 inputs = sorted([file for file in data.glob(pattern)])
                 for input_file in inputs:

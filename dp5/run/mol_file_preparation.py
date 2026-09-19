@@ -1,5 +1,5 @@
-from pathlib import Path
 import logging
+from pathlib import Path
 from typing import List, Union, Dict
 
 from rdkit import Chem
@@ -9,21 +9,23 @@ from rdkit.Chem import AllChem, EnumerateStereoisomers
 logger = logging.getLogger(__name__)
 
 
-def write_to_sdf(mol: Chem.rdchem.Mol, relative_path: Path):
+def write_to_sdf(mol: Chem.rdchem.Mol, output_path: Path):
     """
     Writes rdkit Mol object to a specified path
 
     arguments:
     - mol: RDKit Mol object
-    - relative_path: path to write the file
+    - output_path: path to write the file
 
     returns:
-    - input_file: relative path to file from current working directory
+    - input_file: absolute path to the written file
     """
-    path = Path.cwd() / relative_path
+    path = Path(output_path).expanduser().resolve()
+    path.parent.mkdir(parents=True, exist_ok=True)
     writer = Chem.SDWriter(str(path))
     writer.write(mol)
-    return relative_path
+    writer.close()
+    return str(path)
 
 
 def cleanup_3d(mol):
@@ -161,7 +163,11 @@ def _generate_diastereomers(
 
 
 def prepare_inputs(
-    input_files: List[str], input_type: str, stereocentres: List[int], workflow: Dict
+    input_files: List[str],
+    input_type: str,
+    stereocentres: List[int],
+    workflow: Dict,
+    output_folder: Union[str, Path],
 ) -> List[str]:
     """
     Reads files at the path specified by input config, prepares them as required by the user. Returns paths to the new files.
@@ -171,6 +177,7 @@ def prepare_inputs(
     - input_type (str): format of the input file. May be 'sdf', 'smiles', 'inchi', and 'smarts'.
     - stereocentres (list[int]): specifies mutable stereocentres. Defaults to empty list
     - workflow (dict): dictionary of booleans specifying the workflow.
+    - output_folder (str | pathlib.Path): folder where prepared SD files are written.
 
     Returns:
     - mol_paths (list[str]): paths to the transformed files
@@ -181,13 +188,17 @@ def prepare_inputs(
     # in principle, can create list of list of mols, use enumerate
     logger.info(f"Read structures from {input_files}")
 
+    output_dir = Path(output_folder).expanduser().resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     if input_type == "sdf":
         mols = [read_sdf(file) for file in input_files]
+        input_names = [Path(file).stem for file in input_files]
         logger.debug("read structures from SD File")
     else:
         mols = read_textfile(input_files[0], input_type)
         logger.debug(f"read structures from {input_type} file")
-        input_files = [
+        input_names = [
             f"{input_type}_mol_{i:03}_.sdf"
             for i, mol in enumerate(range(len(mols)), start=1)
         ]
@@ -198,7 +209,7 @@ def prepare_inputs(
     logger.info(f"Structures read successfully")
 
     mols2 = []
-    mutable_atoms = stereocentres if len(input_files) == 1 else []
+    mutable_atoms = stereocentres if len(input_names) == 1 else []
 
     if workflow["generate"]:
         logger.info("Generating diastereomers")
@@ -215,13 +226,12 @@ def prepare_inputs(
 
     logger.debug("Preparing to write structure files")
     filenames = []
-    for filename, mol in zip(input_files, mols2):
+    for input_name, mol in zip(input_names, mols2):
         for i, isomer in enumerate(mol, start=1):
             if len(mol) == 1:
-                fname = f"{filename[:-4]}.sdf"
+                fname = output_dir / f"{Path(input_name).stem}.sdf"
             else:
-                fname = f"{filename[:-4]}isomer{i:03}.sdf"
-            filenames.append(fname)
-            write_to_sdf(isomer, fname)
+                fname = output_dir / f"{Path(input_name).stem}isomer{i:03}.sdf"
+            filenames.append(write_to_sdf(isomer, fname))
 
     return filenames

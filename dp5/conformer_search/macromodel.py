@@ -70,7 +70,7 @@ class ConfSearchMethod(BaseConfSearch):
                     logger.critical("Cannot convert input to .mae format")
                     raise RuntimeError("Schrodinger path not found!")
 
-            with open((Path.cwd() / f"{input}.com").resolve(), "w") as f:
+            with open(Path(f"{input}.com").resolve(), "w") as f:
                 cmd = self.command.format(
                     input, self.ff_code, self.settings["step_count"]
                 )
