@@ -8,6 +8,7 @@ from dp5.load_config import (
     _resolve_dft_workdir,
     _resolve_output_folder,
     _resolve_path_list,
+    _require_structure_inputs,
 )
 
 
@@ -78,6 +79,10 @@ class LoadConfigPathResolutionTests(unittest.TestCase):
             )
 
             self.assertEqual(output_dir, nmr_dir.resolve())
+
+    def test_structure_validation_preserves_explicit_error(self):
+        with self.assertRaisesRegex(ValueError, "No structures specified"):
+            _require_structure_inputs([])
 
     def test_dft_workdir_prefers_configured_value(self):
         with tempfile.TemporaryDirectory() as tmpdir:

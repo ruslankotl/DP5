@@ -46,6 +46,12 @@ def _resolve_cli_path_list(paths: list[str]) -> list[str]:
     return [str(_resolve_cli_path(path)) for path in paths]
 
 
+def _require_structure_inputs(structure_paths: list[str]) -> list[str]:
+    if not structure_paths:
+        raise ValueError("No structures specified")
+    return structure_paths
+
+
 def _resolve_output_folder(
     cli_output: str,
     configured_output: str,
@@ -206,14 +212,12 @@ def main():
         logger.debug(
             f"Read structures {', '.join(config['structure'])} from command line"
         )
-    elif config["structure"]:
+    elif config.get("structure"):
         config["structure"] = _resolve_path_list(config["structure"], config_dir)
         logger.debug(
             f"Read structures {', '.join(config['structure'])} from config file"
         )
-    else:
-        logger.critical("No structures specified")
-        raise ValueError("No structures specified")
+    config["structure"] = _require_structure_inputs(config.get("structure", []))
 
     logger.info(f"Structure input files: {', '.join(config['structure'])}")
 
