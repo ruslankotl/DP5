@@ -21,6 +21,15 @@ from torch_geometric.data import Batch, Data
 
 logger = logging.getLogger(__name__)
 
+_KERAS_LAYER_ALIASES = {
+    "embedding": "atom_embedding",
+    "embedding_1": "atomwise_shift",
+    "dense_21": "loc_1",
+    "dense_22": "loc_2",
+    "dense_23": "loc_3",
+    "dense_24": "loc_reduce",
+}
+
 
 def rbf_expansion(distances, mu=0, delta=0.1, kmax=256):
     k = np.arange(0, kmax)
@@ -107,7 +116,7 @@ def _keras_v3_weights_from_bytes(model_keras_bytes):
                     np.array(var_group[key]) for key in sorted(var_group.keys(), key=int)
                 ]
                 if layer_weights:
-                    weights[layer_name] = layer_weights
+                    weights[_KERAS_LAYER_ALIASES.get(layer_name, layer_name)] = layer_weights
             return weights
 
 
@@ -397,7 +406,7 @@ def _load_graph_model(path):
         weights = _keras_v3_weights_from_bytes(keras_bytes)
         return _load_graph_state_dict_into_model(model, weights)
     if path.suffix == ".pt":
-        checkpoint = torch.load(path, map_location="cpu", weights_only=True)
+        checkpoint = _safe_torch_load(path)
         loc_output_dim = checkpoint["loc_reduce.weight"].shape[0]
         model = CascadeGraphModel(loc_output_dim=loc_output_dim)
         model.load_state_dict(checkpoint)
@@ -406,11 +415,7 @@ def _load_graph_model(path):
     if path.suffix == ".zip":
         with zipfile.ZipFile(path, "r") as zipf:
             if "model.pt" in zipf.namelist():
-                payload = torch.load(
-                    io.BytesIO(zipf.read("model.pt")),
-                    map_location="cpu",
-                    weights_only=True,
-                )
+                payload = _safe_torch_load(io.BytesIO(zipf.read("model.pt")))
                 model = CascadeGraphModel(loc_output_dim=payload["loc_reduce.weight"].shape[0])
                 model.load_state_dict(payload)
                 model.eval()
@@ -428,7 +433,7 @@ def _load_graph_model(path):
 def _load_mlp_weights(path):
     path = _resolve_path(path)
     if path.suffix == ".pt":
-        checkpoint = torch.load(path, map_location="cpu", weights_only=True)
+        checkpoint = _safe_torch_load(path)
         model = PercentileMLP(checkpoint["workaround.weight"].shape[0])
         model.load_state_dict(checkpoint)
         model.eval()
@@ -452,6 +457,15 @@ def _torch_save_bytes(payload):
     buffer = io.BytesIO()
     torch.save(payload, buffer)
     return buffer.getvalue()
+
+
+def _safe_torch_load(source):
+    try:
+        return torch.load(source, map_location="cpu", weights_only=True)
+    except TypeError as exc:
+        raise RuntimeError(
+            "DP5 requires a PyTorch build that supports safe weights-only loading."
+        ) from exc
 
 
 def Mol_iter(dfr):
@@ -615,13 +629,9 @@ class PercentileRegressor:
     @classmethod
     def load(cls, archive_path):
         with zipfile.ZipFile(archive_path, "r") as zipf:
-            arr = np.load(io.BytesIO(zipf.read("array.npy")))
+            arr = np.load(io.BytesIO(zipf.read("array.npy")), allow_pickle=False)
             if "model.pt" in zipf.namelist():
-                payload = torch.load(
-                    io.BytesIO(zipf.read("model.pt")),
-                    map_location="cpu",
-                    weights_only=True,
-                )
+                payload = _safe_torch_load(io.BytesIO(zipf.read("model.pt")))
                 model = PercentileMLP(payload["workaround.weight"].shape[0])
                 model.load_state_dict(payload)
                 model.eval()
@@ -733,13 +743,9 @@ class CASCADE_Quantile:
     def load(cls, archive_path):
         archive_path = _resolve_path(archive_path)
         with zipfile.ZipFile(archive_path, "r") as zipf:
-            quantiles = np.load(io.BytesIO(zipf.read("array.npy")))
+            quantiles = np.load(io.BytesIO(zipf.read("array.npy")), allow_pickle=False)
             if "model.pt" in zipf.namelist():
-                payload = torch.load(
-                    io.BytesIO(zipf.read("model.pt")),
-                    map_location="cpu",
-                    weights_only=True,
-                )
+                payload = _safe_torch_load(io.BytesIO(zipf.read("model.pt")))
                 model = CascadeGraphModel(loc_output_dim=payload["loc_reduce.weight"].shape[0])
                 model.load_state_dict(payload)
                 model.eval()

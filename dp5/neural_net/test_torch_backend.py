@@ -1,4 +1,7 @@
+import tempfile
 import unittest
+import zipfile
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -37,14 +40,22 @@ class TorchBackendTests(unittest.TestCase):
         self.assertEqual(tuple(output.shape), (2, 256))
 
     def test_load_quantile_models(self):
-        direct_model = load_quantile_model()
-        direct_output = direct_model(_sample_batch())
-        self.assertEqual(tuple(direct_output.shape), (2, 99))
+        batch = _sample_batch()
+        archive_path = Path("dp5/neural_net/NMRdb_CASCADE_99quantiles.zip")
+        archive_model = CASCADE_Quantile.load(archive_path)
+        archive_output = archive_model.model(batch)
 
-        archive_model = CASCADE_Quantile.load("dp5/neural_net/NMRdb_CASCADE_99quantiles.zip")
-        archive_output = archive_model.model(_sample_batch())
+        with zipfile.ZipFile(archive_path, "r") as archive:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                keras_path = Path(temp_dir) / "model.keras"
+                keras_path.write_bytes(archive.read("model.keras"))
+                direct_model = load_quantile_model(keras_path)
+
+        direct_output = direct_model(batch)
+        self.assertEqual(tuple(direct_output.shape), (2, 99))
         self.assertEqual(tuple(archive_output.shape), (2, 99))
         self.assertEqual(len(archive_model.quantiles), 99)
+        self.assertTrue(torch.allclose(direct_output, archive_output))
 
     def test_percentile_regressor_predict(self):
         regressor = PercentileRegressor.from_cascade([0.1, 0.5, 0.9])
