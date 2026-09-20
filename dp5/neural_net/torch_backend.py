@@ -37,6 +37,15 @@ _TRUSTED_PICKLE_SHA256 = {
     "pca_10_EXP_decomp.p": "6a98582c527394fc316f4df4626ad11f6fcb1b21e7f36cf3f94f05d18d1d8fe9",
 }
 
+_MAX_ZIP_MEMBER_BYTES = {
+    "array.npy": 1 * 1024 * 1024,
+    "config.json": 1 * 1024 * 1024,
+    "metadata.json": 1 * 1024 * 1024,
+    "model.keras": 128 * 1024 * 1024,
+    "model.pt": 128 * 1024 * 1024,
+    "model.weights.h5": 128 * 1024 * 1024,
+}
+
 
 def rbf_expansion(distances, mu=0, delta=0.1, kmax=256):
     k = np.arange(0, kmax)
@@ -75,6 +84,26 @@ def _load_verified_pickle(path_like):
         raise ValueError(f"Integrity check failed for pickle asset: {path}")
     with path.open("rb") as handle:
         return pickle.load(handle)
+
+
+def _validate_zip_manifest(zipf, required_members, optional_members=()):
+    names = {name for name in zipf.namelist() if not name.endswith("/")}
+    required_members = set(required_members)
+    optional_members = set(optional_members)
+    missing = required_members - names
+    if missing:
+        raise ValueError(f"Archive is missing required members: {sorted(missing)}")
+    unexpected = names - required_members - optional_members
+    if unexpected:
+        raise ValueError(f"Archive contains unexpected members: {sorted(unexpected)}")
+
+
+def _validated_zip_read(zipf, member_name):
+    info = zipf.getinfo(member_name)
+    max_size = _MAX_ZIP_MEMBER_BYTES.get(member_name, 128 * 1024 * 1024)
+    if info.file_size > max_size:
+        raise ValueError(f"Archive member is too large: {member_name}")
+    return zipf.read(member_name)
 
 
 def _segment_sum(values, index, dim_size):
@@ -120,7 +149,8 @@ def _keras_hdf5_weights(path):
 
 def _keras_v3_weights_from_bytes(model_keras_bytes):
     with zipfile.ZipFile(io.BytesIO(model_keras_bytes)) as model_zip:
-        weights_bytes = model_zip.read("model.weights.h5")
+        _validate_zip_manifest(model_zip, {"config.json", "model.weights.h5"}, {"metadata.json"})
+        weights_bytes = _validated_zip_read(model_zip, "model.weights.h5")
         with h5py.File(io.BytesIO(weights_bytes), "r") as handle:
             root = handle["_layer_checkpoint_dependencies"]
             weights = {}
@@ -143,7 +173,8 @@ def _keras_v3_model_bytes(path):
 
 def _model_config_from_keras_bytes(model_keras_bytes):
     with zipfile.ZipFile(io.BytesIO(model_keras_bytes)) as model_zip:
-        return json.loads(model_zip.read("config.json"))
+        _validate_zip_manifest(model_zip, {"config.json", "model.weights.h5"}, {"metadata.json"})
+        return json.loads(_validated_zip_read(model_zip, "config.json"))
 
 
 def _assign_linear(module, weights):
@@ -431,13 +462,14 @@ def _load_graph_model(path):
         return model
     if path.suffix == ".zip":
         with zipfile.ZipFile(path, "r") as zipf:
+            _validate_zip_manifest(zipf, set(), {"array.npy", "model.pt", "model.keras"})
             if "model.pt" in zipf.namelist():
-                payload = _safe_torch_load(io.BytesIO(zipf.read("model.pt")))
+                payload = _safe_torch_load(io.BytesIO(_validated_zip_read(zipf, "model.pt")))
                 model = CascadeGraphModel(loc_output_dim=payload["loc_reduce.weight"].shape[0])
                 model.load_state_dict(payload)
                 model.eval()
                 return model
-            keras_bytes = zipf.read("model.keras")
+            keras_bytes = _validated_zip_read(zipf, "model.keras")
             config = _model_config_from_keras_bytes(keras_bytes)
             layers = {layer["name"]: layer for layer in config["config"]["layers"]}
             output_dim = layers["loc_reduce"]["config"]["units"]
@@ -639,14 +671,15 @@ class PercentileRegressor:
     @classmethod
     def load(cls, archive_path):
         with zipfile.ZipFile(archive_path, "r") as zipf:
-            arr = np.load(io.BytesIO(zipf.read("array.npy")), allow_pickle=False)
+            _validate_zip_manifest(zipf, {"array.npy"}, {"model.pt", "model.keras"})
+            arr = np.load(io.BytesIO(_validated_zip_read(zipf, "array.npy")), allow_pickle=False)
             if "model.pt" in zipf.namelist():
-                payload = _safe_torch_load(io.BytesIO(zipf.read("model.pt")))
+                payload = _safe_torch_load(io.BytesIO(_validated_zip_read(zipf, "model.pt")))
                 model = PercentileMLP(payload["workaround.weight"].shape[0])
                 model.load_state_dict(payload)
                 model.eval()
                 return cls(model, arr)
-            model_bytes = zipf.read("model.keras")
+            model_bytes = _validated_zip_read(zipf, "model.keras")
             with tempfile.TemporaryDirectory() as temp_dir:
                 model_path = Path(temp_dir) / "model.keras"
                 model_path.write_bytes(model_bytes)
@@ -753,15 +786,19 @@ class CASCADE_Quantile:
     def load(cls, archive_path):
         archive_path = _resolve_path(archive_path)
         with zipfile.ZipFile(archive_path, "r") as zipf:
-            quantiles = np.load(io.BytesIO(zipf.read("array.npy")), allow_pickle=False)
+            _validate_zip_manifest(zipf, {"array.npy"}, {"model.pt", "model.keras"})
+            quantiles = np.load(
+                io.BytesIO(_validated_zip_read(zipf, "array.npy")),
+                allow_pickle=False,
+            )
             if "model.pt" in zipf.namelist():
-                payload = _safe_torch_load(io.BytesIO(zipf.read("model.pt")))
+                payload = _safe_torch_load(io.BytesIO(_validated_zip_read(zipf, "model.pt")))
                 model = CascadeGraphModel(loc_output_dim=payload["loc_reduce.weight"].shape[0])
                 model.load_state_dict(payload)
                 model.eval()
                 return cls(model, quantiles)
 
-            model_keras = io.BytesIO(zipf.read("model.keras"))
+            model_keras = io.BytesIO(_validated_zip_read(zipf, "model.keras"))
             weights = _keras_v3_weights_from_bytes(model_keras.getvalue())
             model = CascadeGraphModel(loc_output_dim=len(quantiles))
             _load_graph_state_dict_into_model(model, weights)

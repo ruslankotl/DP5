@@ -62,7 +62,8 @@ class TorchBackendTests(unittest.TestCase):
         self.assertTrue(torch.allclose(zip_output, archive_output))
 
     def test_percentile_regressor_predict(self):
-        regressor = PercentileRegressor.from_cascade([0.1, 0.5, 0.9])
+        regressor = PercentileRegressor.from_cascade([0.9, 0.1, 0.5])
+        self.assertTrue(np.array_equal(regressor.quantiles, np.array([0.1, 0.5, 0.9])))
         outputs = regressor.predict(np.zeros((2, 256), dtype=np.float32))
         self.assertEqual(outputs.shape, (2, 3))
 
