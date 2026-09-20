@@ -478,7 +478,7 @@ def _load_graph_model(path):
                 return model
             keras_bytes = _validated_zip_read(zipf, "model.keras")
             config = _model_config_from_keras_bytes(keras_bytes)
-            layers = {layer["name"]: layer for layer in config["config"]["layers"]}
+            layers = {layer["config"]["name"]: layer for layer in config["config"]["layers"]}
             output_dim = layers["loc_reduce"]["config"]["units"]
             model = CascadeGraphModel(loc_output_dim=output_dim)
             weights = _keras_v3_weights_from_bytes(keras_bytes)
@@ -606,10 +606,7 @@ def load_NMR_prediction_model(
 
 def load_quantile_model(filepath="CASCADE_quantile_extended.keras"):
     """Load the pretrained graph quantile model."""
-    path = _resolve_path(filepath)
-    if path.suffix == ".zip":
-        return CASCADE_Quantile.load(path).model
-    return _load_graph_model(path)
+    return _load_graph_model(filepath)
 
 
 def get_shifts_and_labels(mols, atomic_symbol, model_path, batch_size=16):
@@ -656,9 +653,10 @@ def predict_shifts(model, test, batch_size=16):
                 iso_shifts.extend(np.split(shifts, indices))
 
     test["shift_arrays"] = iso_shifts
-    all_shifts = [
-        np.stack(shifts) for i, shifts in test.groupby("mol_id", sort=False)["shift_arrays"]
-    ]
+    all_shifts = []
+    for i, shifts in test.groupby("mol_id", sort=False)["shift_arrays"]:
+        stacked = np.stack(shifts)
+        all_shifts.append(stacked[0] if stacked.shape[0] == 1 else stacked)
     return all_shifts
 
 
