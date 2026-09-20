@@ -397,18 +397,22 @@ def _load_graph_model(path):
         weights = _keras_v3_weights_from_bytes(keras_bytes)
         return _load_graph_state_dict_into_model(model, weights)
     if path.suffix == ".pt":
-        checkpoint = torch.load(path, map_location="cpu")
-        loc_output_dim = checkpoint["loc_output_dim"]
+        checkpoint = torch.load(path, map_location="cpu", weights_only=True)
+        loc_output_dim = checkpoint["loc_reduce.weight"].shape[0]
         model = CascadeGraphModel(loc_output_dim=loc_output_dim)
-        model.load_state_dict(checkpoint["state_dict"])
+        model.load_state_dict(checkpoint)
         model.eval()
         return model
     if path.suffix == ".zip":
         with zipfile.ZipFile(path, "r") as zipf:
             if "model.pt" in zipf.namelist():
-                payload = torch.load(io.BytesIO(zipf.read("model.pt")), map_location="cpu")
-                model = CascadeGraphModel(loc_output_dim=payload["loc_output_dim"])
-                model.load_state_dict(payload["state_dict"])
+                payload = torch.load(
+                    io.BytesIO(zipf.read("model.pt")),
+                    map_location="cpu",
+                    weights_only=True,
+                )
+                model = CascadeGraphModel(loc_output_dim=payload["loc_reduce.weight"].shape[0])
+                model.load_state_dict(payload)
                 model.eval()
                 return model
             keras_bytes = zipf.read("model.keras")
@@ -424,9 +428,9 @@ def _load_graph_model(path):
 def _load_mlp_weights(path):
     path = _resolve_path(path)
     if path.suffix == ".pt":
-        checkpoint = torch.load(path, map_location="cpu")
-        model = PercentileMLP(checkpoint["dims"])
-        model.load_state_dict(checkpoint["state_dict"])
+        checkpoint = torch.load(path, map_location="cpu", weights_only=True)
+        model = PercentileMLP(checkpoint["workaround.weight"].shape[0])
+        model.load_state_dict(checkpoint)
         model.eval()
         return model
     if path.suffix == ".keras":
@@ -539,7 +543,10 @@ def load_NMR_prediction_model(
 
 def load_quantile_model(filepath="CASCADE_quantile_extended.keras"):
     """Load the pretrained graph quantile model."""
-    return _load_graph_model(filepath)
+    path = _resolve_path(filepath)
+    if path.suffix == ".zip":
+        return CASCADE_Quantile.load(path).model
+    return _load_graph_model(path)
 
 
 def get_shifts_and_labels(mols, atomic_symbol, model_path, batch_size=16):
@@ -603,24 +610,20 @@ class PercentileRegressor:
             array_buffer = io.BytesIO()
             np.save(array_buffer, self.quantiles)
             zipf.writestr("array.npy", array_buffer.getvalue())
-            zipf.writestr(
-                "model.pt",
-                _torch_save_bytes(
-                    {
-                        "dims": self.dims,
-                        "state_dict": self.model.state_dict(),
-                    }
-                ),
-            )
+            zipf.writestr("model.pt", _torch_save_bytes(self.model.state_dict()))
 
     @classmethod
     def load(cls, archive_path):
         with zipfile.ZipFile(archive_path, "r") as zipf:
             arr = np.load(io.BytesIO(zipf.read("array.npy")))
             if "model.pt" in zipf.namelist():
-                payload = torch.load(io.BytesIO(zipf.read("model.pt")), map_location="cpu")
-                model = PercentileMLP(payload["dims"])
-                model.load_state_dict(payload["state_dict"])
+                payload = torch.load(
+                    io.BytesIO(zipf.read("model.pt")),
+                    map_location="cpu",
+                    weights_only=True,
+                )
+                model = PercentileMLP(payload["workaround.weight"].shape[0])
+                model.load_state_dict(payload)
                 model.eval()
                 return cls(model, arr)
             model_bytes = zipf.read("model.keras")
@@ -657,10 +660,10 @@ class PercentileRegressor:
     def __call__(self, *args, **kwargs):
         return self.predict(*args, **kwargs)
 
-    def predict(self, *args, **kwargs):
+    def predict(self, inputs):
         self.model.eval()
         with torch.no_grad():
-            inputs = torch.as_tensor(args[0], dtype=torch.float32)
+            inputs = torch.as_tensor(inputs, dtype=torch.float32)
             outputs = self.model(inputs)
             return outputs.detach().cpu().numpy()
 
@@ -724,15 +727,7 @@ class CASCADE_Quantile:
             array_buffer = io.BytesIO()
             np.save(array_buffer, self.quantiles)
             zipf.writestr("array.npy", array_buffer.getvalue())
-            zipf.writestr(
-                "model.pt",
-                _torch_save_bytes(
-                    {
-                        "loc_output_dim": self.model.loc_reduce.out_features,
-                        "state_dict": self.model.state_dict(),
-                    }
-                ),
-            )
+            zipf.writestr("model.pt", _torch_save_bytes(self.model.state_dict()))
 
     @classmethod
     def load(cls, archive_path):
@@ -740,9 +735,13 @@ class CASCADE_Quantile:
         with zipfile.ZipFile(archive_path, "r") as zipf:
             quantiles = np.load(io.BytesIO(zipf.read("array.npy")))
             if "model.pt" in zipf.namelist():
-                payload = torch.load(io.BytesIO(zipf.read("model.pt")), map_location="cpu")
-                model = CascadeGraphModel(loc_output_dim=payload["loc_output_dim"])
-                model.load_state_dict(payload["state_dict"])
+                payload = torch.load(
+                    io.BytesIO(zipf.read("model.pt")),
+                    map_location="cpu",
+                    weights_only=True,
+                )
+                model = CascadeGraphModel(loc_output_dim=payload["loc_reduce.weight"].shape[0])
+                model.load_state_dict(payload)
                 model.eval()
                 return cls(model, quantiles)
 
