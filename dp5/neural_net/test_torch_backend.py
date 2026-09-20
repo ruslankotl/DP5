@@ -41,9 +41,11 @@ class TorchBackendTests(unittest.TestCase):
 
     def test_load_quantile_models(self):
         batch = _sample_batch()
-        archive_path = Path("dp5/neural_net/NMRdb_CASCADE_99quantiles.zip")
+        archive_path = (Path(__file__).parent / "NMRdb_CASCADE_99quantiles.zip").resolve()
         archive_model = CASCADE_Quantile.load(archive_path)
         archive_output = archive_model.model(batch)
+        zip_model = load_quantile_model(archive_path)
+        zip_output = zip_model(batch)
 
         with zipfile.ZipFile(archive_path, "r") as archive:
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -54,8 +56,10 @@ class TorchBackendTests(unittest.TestCase):
         direct_output = direct_model(batch)
         self.assertEqual(tuple(direct_output.shape), (2, 99))
         self.assertEqual(tuple(archive_output.shape), (2, 99))
+        self.assertEqual(tuple(zip_output.shape), (2, 99))
         self.assertEqual(len(archive_model.quantiles), 99)
         self.assertTrue(torch.allclose(direct_output, archive_output))
+        self.assertTrue(torch.allclose(zip_output, archive_output))
 
     def test_percentile_regressor_predict(self):
         regressor = PercentileRegressor.from_cascade([0.1, 0.5, 0.9])

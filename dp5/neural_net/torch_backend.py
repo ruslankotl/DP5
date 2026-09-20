@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import hashlib
 import pickle
 import tempfile
 import warnings
@@ -28,6 +29,12 @@ _KERAS_LAYER_ALIASES = {
     "dense_22": "loc_2",
     "dense_23": "loc_3",
     "dense_24": "loc_reduce",
+}
+
+_TRUSTED_PICKLE_SHA256 = {
+    "mean_model_preprocessor.p": "6d143a468595797a05434a32da76cdcf57cb8b0cc929bfe27181acc297fde1b0",
+    "pca_10_ERRORrep_Error_decomp.p": "0743a95187744c7aefe1de43fb3c29e35e3efcd0af8a8f6959fc6e7a10843e14",
+    "pca_10_EXP_decomp.p": "6a98582c527394fc316f4df4626ad11f6fcb1b21e7f36cf3f94f05d18d1d8fe9",
 }
 
 
@@ -55,9 +62,19 @@ def _resolve_path(path_like):
     path = Path(path_like)
     if path.is_absolute():
         return path
-    if path.exists():
-        return path.resolve()
     return Path(__file__).parent / path
+
+
+def _load_verified_pickle(path_like):
+    path = Path(path_like)
+    expected_hash = _TRUSTED_PICKLE_SHA256.get(path.name)
+    if expected_hash is None:
+        raise ValueError(f"Untrusted pickle asset: {path}")
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if digest != expected_hash:
+        raise ValueError(f"Integrity check failed for pickle asset: {path}")
+    with path.open("rb") as handle:
+        return pickle.load(handle)
 
 
 def _segment_sum(values, index, dim_size):
@@ -488,8 +505,7 @@ def build_model(model_file):
 
 
 def extract_representations(model, test, batch_size):
-    with open(Path(__file__).parent / "mean_model_preprocessor.p", "rb") as handle:
-        preprocessor = pickle.load(handle)
+    preprocessor = _load_verified_pickle(Path(__file__).parent / "mean_model_preprocessor.p")
     inputs_test = preprocessor.predict(Mol_iter2(test))
     test_sequence = GraphBatchSequence(inputs_test, test.atom_index, batch_size)
     reps_list = []
@@ -508,14 +524,10 @@ def extract_representations(model, test, batch_size):
 
 def extract_Error_reps(model, test, Settings):
     batch_size = 1
-    preprocessor = pickle.load(
-        open(Path(Settings.ScriptDir) / "mean_model_preprocessor.p", "rb")
-    )
+    preprocessor = _load_verified_pickle(Path(Settings.ScriptDir) / "mean_model_preprocessor.p")
     inputs_test = preprocessor.predict(Mol_iter2(test))
     test_sequence = GraphBatchSequence(inputs_test, test.atom_index, batch_size)
-    pca = pickle.load(
-        open(Path(Settings.ScriptDir) / "pca_10_ERRORrep_Error_decomp.p", "rb")
-    )
+    pca = _load_verified_pickle(Path(Settings.ScriptDir) / "pca_10_ERRORrep_Error_decomp.p")
 
     reps = []
     device = _model_device(model)
@@ -530,12 +542,10 @@ def extract_Error_reps(model, test, Settings):
 
 def extract_Exp_reps(model, test, Settings):
     batch_size = 1
-    preprocessor = pickle.load(
-        open(Path(Settings.ScriptDir) / "mean_model_preprocessor.p", "rb")
-    )
+    preprocessor = _load_verified_pickle(Path(Settings.ScriptDir) / "mean_model_preprocessor.p")
     inputs_test = preprocessor.predict(Mol_iter2(test))
     test_sequence = GraphBatchSequence(inputs_test, test.atom_index, batch_size)
-    pca = pickle.load(open(Path(Settings.ScriptDir) / "pca_10_EXP_decomp.p", "rb"))
+    pca = _load_verified_pickle(Path(Settings.ScriptDir) / "pca_10_EXP_decomp.p")
 
     reps = []
     device = _model_device(model)
@@ -590,7 +600,7 @@ def mols_to_df(mols, atomic_symbol):
 
 def predict_shifts(model, test, batch_size=16):
     """Predict shifts for all conformers of all molecules."""
-    preprocessor = pickle.load(open(Path(__file__).parent / "mean_model_preprocessor.p", "rb"))
+    preprocessor = _load_verified_pickle(Path(__file__).parent / "mean_model_preprocessor.p")
     inputs_test = preprocessor.predict(Mol_iter2(test))
     test_sequence = GraphBatchSequence(inputs_test, test.atom_index, batch_size)
 
