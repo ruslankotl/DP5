@@ -1,10 +1,7 @@
 import numpy as np
-from random import shuffle
-
-from tensorflow.keras.utils import Sequence
 
 
-class GraphSequence(Sequence):
+class GraphSequence:
     
     def __init__(self, inputs, y=None, batch_size=1, shuffle=True,
                  final_batch=True):
@@ -48,6 +45,8 @@ class GraphSequence(Sequence):
         molecules still refer to the correct atoms.
 
         """
+        if idx >= len(self):
+            raise IndexError(idx)
         batch_indexes = idx * self.batch_size + np.arange(0, self.batch_size)
         batch_indexes = batch_indexes[batch_indexes < len(self._inputs)]
 
@@ -78,6 +77,10 @@ class GraphSequence(Sequence):
 
         else:
             return batch_data
+
+    def __iter__(self):
+        for idx in range(len(self)):
+            yield self[idx]
         
     def process_data(self, batch_data):
         """ function to add additional processing to batch data before returning """

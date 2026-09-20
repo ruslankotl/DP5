@@ -33,7 +33,9 @@ autodoc_mock_imports = [
     "numpy",
     "sklearn",
     "pandas",
-    "tensorflow",
+    "torch",
+    "torch_geometric",
+    "h5py",
     "pathos",
     "scipy",
     "nmrglue",
@@ -44,7 +46,6 @@ autodoc_mock_imports = [
     "statsmodels",
     "rdkit",
     "tqdm",
-    "keras",
 ]
 # autodoc_typehints = "description"
 

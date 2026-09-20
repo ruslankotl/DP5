@@ -1,7 +1,7 @@
 An improved version of DP5 analysis developed by Howarth (DOI:[10.1039/D1SC04406K](https://doi.org/10.1039/D1SC04406K)). This codebase is refactored for legibility and maintainability.
 
 We strongly recommend using a separate python environment created via `conda`, `uv`, or other solution of your choice to run this programme.
-DP5 currently supports `python>=3.9,<=3.11` (due to the TensorFlow dependency range).
+DP5 currently supports `python>=3.9,<=3.12`.
 
 If you do not have `uv` installed yet:
 - macOS (Homebrew): `brew install uv`
