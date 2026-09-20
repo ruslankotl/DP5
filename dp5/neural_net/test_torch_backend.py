@@ -1,3 +1,4 @@
+import io
 import tempfile
 import unittest
 import zipfile
@@ -66,6 +67,22 @@ class TorchBackendTests(unittest.TestCase):
         self.assertTrue(np.array_equal(regressor.quantiles, np.array([0.1, 0.5, 0.9])))
         outputs = regressor.predict(np.zeros((2, 256), dtype=np.float32))
         self.assertEqual(outputs.shape, (2, 3))
+
+    def test_invalid_quantile_archives_are_rejected(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            broken_zip = Path(temp_dir) / "broken_quantiles.zip"
+            array_buffer = io.BytesIO()
+            np.save(array_buffer, np.array([0.1, 0.5, 0.9], dtype=np.float32))
+            with zipfile.ZipFile(broken_zip, "w", zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr("array.npy", array_buffer.getvalue())
+            with self.assertRaises(ValueError):
+                CASCADE_Quantile.load(broken_zip)
+
+            broken_keras = Path(temp_dir) / "broken_model.keras"
+            with zipfile.ZipFile(broken_keras, "w", zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr("config.json", "{}")
+            with self.assertRaises(ValueError):
+                load_quantile_model(broken_keras)
 
 
 if __name__ == "__main__":

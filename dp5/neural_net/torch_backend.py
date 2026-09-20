@@ -106,6 +106,12 @@ def _validated_zip_read(zipf, member_name):
     return zipf.read(member_name)
 
 
+def _require_model_payload(zipf):
+    names = set(zipf.namelist())
+    if "model.pt" not in names and "model.keras" not in names:
+        raise ValueError("Archive must contain either model.pt or model.keras")
+
+
 def _segment_sum(values, index, dim_size):
     output_shape = (dim_size,) + tuple(values.shape[1:])
     output = values.new_zeros(output_shape)
@@ -448,7 +454,7 @@ def _load_graph_model(path):
     if path.suffix == ".keras":
         keras_bytes = _keras_v3_model_bytes(path)
         config = _model_config_from_keras_bytes(keras_bytes)
-        layers = {layer["name"]: layer for layer in config["config"]["layers"]}
+        layers = {layer["config"]["name"]: layer for layer in config["config"]["layers"]}
         output_dim = layers["loc_reduce"]["config"]["units"]
         model = CascadeGraphModel(loc_output_dim=output_dim)
         weights = _keras_v3_weights_from_bytes(keras_bytes)
@@ -463,6 +469,7 @@ def _load_graph_model(path):
     if path.suffix == ".zip":
         with zipfile.ZipFile(path, "r") as zipf:
             _validate_zip_manifest(zipf, set(), {"array.npy", "model.pt", "model.keras"})
+            _require_model_payload(zipf)
             if "model.pt" in zipf.namelist():
                 payload = _safe_torch_load(io.BytesIO(_validated_zip_read(zipf, "model.pt")))
                 model = CascadeGraphModel(loc_output_dim=payload["loc_reduce.weight"].shape[0])
@@ -491,7 +498,7 @@ def _load_mlp_weights(path):
         keras_bytes = _keras_v3_model_bytes(path)
         weights = _keras_v3_weights_from_bytes(keras_bytes)
         config = _model_config_from_keras_bytes(keras_bytes)
-        layers = {layer["name"]: layer for layer in config["config"]["layers"]}
+        layers = {layer["config"]["name"]: layer for layer in config["config"]["layers"]}
         dims = layers["loc_reduce"]["config"]["units"]
         model = PercentileMLP(dims)
         for layer_name in ["loc_1", "loc_2", "loc_3", "loc_reduce", "workaround"]:
@@ -672,6 +679,7 @@ class PercentileRegressor:
     def load(cls, archive_path):
         with zipfile.ZipFile(archive_path, "r") as zipf:
             _validate_zip_manifest(zipf, {"array.npy"}, {"model.pt", "model.keras"})
+            _require_model_payload(zipf)
             arr = np.load(io.BytesIO(_validated_zip_read(zipf, "array.npy")), allow_pickle=False)
             if "model.pt" in zipf.namelist():
                 payload = _safe_torch_load(io.BytesIO(_validated_zip_read(zipf, "model.pt")))
@@ -787,6 +795,7 @@ class CASCADE_Quantile:
         archive_path = _resolve_path(archive_path)
         with zipfile.ZipFile(archive_path, "r") as zipf:
             _validate_zip_manifest(zipf, {"array.npy"}, {"model.pt", "model.keras"})
+            _require_model_payload(zipf)
             quantiles = np.load(
                 io.BytesIO(_validated_zip_read(zipf, "array.npy")),
                 allow_pickle=False,
