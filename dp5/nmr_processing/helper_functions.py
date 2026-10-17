@@ -202,7 +202,7 @@ def generalised_lorentzian(
 
 
 def lorentzian(p, w, p0, A):
-    return generalised_lorentzian(p, p0, w, 1, A)
+    return generalised_lorentzian(p, p0, w, 0, A)
 
 
 def methyl_protons(mol):
